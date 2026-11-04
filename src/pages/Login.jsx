@@ -6,7 +6,7 @@ import { auth, DEMO } from "../api";
 
 export default function Login() {
   const { t } = useLang();
-  const { session, refresh } = useAuth();
+  const { session, refresh, isStaff, isAdmin, profile } = useAuth();
   const nav = useNavigate();
   const [mode, setMode] = useState("email");
   const [id, setId] = useState("");
@@ -14,7 +14,7 @@ export default function Login() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  if (session) return <Navigate to="/me" replace />;
+  if (session) return <Navigate to={isStaff && !profile?.member_id ? (isAdmin ? "/admin" : "/staff") : "/me"} replace />;
   const key = mode === "email" ? { email: id.trim() } : { phone: id.trim() };
   const send = async (e) => {
     e.preventDefault(); setErr(""); setBusy(true);
@@ -23,7 +23,7 @@ export default function Login() {
   };
   const verify = async (e) => {
     e.preventDefault(); setErr(""); setBusy(true);
-    try { await auth.verifyOtp({ ...key, token: code.trim() }); await refresh(); nav("/me"); } catch (x) { setErr(t("login_fail") + (x.message || "")); }
+    try { await auth.verifyOtp({ ...key, token: code.trim() }); await refresh(); } catch (x) { setErr(t("login_fail") + (x.message || "")); }
     setBusy(false);
   };
   return (
@@ -34,6 +34,7 @@ export default function Login() {
           <p className="notice honey" style={{ margin: 0 }}>{t("demo_banner")}</p>
           <button className="btn primary" onClick={async () => { await auth.demoSignIn("member"); nav("/me"); }}>{t("demo_as_member")}</button>
           <button className="btn" onClick={async () => { await auth.demoSignIn("admin"); nav("/admin"); }}>{t("demo_as_admin")}</button>
+          <button className="btn" onClick={async () => { await auth.demoSignIn("therapist"); nav("/staff"); }}>{t("demo_as_staff")}</button>
         </div>
       ) : (
         <>

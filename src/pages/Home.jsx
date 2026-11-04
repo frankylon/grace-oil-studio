@@ -15,25 +15,25 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
    On this page, the aromatherapist's name, Grace, opens in the middle to let one bottle stand through it. */
 
 const C = {
-  say: ["温哥华芳疗师手调的 doTERRA 精油。说出你的感受，我按滴为你调好这一瓶。", "Hand-mixed doTERRA blends by a Vancouver aromatherapist. Tell me how you feel and I'll mix the bottle, drop by drop."],
-  go: ["按感受配油", "Find my blend"],
+  say: ["温哥华芳疗师 Grace。先了解你的状况，再用 doTERRA 精油为你调配适合你的那一瓶。", "Grace, aromatherapist in Vancouver. She gets to know how you feel, then blends doTERRA oils into the bottle that suits you."],
+  go: ["请 Grace 为我调配", "Ask Grace to blend for me"],
   where: ["温哥华 · 芳疗工作室", "Vancouver · aromatherapy studio"],
   oils: ["精油百科", "Oil library"], recipes: ["全部配方", "All blends"],
-  ph1: ["每天", "Oils I"], ph2: ["手上的油", "reach for"],
-  sh: ["四款招牌配方", "Four signature blends"],
-  scap: ["每瓶都按滴数写好，点开就能看用法，按一下就帮你配。", "Every bottle is written out in drops: open one for directions, or tap to have it mixed."],
-  mix: ["帮我配这瓶", "Mix this for me"], drops: ["滴", "drops"],
-  hh1: ["从一句话", "From one line"], hh2: ["到一瓶油", "to one bottle"],
-  hp: ["不用懂精油。告诉我哪里不舒服，剩下的交给我。", "You don't need to know oils. Tell me what's bothering you and leave the rest to me."],
-  ch1: ["告诉我感受", "Tell me how"], ch2: ["我来调", "you feel"],
-  cs: ["配好会通知你来取，配方和滴数都存在你的会员页。", "I'll let you know when it's ready, and the formula stays on your member page."],
+  ph1: ["认识", "Meet the"], ph2: ["主要精油", "key oils"],
+  sh: ["为不同需要调配", "Blends for different needs"],
+  scap: ["这些是 Grace 常用的配方，她会按你的情况再调整。", "These are blends Grace uses often; she adjusts each one to the person."],
+  mix: ["为我调配", "Blend this for me"],
+  hh1: ["从了解你", "From knowing you"], hh2: ["到一瓶油", "to one bottle"],
+  hp: ["你不需要懂精油。告诉 Grace 你的状况，选油和调配交给她。", "You don't need to know oils. Tell Grace how you feel and leave the choosing and blending to her."],
+  ch1: ["说说你的状况", "Tell Grace"], ch2: ["为你调配", "how you feel"],
+  cs: ["调好会通知你来取，每次调配和使用进展都记在你的会员页。", "You'll hear when it's ready, and every blend and how it's going is kept on your member page."],
 };
 
 const OILS = [
-  { id: "frankincense-essential-oil", zh: "几乎每瓶护肤和舒缓配方的底子，香气沉稳，和什么都合得来。", en: "The base of nearly every skin and calming blend I make: steady, and it gets along with everything." },
-  { id: "roman-chamomile-oil-nhp", zh: "睡前和情绪配方用得最多，一两滴就让整瓶变得柔和。", en: "My go-to for evening and mood blends; a drop or two softens the whole bottle." },
-  { id: "ginger-essential-oil", zh: "肩颈、腰腹按摩的暖意来自它，和丝柏一起用效果最稳。", en: "The warmth in shoulder and belly massage blends, steadiest alongside cypress." },
-  { id: "bergamot-essential-oil", zh: "压力大的日子，我会在配方里加它，让香气明亮起来。", en: "On heavy days I add it to lift the aroma and brighten the blend." },
+  { id: "frankincense-essential-oil", zh: "取自乳香树脂，香气沉稳温和。护肤和放松类调配里最常用的一款，和大多数精油都很搭。", en: "From frankincense resin, with a calm, warm aroma. The oil Grace uses most in skin and relaxing blends; it pairs with almost everything." },
+  { id: "roman-chamomile-oil-nhp", zh: "花香柔和带点苹果香，适合睡前和舒缓情绪的调配，也适合敏感的人。", en: "Soft, apple-like floral scent. Suited to evening and calming blends, and gentle enough for sensitive people." },
+  { id: "ginger-essential-oil", zh: "取自姜根，带温热感。常用在肩颈、腰腹按摩油里，怕冷的人特别喜欢。", en: "From ginger root, with a warming feel. Often in shoulder and belly massage blends; people who feel the cold love it." },
+  { id: "bergamot-essential-oil", zh: "柑橘里带花香，清新明亮。压力大、心情闷的时候，Grace 会用它让配方香气轻快起来。", en: "Citrus with a floral edge, bright and fresh. When life feels heavy, Grace adds it to lift the whole blend." },
 ];
 
 const SIG = [
@@ -41,9 +41,9 @@ const SIG = [
 ];
 
 const STEPS = [
-  { h: ["今天", "Today"], rows: [[["选一种感受或一条配方", "Pick a feeling or a blend"], ["1 分钟", "1 min"]], [["按「帮我配」留下联系方式", "Tap “Mix this for me”, leave a contact"], ["1 分钟", "1 min"]]] },
-  { h: ["当天", "Same day"], rows: [[["按滴调好，确认基底油和浓度", "Mixed by the drop, carrier and strength checked"], ["当天", "same day"]], [["通知你来取", "You get a message to collect"], ["—", "—"]]] },
-  { h: ["之后", "After"], rows: [[["配方与滴数存进会员页", "Formula and drops saved to your page"], ["一直在", "kept"]], [["用完照着再配一瓶", "Run out, mix the same again"], ["随时", "any time"]]] },
+  { h: ["了解", "Getting to know you"], rows: [[["告诉 Grace 你的状况和需要", "Tell Grace how you feel and what you need"], ["线上 / 到店", "online / in person"]], [["过敏、香味喜好一起说", "Mention allergies and scents you like"], ["几分钟", "a few min"]]] },
+  { h: ["调配", "Blending"], rows: [[["挑选适合你的精油和浓度", "She picks the oils and strength for you"], ["当天", "same day"]], [["通知你来取，教你怎么用", "You collect it and learn how to use it"], ["到店", "in store"]]] },
+  { h: ["跟进", "Follow-up"], rows: [[["调配记录存进会员页", "The blend is saved to your member page"], ["一直在", "kept"]], [["用后感受告诉 Grace，再调整", "Tell Grace how it went; she fine-tunes it"], ["随时", "any time"]]] },
 ];
 
 const cut = (id) => asset(`/img/p/${id}.webp`);
@@ -87,7 +87,7 @@ export default function Home() {
   const L = (k) => pick(C[k][0], C[k][1]);
   const root = useRef(null);
   const sig = useMemo(() => (cat.ready ? SIG.map((s) => ({ ...s, r: cat.recipes.find((r) => r.id === s.id) })).filter((s) => s.r) : []), [cat]);
-  const scrollFeel = (e) => { e.preventDefault(); document.getElementById("feel")?.scrollIntoView({ behavior: "smooth" }); };
+  const scrollFeel = (e) => { e.preventDefault(); window.dispatchEvent(new Event("open-consult")); };
 
   useGSAP(() => {
     if (!cat.ready || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -138,7 +138,7 @@ export default function Home() {
               <Link to={`/recipes/${r.id}`} className="ttl">{pick(r.title_zh, r.title_en)}</Link>
               <div className="bots">{items.map((i) => <img key={i.product} src={cut(i.product)} alt={name(i)} width="400" height="900" loading="lazy" className={+i.drops === max ? "big" : ""} />)}</div>
               <div className="meta">
-                <span className="soft">{items.map((i) => `${name(i)} ${i.drops}`).join(" · ")} {L("drops")}</span>
+                <span className="soft">{items.map((i) => name(i)).join(" · ")}</span>
                 <Link className="btn primary sm" to={`/recipes/${r.id}?mix=1`}>{L("mix")}</Link>
               </div>
             </div>); })}
@@ -154,7 +154,7 @@ export default function Home() {
             <div key={g.h[1]} className="grp"><b>{pick(g.h[0], g.h[1])}</b>
               {g.rows.map(([a, b]) => <div key={a[1]} className="row"><span>{pick(a[0], a[1])}</span><i aria-hidden="true" /><span>{pick(b[0], b[1])}</span></div>)}
             </div>))}
-          <div className="end"><span>{pick("手里一瓶为你调的油", "A bottle mixed for you")}</span><span>{pick("约 1 天", "about a day")}</span></div>
+          <div className="end"><span>{pick("一瓶为你调配的精油", "A blend made for you")}</span><span>{pick("约 1 天", "about a day")}</span></div>
         </div>
       </section>
 

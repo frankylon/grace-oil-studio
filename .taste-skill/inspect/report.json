@@ -1,6 +1,6 @@
 {
  "url": "http://localhost:4173/",
- "at": "2026-11-04T21:56:34.448Z",
+ "at": "2026-11-04T22:30:43.852Z",
  "allow": [],
  "viewports": [
   {
@@ -9,13 +9,13 @@
    "load": "load",
    "screens": 7,
    "filled": [
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1
+    0.78,
+    0.64,
+    0.31,
+    0.83,
+    0.76,
+    0.97,
+    0.96
    ],
    "motion": {
     "elements": 19,
@@ -31,9 +31,9 @@
      "h": 900
     },
     "page": {
-     "height": 5901,
+     "height": 5958,
      "screens": 6.6,
-     "words": 147,
+     "words": 149,
      "img": 17,
      "video": 0,
      "canvas": 0,
@@ -62,12 +62,12 @@
      "videosNoPoster": 0
     },
     "hero": {
-     "text": "Yu en",
-     "words": 2,
-     "chars": 5,
-     "lines": 1,
-     "size": 633.9,
-     "vw": 44,
+     "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
+     "words": 6,
+     "chars": 31,
+     "lines": 2,
+     "size": 457.6,
+     "vw": 31.8,
      "font": "Bodoni Moda Variable",
      "weight": 500,
      "tracking": -0.045,
@@ -78,46 +78,25 @@
      "align": "center",
      "position": "center",
      "widthRatio": 0.96,
-     "top": 281,
-     "tag": "div",
+     "top": 384,
+     "tag": "h1",
      "kind": "heading"
     },
     "h1": {
-     "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
+     "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
      "words": 6,
      "lines": 2,
-     "size": 523.5,
+     "size": 457.6,
      "font": "Bodoni Moda Variable"
     },
     "headings": [
      {
-      "text": "Yu en",
-      "words": 2,
-      "chars": 5,
-      "lines": 1,
-      "size": 633.9,
-      "vw": 44,
-      "font": "Bodoni Moda Variable",
-      "weight": 500,
-      "tracking": -0.045,
-      "leading": 0.8,
-      "upper": false,
-      "italic": false,
-      "mono": false,
-      "align": "center",
-      "position": "center",
-      "widthRatio": 0.96,
-      "top": 281,
-      "tag": "div",
-      "kind": "heading"
-     },
-     {
-      "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
+      "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
       "words": 6,
-      "chars": 26,
+      "chars": 31,
       "lines": 2,
-      "size": 523.5,
-      "vw": 36.4,
+      "size": 457.6,
+      "vw": 31.8,
       "font": "Bodoni Moda Variable",
       "weight": 500,
       "tracking": -0.045,
@@ -128,12 +107,12 @@
       "align": "center",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 358,
+      "top": 384,
       "tag": "h1",
       "kind": "heading"
      },
      {
-      "text": "每天 手上的油",
+      "text": "认识 主要精油",
       "words": 2,
       "chars": 7,
       "lines": 2,
@@ -154,9 +133,9 @@
       "kind": "heading"
      },
      {
-      "text": "四款招牌配方",
+      "text": "为不同需要调配",
       "words": 1,
-      "chars": 6,
+      "chars": 7,
       "lines": 1,
       "size": 44,
       "vw": 3.1,
@@ -170,7 +149,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.8,
-      "top": 2669,
+      "top": 2726,
       "tag": "h2",
       "kind": "heading"
      },
@@ -191,7 +170,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.17,
-      "top": 2794,
+      "top": 2851,
       "tag": "a",
       "kind": "heading"
      },
@@ -212,7 +191,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.14,
-      "top": 2794,
+      "top": 2851,
       "tag": "a",
       "kind": "heading"
      },
@@ -233,7 +212,7 @@
       "align": "left",
       "position": "right",
       "widthRatio": 0.17,
-      "top": 2794,
+      "top": 2851,
       "tag": "a",
       "kind": "heading"
      },
@@ -254,12 +233,12 @@
       "align": "left",
       "position": "right",
       "widthRatio": 0.14,
-      "top": 2794,
+      "top": 2851,
       "tag": "a",
       "kind": "heading"
      },
      {
-      "text": "从一句话 到一瓶油",
+      "text": "从了解你 到一瓶油",
       "words": 2,
       "chars": 9,
       "lines": 2,
@@ -275,14 +254,14 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.35,
-      "top": 3721,
+      "top": 3778,
       "tag": "h2",
       "kind": "heading"
      },
      {
-      "text": "告诉我感受 我来调",
+      "text": "说说你的状况 为你调配",
       "words": 2,
-      "chars": 9,
+      "chars": 11,
       "lines": 2,
       "size": 144,
       "vw": 10,
@@ -296,8 +275,29 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 4493,
+      "top": 4550,
       "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Gra ce",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 548.4,
+      "vw": 38.1,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.045,
+      "leading": 0.8,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 5408,
+      "tag": "div",
       "kind": "heading"
      }
     ],
@@ -334,8 +334,8 @@
       65,
       107,
       144,
-      524,
-      634
+      458,
+      548
      ],
      "sizeCount": 11,
      "notLoaded": [],
@@ -349,10 +349,10 @@
      },
      "measureChars": 82,
      "max": {
-      "size": 633.9,
-      "vw": 44,
+      "size": 548.4,
+      "vw": 38.1,
       "font": "Bodoni Moda Variable",
-      "text": "Yu"
+      "text": "Gra"
      },
      "monoShare": 0,
      "monoProseShare": 0,
@@ -387,7 +387,7 @@
       },
       {
        "color": "#ecf0f2",
-       "top": 3581,
+       "top": 3638,
        "hsl": {
         "h": 200,
         "s": 0.19,
@@ -396,7 +396,7 @@
       },
       {
        "color": "#1f3038",
-       "top": 4353,
+       "top": 4410,
        "hsl": {
         "h": 199,
         "s": 0.29,
@@ -407,23 +407,23 @@
      "textColors": [
       {
        "color": "#1f3038",
-       "share": 0.35
+       "share": 0.39
       },
       {
        "color": "#5d6b72",
-       "share": 0.33
+       "share": 0.28
       },
       {
        "color": "#b7c3c9",
-       "share": 0.24
+       "share": 0.23
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.05
       },
       {
        "color": "#f7f9fa",
        "share": 0.05
-      },
-      {
-       "color": "#ffffff",
-       "share": 0.04
       }
      ],
      "button": {
@@ -447,8 +447,8 @@
      "mono": 0,
      "upper": 0,
      "heroLabels": [
-      "按感受配油",
-      "按感受配油"
+      "请 Grace 调配",
+      "请 Grace 为我调配"
      ]
     },
     "surfaces": {
@@ -474,7 +474,7 @@
     },
     "heroMedia": [],
     "nav": {
-     "links": 4,
+     "links": 5,
      "fixed": true,
      "height": 100,
      "floatingPill": false,
@@ -490,7 +490,7 @@
      "w": 1440,
      "h": 900
     },
-    "pageH": 5901,
+    "pageH": 5958,
     "margins": {
      "left": 29,
      "right": 29
@@ -500,19 +500,19 @@
       "sel": "main",
       "tag": "main",
       "top": 100,
-      "height": 4901,
-      "words": 77,
+      "height": 4958,
+      "words": 88,
       "media": 15,
       "middle": 0,
       "heading": {
-       "text": "Yu",
-       "size": 523,
+       "text": "Gra",
+       "size": 458,
        "tag": "h1"
       },
       "left": 29,
-      "right": 29,
+      "right": 27,
       "textLeft": 29,
-      "textRight": 29,
+      "textRight": 27,
       "fullBleed": false,
       "footer": false,
       "hero": true,
@@ -522,33 +522,33 @@
      {
       "sel": "footer.fx",
       "tag": "footer",
-      "top": 0,
+      "top": 5058,
       "height": 900,
-      "words": 27,
+      "words": 29,
       "media": 0,
       "middle": 0,
       "heading": {
-       "text": "Yu",
-       "size": 634,
+       "text": "Gra",
+       "size": 548,
        "tag": "span"
       },
       "left": 29,
-      "right": 29,
+      "right": 30,
       "textLeft": 29,
-      "textRight": 29,
+      "textRight": 30,
       "fullBleed": false,
       "footer": true,
-      "hero": true,
+      "hero": false,
       "continues": false,
-      "pinned": true
+      "pinned": false
      }
     ],
     "gaps": [],
     "h1s": [
      {
-      "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
-      "size": 523,
-      "top": 358,
+      "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
+      "size": 458,
+      "top": 384,
       "firstScreen": true
      }
     ],
@@ -568,12 +568,17 @@
      }
     ],
     "leftBlocks": 5,
-    "bodySize": 16,
+    "bodySize": 19,
     "stage": false,
     "explains": true,
     "slivers": [],
-    "voidShare": 0,
-    "voidBox": null
+    "voidShare": 0.05,
+    "voidBox": {
+     "x": 420,
+     "y": 120,
+     "w": 1020,
+     "h": 60
+    }
    },
    "app": null,
    "consoleErrors": []
@@ -584,12 +589,12 @@
    "load": "load",
    "screens": 9,
    "filled": [
+    0.69,
+    0.41,
+    0.28,
+    0.96,
+    0.64,
     0.73,
-    0.74,
-    0.78,
-    0.98,
-    0.86,
-    0.71,
     1,
     1,
     1
@@ -608,9 +613,9 @@
      "h": 1024
     },
     "page": {
-     "height": 7534,
+     "height": 7615,
      "screens": 7.4,
-     "words": 111,
+     "words": 129,
      "img": 17,
      "video": 0,
      "canvas": 0,
@@ -640,12 +645,12 @@
      "videosNoPoster": 0
     },
     "hero": {
-     "text": "Yu en",
-     "words": 2,
-     "chars": 5,
-     "lines": 1,
-     "size": 337.6,
-     "vw": 44,
+     "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
+     "words": 6,
+     "chars": 31,
+     "lines": 2,
+     "size": 243.7,
+     "vw": 31.7,
      "font": "Bodoni Moda Variable",
      "weight": 500,
      "tracking": -0.045,
@@ -656,25 +661,25 @@
      "align": "center",
      "position": "center",
      "widthRatio": 0.96,
-     "top": 642,
-     "tag": "div",
+     "top": 530,
+     "tag": "h1",
      "kind": "heading"
     },
     "h1": {
-     "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
+     "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
      "words": 6,
      "lines": 2,
-     "size": 278.8,
+     "size": 243.7,
      "font": "Bodoni Moda Variable"
     },
     "headings": [
      {
-      "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
+      "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
       "words": 6,
-      "chars": 26,
+      "chars": 31,
       "lines": 2,
-      "size": 278.8,
-      "vw": 36.3,
+      "size": 243.7,
+      "vw": 31.7,
       "font": "Bodoni Moda Variable",
       "weight": 500,
       "tracking": -0.045,
@@ -685,33 +690,12 @@
       "align": "center",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 516,
+      "top": 530,
       "tag": "h1",
       "kind": "heading"
      },
      {
-      "text": "Yu en",
-      "words": 2,
-      "chars": 5,
-      "lines": 1,
-      "size": 337.6,
-      "vw": 44,
-      "font": "Bodoni Moda Variable",
-      "weight": 500,
-      "tracking": -0.045,
-      "leading": 0.8,
-      "upper": false,
-      "italic": false,
-      "mono": false,
-      "align": "center",
-      "position": "center",
-      "widthRatio": 0.96,
-      "top": 642,
-      "tag": "div",
-      "kind": "heading"
-     },
-     {
-      "text": "每天 手上的油",
+      "text": "认识 主要精油",
       "words": 2,
       "chars": 7,
       "lines": 2,
@@ -732,9 +716,9 @@
       "kind": "heading"
      },
      {
-      "text": "四款招牌配方",
+      "text": "为不同需要调配",
       "words": 1,
-      "chars": 6,
+      "chars": 7,
       "lines": 1,
       "size": 34.7,
       "vw": 4.5,
@@ -748,12 +732,12 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 2876,
+      "top": 2956,
       "tag": "h2",
       "kind": "heading"
      },
      {
-      "text": "从一句话 到一瓶油",
+      "text": "从了解你 到一瓶油",
       "words": 2,
       "chars": 9,
       "lines": 2,
@@ -769,14 +753,14 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.42,
-      "top": 5025,
+      "top": 5105,
       "tag": "h2",
       "kind": "heading"
      },
      {
-      "text": "告诉我感受 我来调",
+      "text": "说说你的状况 为你调配",
       "words": 2,
-      "chars": 9,
+      "chars": 11,
       "lines": 2,
       "size": 76.8,
       "vw": 10,
@@ -790,8 +774,29 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 5850,
+      "top": 5930,
       "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Gra ce",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 292.1,
+      "vw": 38,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.045,
+      "leading": 0.8,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 7269,
+      "tag": "div",
       "kind": "heading"
      }
     ],
@@ -828,8 +833,8 @@
       42,
       57,
       77,
-      279,
-      338
+      244,
+      292
      ],
      "sizeCount": 11,
      "notLoaded": [],
@@ -843,10 +848,10 @@
      },
      "measureChars": 82,
      "max": {
-      "size": 337.6,
-      "vw": 44,
+      "size": 292.1,
+      "vw": 38,
       "font": "Bodoni Moda Variable",
-      "text": "Yu"
+      "text": "Gra"
      },
      "monoShare": 0,
      "monoProseShare": 0,
@@ -881,7 +886,7 @@
       },
       {
        "color": "#ecf0f2",
-       "top": 2939,
+       "top": 3020,
        "hsl": {
         "h": 200,
         "s": 0.19,
@@ -890,7 +895,7 @@
       },
       {
        "color": "#1f3038",
-       "top": 5773,
+       "top": 5854,
        "hsl": {
         "h": 199,
         "s": 0.29,
@@ -901,23 +906,23 @@
      "textColors": [
       {
        "color": "#1f3038",
-       "share": 0.39
-      },
-      {
-       "color": "#b7c3c9",
-       "share": 0.26
+       "share": 0.42
       },
       {
        "color": "#5d6b72",
-       "share": 0.25
+       "share": 0.24
+      },
+      {
+       "color": "#b7c3c9",
+       "share": 0.24
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.06
       },
       {
        "color": "#f7f9fa",
        "share": 0.05
-      },
-      {
-       "color": "#ffffff",
-       "share": 0.04
       }
      ],
      "button": {
@@ -941,8 +946,8 @@
      "mono": 0,
      "upper": 0,
      "heroLabels": [
-      "按感受配油",
-      "按感受配油"
+      "请 Grace 调配",
+      "请 Grace 为我调配"
      ]
     },
     "surfaces": {
@@ -968,7 +973,7 @@
     },
     "heroMedia": [],
     "nav": {
-     "links": 4,
+     "links": 5,
      "fixed": true,
      "height": 100,
      "floatingPill": false,
@@ -984,7 +989,7 @@
      "w": 768,
      "h": 1024
     },
-    "pageH": 7534,
+    "pageH": 7615,
     "margins": {
      "left": 16,
      "right": 16
@@ -994,19 +999,19 @@
       "sel": "main",
       "tag": "main",
       "top": 100,
-      "height": 6410,
-      "words": 72,
-      "media": 15,
+      "height": 6491,
+      "words": 86,
+      "media": 14,
       "middle": 0,
       "heading": {
-       "text": "Yu",
-       "size": 279,
+       "text": "Gra",
+       "size": 244,
        "tag": "h1"
       },
       "left": 16,
-      "right": 16,
+      "right": 15,
       "textLeft": 16,
-      "textRight": 16,
+      "textRight": 15,
       "fullBleed": false,
       "footer": false,
       "hero": true,
@@ -1016,33 +1021,29 @@
      {
       "sel": "footer.fx",
       "tag": "footer",
-      "top": 0,
+      "top": 6591,
       "height": 1024,
-      "words": 27,
+      "words": 29,
       "media": 0,
       "middle": 0,
-      "heading": {
-       "text": "Yu",
-       "size": 338,
-       "tag": "span"
-      },
+      "heading": null,
       "left": 16,
       "right": 16,
       "textLeft": 16,
       "textRight": 16,
       "fullBleed": false,
       "footer": true,
-      "hero": true,
+      "hero": false,
       "continues": false,
-      "pinned": true
+      "pinned": false
      }
     ],
     "gaps": [],
     "h1s": [
      {
-      "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
-      "size": 279,
-      "top": 516,
+      "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
+      "size": 244,
+      "top": 530,
       "firstScreen": true
      }
     ],
@@ -1054,7 +1055,7 @@
      }
     ],
     "leftBlocks": 5,
-    "bodySize": 16,
+    "bodySize": 18,
     "stage": false,
     "explains": false,
     "slivers": [],
@@ -1068,16 +1069,15 @@
    "width": 390,
    "height": 844,
    "load": "load",
-   "screens": 8,
+   "screens": 7,
    "filled": [
-    0.87,
-    0.72,
-    0.72,
+    0.6,
+    0.58,
     0.89,
-    0.81,
-    0.92,
-    0.97,
-    0.96
+    0.69,
+    0.82,
+    0.96,
+    0.97
    ],
    "motion": {
     "elements": 19,
@@ -1093,9 +1093,9 @@
      "h": 844
     },
     "page": {
-     "height": 6112,
-     "screens": 7.2,
-     "words": 111,
+     "height": 5416,
+     "screens": 6.4,
+     "words": 128,
      "img": 17,
      "video": 0,
      "canvas": 0,
@@ -1116,12 +1116,12 @@
      "videosNoPoster": 0
     },
     "hero": {
-     "text": "Yu en",
-     "words": 2,
-     "chars": 5,
-     "lines": 1,
-     "size": 164.2,
-     "vw": 42.1,
+     "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
+     "words": 6,
+     "chars": 31,
+     "lines": 2,
+     "size": 118.5,
+     "vw": 30.4,
      "font": "Bodoni Moda Variable",
      "weight": 500,
      "tracking": -0.045,
@@ -1132,22 +1132,22 @@
      "align": "center",
      "position": "center",
      "widthRatio": 0.92,
-     "top": 553,
-     "tag": "div",
+     "top": 172,
+     "tag": "h1",
      "kind": "heading"
     },
     "h1": {
-     "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
+     "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
      "words": 6,
      "lines": 2,
-     "size": 135.6,
+     "size": 118.5,
      "font": "Bodoni Moda Variable"
     },
     "headings": [
      {
-      "text": "源",
+      "text": "Grace",
       "words": 1,
-      "chars": 1,
+      "chars": 5,
       "lines": 1,
       "size": 24,
       "vw": 6.2,
@@ -1160,18 +1160,18 @@
       "mono": false,
       "align": "left",
       "position": "left",
-      "widthRatio": 0.06,
+      "widthRatio": 0.16,
       "top": 68,
-      "tag": "b",
+      "tag": "a",
       "kind": "heading"
      },
      {
-      "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
+      "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
       "words": 6,
-      "chars": 26,
+      "chars": 31,
       "lines": 2,
-      "size": 135.6,
-      "vw": 34.8,
+      "size": 118.5,
+      "vw": 30.4,
       "font": "Bodoni Moda Variable",
       "weight": 500,
       "tracking": -0.045,
@@ -1187,7 +1187,7 @@
       "kind": "heading"
      },
      {
-      "text": "每天 手上的油",
+      "text": "认识 主要精油",
       "words": 2,
       "chars": 7,
       "lines": 2,
@@ -1203,35 +1203,14 @@
       "align": "center",
       "position": "center",
       "widthRatio": 0.58,
-      "top": 549,
+      "top": 564,
       "tag": "h2",
       "kind": "heading"
      },
      {
-      "text": "Yu en",
-      "words": 2,
-      "chars": 5,
-      "lines": 1,
-      "size": 164.2,
-      "vw": 42.1,
-      "font": "Bodoni Moda Variable",
-      "weight": 500,
-      "tracking": -0.045,
-      "leading": 0.8,
-      "upper": false,
-      "italic": false,
-      "mono": false,
-      "align": "center",
-      "position": "center",
-      "widthRatio": 0.92,
-      "top": 553,
-      "tag": "div",
-      "kind": "heading"
-     },
-     {
-      "text": "四款招牌配方",
+      "text": "为不同需要调配",
       "words": 1,
-      "chars": 6,
+      "chars": 7,
       "lines": 1,
       "size": 32,
       "vw": 8.2,
@@ -1245,7 +1224,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.92,
-      "top": 2506,
+      "top": 1786,
       "tag": "h2",
       "kind": "heading"
      },
@@ -1266,7 +1245,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.46,
-      "top": 2582,
+      "top": 1863,
       "tag": "a",
       "kind": "heading"
      },
@@ -1287,7 +1266,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.37,
-      "top": 2990,
+      "top": 2271,
       "tag": "a",
       "kind": "heading"
      },
@@ -1308,7 +1287,7 @@
       "align": "left",
       "position": "right",
       "widthRatio": 0.37,
-      "top": 2990,
+      "top": 2271,
       "tag": "a",
       "kind": "heading"
      },
@@ -1329,12 +1308,12 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.37,
-      "top": 3399,
+      "top": 2679,
       "tag": "a",
       "kind": "heading"
      },
      {
-      "text": "从一句话 到一瓶油",
+      "text": "从了解你 到一瓶油",
       "words": 2,
       "chars": 9,
       "lines": 2,
@@ -1350,14 +1329,14 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.78,
-      "top": 3851,
+      "top": 3132,
       "tag": "h2",
       "kind": "heading"
      },
      {
-      "text": "告诉我感受 我来调",
+      "text": "说说你的状况 为你调配",
       "words": 2,
-      "chars": 9,
+      "chars": 11,
       "lines": 2,
       "size": 58.5,
       "vw": 15,
@@ -1371,8 +1350,29 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.92,
-      "top": 4665,
+      "top": 3969,
       "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Gra ce",
+      "words": 2,
+      "chars": 6,
+      "lines": 1,
+      "size": 142.1,
+      "vw": 36.4,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.045,
+      "leading": 0.8,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5143,
+      "tag": "div",
       "kind": "heading"
      }
     ],
@@ -1408,8 +1408,8 @@
       32,
       40,
       59,
-      136,
-      164
+      119,
+      142
      ],
      "sizeCount": 10,
      "notLoaded": [],
@@ -1423,10 +1423,10 @@
      },
      "measureChars": 45,
      "max": {
-      "size": 164.2,
-      "vw": 42.1,
+      "size": 142.1,
+      "vw": 36.4,
       "font": "Bodoni Moda Variable",
-      "text": "Yu"
+      "text": "Gra"
      },
      "monoShare": 0,
      "monoProseShare": 0,
@@ -1461,7 +1461,7 @@
       },
       {
        "color": "#ecf0f2",
-       "top": 2566,
+       "top": 1847,
        "hsl": {
         "h": 200,
         "s": 0.19,
@@ -1470,7 +1470,7 @@
       },
       {
        "color": "#1f3038",
-       "top": 4593,
+       "top": 3897,
        "hsl": {
         "h": 199,
         "s": 0.29,
@@ -1481,23 +1481,23 @@
      "textColors": [
       {
        "color": "#1f3038",
-       "share": 0.39
+       "share": 0.42
       },
       {
        "color": "#b7c3c9",
-       "share": 0.26
+       "share": 0.24
       },
       {
        "color": "#5d6b72",
-       "share": 0.25
+       "share": 0.23
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.06
       },
       {
        "color": "#f7f9fa",
        "share": 0.05
-      },
-      {
-       "color": "#ffffff",
-       "share": 0.04
       }
      ],
      "button": {
@@ -1521,8 +1521,8 @@
      "mono": 0,
      "upper": 0,
      "heroLabels": [
-      "按感受配油",
-      "按感受配油"
+      "请 Grace 调配",
+      "请 Grace 为我调配"
      ]
     },
     "surfaces": {
@@ -1548,7 +1548,7 @@
     },
     "heroMedia": [],
     "nav": {
-     "links": 4,
+     "links": 5,
      "fixed": true,
      "height": 152,
      "floatingPill": false,
@@ -1564,7 +1564,7 @@
      "w": 390,
      "h": 844
     },
-    "pageH": 6112,
+    "pageH": 5416,
     "margins": {
      "left": 16,
      "right": 16
@@ -1575,13 +1575,17 @@
       "tag": "header",
       "top": 0,
       "height": 152,
-      "words": 7,
+      "words": 10,
       "media": 0,
       "middle": 0,
-      "heading": null,
+      "heading": {
+       "text": "Grace",
+       "size": 24,
+       "tag": "b"
+      },
       "left": 16,
       "right": 16,
-      "textLeft": 17,
+      "textLeft": 16,
       "textRight": 16,
       "fullBleed": false,
       "footer": false,
@@ -1593,19 +1597,19 @@
       "sel": "main",
       "tag": "main",
       "top": 152,
-      "height": 5116,
-      "words": 70,
-      "media": 5,
+      "height": 4420,
+      "words": 84,
+      "media": 1,
       "middle": 0,
       "heading": {
-       "text": "每天",
+       "text": "认识",
        "size": 59,
        "tag": "h2"
       },
       "left": 16,
       "right": 16,
       "textLeft": 16,
-      "textRight": 16,
+      "textRight": 27,
       "fullBleed": false,
       "footer": false,
       "hero": true,
@@ -1615,14 +1619,14 @@
      {
       "sel": "footer.fx",
       "tag": "footer",
-      "top": 0,
+      "top": 4572,
       "height": 844,
-      "words": 27,
+      "words": 29,
       "media": 0,
       "middle": 0,
       "heading": {
-       "text": "Yu",
-       "size": 164,
+       "text": "Gra",
+       "size": 142,
        "tag": "span"
       },
       "left": 16,
@@ -1631,16 +1635,16 @@
       "textRight": 16,
       "fullBleed": false,
       "footer": true,
-      "hero": true,
+      "hero": false,
       "continues": false,
-      "pinned": true
+      "pinned": false
      }
     ],
     "gaps": [],
     "h1s": [
      {
-      "text": "Yu en 源 精油配方馆 · 温哥华芳疗师手调精油",
-      "size": 136,
+      "text": "Gra ce Grace 芳疗工作室 · 温哥华芳疗师手调精油",
+      "size": 119,
       "top": 172,
       "firstScreen": true
      }
@@ -1653,7 +1657,7 @@
      }
     ],
     "leftBlocks": 5,
-    "bodySize": 16,
+    "bodySize": 17,
     "stage": false,
     "explains": false,
     "slivers": [],
@@ -1669,7 +1673,7 @@
    "level": "WARN",
    "id": "size-count",
    "width": 1440,
-   "message": "11 different font sizes (16, 19, 24, 26, 32, 44, 65, 107, 144, 524, 634).",
+   "message": "11 different font sizes (16, 19, 24, 26, 32, 44, 65, 107, 144, 458, 548).",
    "fix": "A page needs about five: display, heading, lead, body, small.",
    "alsoAt": [
     768,

@@ -34,7 +34,7 @@ export function loadCatalog() {
 export function resetCatalog() { catalogPromise = null; }
 
 /* ---------------- 演示数据库 ---------------- */
-const LS = "yuen.demo.v1";
+const LS = "grace.demo.v2";
 let demo = null;
 let demoUser = null; // {role, member_id}
 const listeners = new Set();
@@ -56,15 +56,17 @@ function treeIds(rootId) {
 }
 function demoVisible(table, row) {
   if (["products", "recipes", "levels", "site_meta"].includes(table)) return true;
-  if (!demoUser) return table === "blend_requests" ? false : false;
+  if (!demoUser) return false;
   if (demoUser.role === "admin") return true;
+  if (demoUser.role === "therapist") return ["staff", "members", "blends", "needs", "bookings", "service_records", "service_notes"].includes(table);
   const me = demoUser.member_id; const tree = treeIds(me);
   const shares = (id) => id === me || (tree.has(id) && demo.members.find((m) => m.id === id)?.share_health_with_upline);
   switch (table) {
     case "members": return tree.has(row.id);
     case "member_status": case "orders": return tree.has(row.member_id);
     case "blends": case "needs": return shares(row.member_id);
-    case "blend_requests": return row.member_id === me;
+    case "blend_requests": case "bookings": return row.member_id === me;
+    case "service_records": return row.status === "final" && shares(row.member_id);
     default: return false;
   }
 }
@@ -92,20 +94,23 @@ export const db = {
   async insert(table, row) {
     if (DEMO) {
       await demoDb();
-      if (table === "blend_requests" || (table === "needs" && demoUser?.role !== "admin")) { /* 允许 */ }
+      const staff = ["admin", "therapist"].includes(demoUser?.role);
+      if (table === "blend_requests" || table === "bookings" || (table === "needs" && demoUser)) { /* 允许 */ }
+      else if (staff && ["service_records", "service_notes", "members", "blends"].includes(table)) { /* 芳疗师可写 */ }
       else if (demoUser?.role !== "admin") throw new Error("not allowed");
       const r = { id: uid(), created_at: new Date().toISOString(), ...row };
       (demo[table] = demo[table] || []).push(r); persist(); return r;
     }
     // 客人提交配油申请时没有读取权限，所以不回读
-    if (table === "blend_requests") { const { error } = await sb.from(table).insert(row); if (error) throw error; return row; }
+    if (table === "blend_requests" || (table === "bookings" && !row.therapist_id)) { const { error } = await sb.from(table).insert(row); if (error) throw error; return row; }
     const { data, error } = await sb.from(table).insert(row).select();
     if (error) throw error;
     return data && data[0];
   },
   async update(table, id, patch, idCol = "id") {
     if (DEMO) {
-      await demoDb(); if (demoUser?.role !== "admin") throw new Error("not allowed");
+      await demoDb();
+      if (demoUser?.role !== "admin" && !(demoUser?.role === "therapist" && ["bookings", "service_records"].includes(table))) throw new Error("not allowed");
       const r = (demo[table] || []).find((x) => x[idCol] === id);
       if (r) Object.assign(r, patch); else (demo[table] = demo[table] || []).push({ [idCol]: id, ...patch });
       persist(); return r;
@@ -152,7 +157,7 @@ export const db = {
 /* ---------------- 登入 ---------------- */
 export const auth = {
   async session() {
-    if (DEMO) { await demoDb(); return demoUser ? { user: { id: "demo", email: demoUser.role === "admin" ? "admin@demo" : "venus@demo" } } : null; }
+    if (DEMO) { await demoDb(); return demoUser ? { user: { id: "demo", email: demoUser.role + "@demo" } } : null; }
     const { data } = await sb.auth.getSession(); return data.session;
   },
   onChange(cb) {
@@ -175,7 +180,9 @@ export const auth = {
   },
   async demoSignIn(role) {
     await demoDb();
-    demoUser = role === "admin" ? { role: "admin", member_id: null } : { role: "member", member_id: demo.demo_member_id };
+    demoUser = role === "admin" ? { role: "admin", member_id: null, staff_id: demo.staff?.[0]?.id }
+      : role === "therapist" ? { role: "therapist", member_id: null, staff_id: demo.demo_staff_id }
+      : { role: "member", member_id: demo.demo_member_id };
     try { sessionStorage.setItem(LS + ".user", JSON.stringify(demoUser)); } catch {}
     const s = await auth.session(); listeners.forEach((f) => f(s));
   },
@@ -188,7 +195,12 @@ export const auth = {
       try { await sb.rpc("link_my_member"); } catch {}
       ({ data } = await sb.from("profiles").select("role,member_id").eq("id", s.session.user.id).maybeSingle());
     }
-    return data || { role: "member", member_id: null };
+    const prof = data || { role: "member", member_id: null };
+    if (prof.role === "admin" || prof.role === "therapist") {
+      const { data: st } = await sb.from("staff").select("id,name").eq("user_id", s.session.user.id).maybeSingle();
+      prof.staff_id = st?.id || null; prof.staff_name = st?.name || "";
+    }
+    return prof;
   },
 };
 

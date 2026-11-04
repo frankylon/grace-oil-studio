@@ -4,6 +4,7 @@ import { useLang } from "../i18n";
 import { useAuth, useCatalog, useToast } from "../ctx";
 import { db } from "../api";
 import { DropList, Loading } from "../components";
+import { MyBookings, ServiceHistory } from "./Service";
 import { buildTree, countTree, daysSince, dilutionPct, ladder, money, ownedSet } from "../util";
 
 export function useMemberData(memberId) {
@@ -34,6 +35,7 @@ export function MyAccount() {
   if (loading) return <Loading />;
   if (!session) return <Navigate to="/login" replace />;
   if (profile?.role === "admin" && !profile.member_id) return <Navigate to="/admin" replace />;
+  if (profile?.role === "therapist" && !profile.member_id) return <Navigate to="/staff" replace />;
   if (!profile?.member_id) return <div className="panel pad" style={{ maxWidth: 560, margin: "24px auto" }}><p style={{ margin: 0 }}>{t("not_linked")}</p></div>;
   return <MemberView memberId={profile.member_id} self />;
 }
@@ -46,7 +48,7 @@ export function DownlineView() {
   return <MemberView memberId={id} key={id} />;
 }
 
-const TABS = ["overview", "my_blends", "my_orders", "my_needs", "my_team", "my_requests"];
+const TABS = ["overview", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests"];
 
 export function MemberView({ memberId, self, admin }) {
   const { t, cv, pick } = useLang();
@@ -62,7 +64,7 @@ export function MemberView({ memberId, self, admin }) {
   const teamN = countTree(tree);
   const isMine = m.id === profile?.member_id;
   const healthVisible = admin || isMine || m.share_health_with_upline;
-  const tabs = TABS.filter((x) => (x !== "my_requests" || isMine) && (x !== "my_team" || teamN > 0 || self));
+  const tabs = TABS.filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self));
   return (
     <>
       {!self && !admin && <div className="crumbs"><Link to="/me">{t("nav_member")}</Link><span>/</span><span>{cv(m.name)}</span></div>}
@@ -74,6 +76,8 @@ export function MemberView({ memberId, self, admin }) {
       <div className="tabs" role="tablist">{tabs.map((x) => <button key={x} role="tab" aria-current={tab === x} onClick={() => setTab(x)}>{t(x)}</button>)}</div>
       {tab === "overview" && <Overview d={d} m={m} s={s} teamN={teamN} />}
       {tab === "my_blends" && (healthVisible ? <Blends d={d} /> : <div className="empty">{t("health_hidden")}</div>)}
+      {tab === "my_services" && (healthVisible ? <ServiceHistory memberId={m.id} staffView={admin} /> : <div className="empty">{t("health_hidden")}</div>)}
+      {tab === "my_bookings" && <MyBookings memberId={m.id} />}
       {tab === "my_orders" && <Orders orders={d.orders} />}
       {tab === "my_needs" && (healthVisible ? <Needs d={d} m={m} canPost={isMine} reload={reload} /> : <div className="empty">{t("health_hidden")}</div>)}
       {tab === "my_team" && <Team tree={tree} st={d.st} levels={d.levels} admin={admin} />}

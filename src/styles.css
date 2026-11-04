@@ -253,3 +253,53 @@ td.num,th.num{text-align:right}
 .modal,.modal-card,dialog{border-radius:var(--r-lg);overflow:hidden}
 img.ph-img,.photo img,.strip img{border-radius:var(--r)}
 @media (max-width:420px){.brand span{display:none}}
+
+/* service: booking, workspace, client file, session record */
+.svc-narrow{max-width:720px;margin:24px auto 80px}
+.svc-form{display:flex;flex-direction:column;gap:20px}
+.svc-form h3{font-size:var(--step-lead)}
+.seg2{display:flex;gap:8px;flex-wrap:wrap}
+.seg2 button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 18px;border-radius:var(--r-pill);font-size:1rem;transition:background-color .2s,color .2s,border-color .2s} /* taste-skill-ignore: app control outline */
+.seg2 button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg2 button:hover{border-color:var(--ink)}
+.svc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.svc-head .page-title{margin-bottom:4px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.svc-two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:clamp(20px,3vw,48px);align-items:start;margin-top:24px}
+@media (max-width:900px){.svc-two{grid-template-columns:1fr}}
+.svc-h2{font-size:var(--step-lead);margin-bottom:14px}
+.svc-list{display:flex;flex-direction:column;gap:10px}
+.svc-bk{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr) auto;gap:6px 16px;align-items:center;padding:16px 20px;background:var(--surface);border-radius:var(--r);text-decoration:none;color:inherit}
+.svc-bk .acts{justify-content:flex-end}
+.svc-bk.link-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+.svc-bk.link-row:hover{background:var(--paper-3)}
+@media (max-width:900px){.svc-bk,.svc-bk.link-row{grid-template-columns:1fr}.svc-bk .acts{justify-content:flex-start}}
+.svc-rec{background:var(--surface);border-radius:var(--r);overflow:hidden}
+.svc-rec.draft{background:#fff;outline:1px dashed var(--line)} /* taste-skill-ignore: draft marker */
+.svc-rec-h{width:100%;display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:16px;align-items:baseline;text-align:left;background:none;border:0;padding:16px 20px;color:inherit}
+.svc-rec-h .d{font-variant-numeric:tabular-nums;color:var(--muted)}
+.svc-rec-h .t{font-weight:500}
+.svc-rec-h .m{color:var(--muted);font-size:var(--step-small)}
+@media (max-width:700px){.svc-rec-h{grid-template-columns:1fr;gap:2px}}
+.svc-rec-b{padding:0 20px 20px}
+.svc-rec-b dl{margin:0;display:flex;flex-direction:column;gap:12px}
+.svc-rec-b dt{font-size:var(--step-small);color:var(--muted)}
+.svc-rec-b dd{margin:2px 0 0;white-space:pre-wrap}
+.svc-report{white-space:pre-wrap;line-height:1.65;max-width:68ch}
+.svc-side{background:var(--surface);border-radius:var(--r);padding:18px 20px;margin-bottom:12px}
+.svc-side h3{font-size:1rem;font-family:var(--f);font-weight:500;margin-bottom:8px}
+.svc-side p{margin:4px 0}
+.svc-prev{background:var(--surface);border-radius:var(--r);padding:16px 20px;margin-top:16px;display:flex;flex-direction:column;gap:4px;border-left:4px solid var(--accent)} /* taste-skill-ignore: last-visit marker */
+.svc-oil{display:grid;grid-template-columns:minmax(0,1fr) 90px minmax(0,1.2fr) auto;gap:8px;align-items:center}
+@media (max-width:600px){.svc-oil{grid-template-columns:1fr 80px}}
+.svc-pick{display:flex;flex-wrap:wrap;gap:6px}
+.svc-pick button{border:0;background:var(--surface);border-radius:var(--r-pill);padding:6px 14px}
+.svc-pick button:hover{background:var(--paper-3)}
+.svc-rep-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.svc-notes{position:sticky;top:88px;display:flex;flex-direction:column;gap:12px;background:var(--surface);border-radius:var(--r-lg);padding:20px}
+@media (max-width:900px){.svc-notes{position:static;order:-1}}
+.svc-note{background:#fff;border-radius:var(--r-sm);padding:10px 14px}
+.svc-note p{margin:4px 0 0;white-space:pre-wrap}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:700px){.grid3{grid-template-columns:1fr}}
+textarea{border-radius:var(--r-sm)}

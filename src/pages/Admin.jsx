@@ -6,13 +6,14 @@ import { useAuth, useCatalog, useToast } from "../ctx";
 import { db, resetCatalog } from "../api";
 import { Loading, Modal, useProductName } from "../components";
 import { Orders, MemberView, Team } from "./Member";
+import { BookingsAdmin, ServiceHistory, StaffAdmin } from "./Service";
 import { buildTree, money, today } from "../util";
 
 export default function Admin() {
   const { t } = useLang();
   const { isAdmin, loading, session } = useAuth();
   const [sp, setSp] = useSearchParams();
-  const tab = sp.get("tab") || (sp.get("m") ? "a_members" : "a_requests");
+  const tab = sp.get("tab") || (sp.get("m") ? "a_members" : "a_bookings");
   if (loading) return <Loading />;
   if (!session) return <Navigate to="/login" replace />;
   if (!isAdmin) return <div className="empty">{t("forbidden")}</div>;
@@ -20,7 +21,9 @@ export default function Admin() {
   return (
     <>
       <h1 style={{ fontSize: 30 }}>{t("nav_admin")}</h1>
-      <div className="tabs">{["a_requests", "a_members", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
+      <div className="tabs">{["a_bookings", "a_requests", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
+      {tab === "a_bookings" && <BookingsAdmin />}
+      {tab === "a_staff" && <StaffAdmin />}
       {tab === "a_requests" && <RequestsAdmin />}
       {tab === "a_members" && <MembersAdmin />}
       {tab === "a_import" && <ImportAdmin />}
@@ -131,8 +134,8 @@ function MemberForm({ m, members, onClose, onSaved }) {
 }
 
 function MemberAdminDetail({ m, members, onEdit }) {
-  const { t, cv } = useLang();
-  const [sub, setSub] = useState("status");
+  const { t, cv, pick } = useLang();
+  const [sub, setSub] = useState("services");
   const [k, setK] = useState(0);
   const sponsor = members.find((x) => x.id === m.sponsor_id);
   return (
@@ -149,7 +152,8 @@ function MemberAdminDetail({ m, members, onEdit }) {
         </div>
         <button className="btn sm" onClick={onEdit}>{t("edit")}</button>
       </div>
-      <div className="tabs">{["status", "orders", "blends", "needs", "team", "preview"].map((x) => <button key={x} aria-current={sub === x} onClick={() => setSub(x)}>{t({ status: "status_edit", orders: "my_orders", blends: "my_blends", needs: "my_needs", team: "my_team", preview: "nav_member" }[x])}</button>)}</div>
+      <div className="tabs">{["services", "status", "orders", "blends", "needs", "team", "preview"].map((x) => <button key={x} aria-current={sub === x} onClick={() => setSub(x)}>{t({ services: "my_services", status: "status_edit", orders: "my_orders", blends: "my_blends", needs: "my_needs", team: "my_team", preview: "nav_member" }[x])}</button>)}</div>
+      {sub === "services" && <><p><Link className="btn primary sm" to={`/staff/c/${m.id}`}>{pick("打开服务档案 / 写新记录", "Open client file / new record")}</Link></p><ServiceHistory memberId={m.id} staffView /></>}
       {sub === "status" && <StatusEditor m={m} />}
       {sub === "orders" && <OrdersAdmin m={m} />}
       {sub === "blends" && <BlendsAdmin m={m} />}
