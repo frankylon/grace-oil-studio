@@ -3,3 +3,5 @@ dist
 dist-preview
 .env
 .env.local
+dist-demo
+.taste-skill

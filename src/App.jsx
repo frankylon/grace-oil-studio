@@ -5,7 +5,7 @@ import { AuthProvider, CatalogProvider, ToastProvider, useAuth } from "./ctx";
 import { DEMO, auth } from "./api";
 import { OilDetail, Oils, RecipeDetail, Recipes, Search } from "./pages/Public";
 import Home from "./pages/Home";
-import { generalPhotos, allPhotos } from "./img";
+import { asset } from "./img";
 import Login from "./pages/Login";
 import { DownlineView, MyAccount } from "./pages/Member";
 import Admin from "./pages/Admin";
@@ -37,20 +37,20 @@ function Header() {
   );
 }
 function Footer() {
-  const { t } = useLang();
-  const stamp = generalPhotos()[0] || allPhotos()[1];
+  const { t, lang } = useLang();
   return (
-    <footer className="card-back">
-      <div className="postcard">
-        <div className="so"><h2>{t("foot_h")}</h2><p>{t("foot_p")}</p></div>
-        <div className="addr">
-          {stamp && <span className="stamp"><img src={stamp} alt="" loading="lazy" /></span>}
-          <Link className="link" to="/oils">{t("nav_oils")}</Link>
-          <Link className="link" to="/recipes">{t("all_recipes")}</Link>
-          <Link className="link" to="/login">{t("login")}</Link>
-          <Link className="link" to="/">{t("find_blend")}</Link>
-        </div>
-        <div className="imprint"><span>{t("independent")}</span><span>{t("disclaimer")}</span></div>
+    <footer className="fx">
+      <div className="ph"><img src={asset("/img/photo/hope-touch-3.webp")} alt="" loading="lazy" /></div>
+      <div className="menu">
+        <span className="wm">{lang === "en" ? "Yuen Oil Studio" : t("brand_sub")}</span>
+        <nav aria-label="footer">
+          <Link to="/">{t("find_blend")}</Link>
+          <Link to="/recipes">{t("all_recipes")}</Link>
+          <Link to="/oils">{t("nav_oils")}</Link>
+          <Link to="/login">{t("login")}</Link>
+        </nav>
+        <div className="info"><span>{t("foot_p")}</span><span>{t("independent")}</span></div>
+        <p className="legal">{t("disclaimer")}</p>
       </div>
     </footer>
   );
