@@ -1,0 +1,445 @@
+{
+ "_general": [],
+ "arborvitae-essential-oil": {
+  "product": "/img/p/arborvitae-essential-oil.webp",
+  "photos": [],
+  "zip": "arborvitae.zip"
+ },
+ "basil-oil": {
+  "product": "/img/p/basil-oil.webp",
+  "photos": [
+   "/img/photo/basil-oil-1.webp"
+  ],
+  "zip": "basil.zip"
+ },
+ "intune-oil-blend": {
+  "product": "/img/p/intune-oil-blend.webp",
+  "photos": [],
+  "zip": "intune.zip"
+ },
+ "bergamot-essential-oil": {
+  "product": "/img/p/bergamot-essential-oil.webp",
+  "photos": [
+   "/img/photo/bergamot-essential-oil-1.webp",
+   "/img/photo/bergamot-essential-oil-2.webp",
+   "/img/photo/bergamot-essential-oil-3.webp"
+  ],
+  "zip": "bergamot.zip"
+ },
+ "black-pepper-oil": {
+  "product": "/img/p/black-pepper-oil.webp",
+  "photos": [
+   "/img/photo/black-pepper-oil-1.webp"
+  ],
+  "zip": "black pepper.zip"
+ },
+ "black-spruce-essential-oil": {
+  "product": "/img/p/black-spruce-essential-oil.webp",
+  "photos": [
+   "/img/photo/black-spruce-essential-oil-1.webp",
+   "/img/photo/black-spruce-essential-oil-2.webp",
+   "/img/photo/black-spruce-essential-oil-3.webp"
+  ],
+  "zip": "Black spruce.zip"
+ },
+ "blue-lotus-touch": {
+  "product": "/img/p/blue-lotus-touch.webp",
+  "photos": [
+   "/img/photo/blue-lotus-touch-1.webp",
+   "/img/photo/blue-lotus-touch-2.webp",
+   "/img/photo/blue-lotus-touch-3.webp"
+  ],
+  "zip": "blue lotus.zip"
+ },
+ "blue-tansy-oil": {
+  "product": "/img/p/blue-tansy-oil.webp",
+  "photos": [
+   "/img/photo/blue-tansy-oil-1.webp"
+  ],
+  "zip": "blue tansy.zip"
+ },
+ "cardamom-oil": {
+  "product": "/img/p/cardamom-oil.webp",
+  "photos": [
+   "/img/photo/cardamom-oil-1.webp"
+  ],
+  "zip": "cardamom.zip"
+ },
+ "cassia-oil": {
+  "product": "/img/p/cassia-oil.webp",
+  "photos": [
+   "/img/photo/cassia-oil-1.webp"
+  ],
+  "zip": "cassia.zip"
+ },
+ "cedarwood-oil": {
+  "product": "/img/p/cedarwood-oil.webp",
+  "photos": [
+   "/img/photo/cedarwood-oil-1.webp"
+  ],
+  "zip": "cedarwood.zip"
+ },
+ "cilantro-oil": {
+  "product": "/img/p/cilantro-oil.webp",
+  "photos": [
+   "/img/photo/cilantro-oil-1.webp"
+  ],
+  "zip": "cilantro.zip"
+ },
+ "cinnamon-bark-oil": {
+  "product": "/img/p/cinnamon-bark-oil.webp",
+  "photos": [
+   "/img/photo/cinnamon-bark-oil-1.webp"
+  ],
+  "zip": "cinnamon.bark.zip"
+ },
+ "citronella-oil": {
+  "product": "/img/p/citronella-oil.webp",
+  "photos": [
+   "/img/photo/citronella-oil-1.webp",
+   "/img/photo/citronella-oil-2.webp"
+  ],
+  "zip": "citronella.zip"
+ },
+ "clarycalm-essential-oil": {
+  "product": null,
+  "photos": [
+   "/img/photo/clarycalm-essential-oil-1.webp",
+   "/img/photo/clarycalm-essential-oil-2.webp"
+  ],
+  "zip": "clary calm.zip"
+ },
+ "clary-sage-oil": {
+  "product": "/img/p/clary-sage-oil.webp",
+  "photos": [
+   "/img/photo/clary-sage-oil-1.webp"
+  ],
+  "zip": "clary sage.zip"
+ },
+ "console": {
+  "product": "/img/p/console.webp",
+  "photos": [],
+  "zip": "console.zip"
+ },
+ "copaiba-essential-oil": {
+  "product": "/img/p/copaiba-essential-oil.webp",
+  "photos": [],
+  "zip": "copaiba.zip"
+ },
+ "touch-copaiba": {
+  "product": "/img/p/touch-copaiba.webp",
+  "photos": [],
+  "zip": "copaiba.zip"
+ },
+ "coriander-oil": {
+  "product": "/img/p/coriander-oil.webp",
+  "photos": [
+   "/img/photo/coriander-oil-1.webp"
+  ],
+  "zip": "coriander.zip"
+ },
+ "cypress-oil": {
+  "product": "/img/p/cypress-oil.webp",
+  "photos": [
+   "/img/photo/cypress-oil-1.webp"
+  ],
+  "zip": "cypress.zip"
+ },
+ "ddr-prime": {
+  "product": "/img/p/ddr-prime.webp",
+  "photos": [
+   "/img/photo/ddr-prime-1.webp",
+   "/img/photo/ddr-prime-2.webp"
+  ],
+  "zip": "ddr prime.zip"
+ },
+ "deep-blue": {
+  "product": "/img/p/deep-blue.webp",
+  "photos": [
+   "/img/photo/deep-blue-1.webp",
+   "/img/photo/deep-blue-2.webp"
+  ],
+  "zip": "deep blue.zip"
+ },
+ "douglas-fir-oil": {
+  "product": "/img/p/douglas-fir-oil.webp",
+  "photos": [
+   "/img/photo/douglas-fir-oil-1.webp"
+  ],
+  "zip": "Douglas Fir.zip"
+ },
+ "easy-air": {
+  "product": "/img/p/easy-air.webp",
+  "photos": [
+   "/img/photo/easy-air-1.webp"
+  ],
+  "zip": "easy air.zip"
+ },
+ "eucalyptus-oil": {
+  "product": "/img/p/eucalyptus-oil.webp",
+  "photos": [
+   "/img/photo/eucalyptus-oil-1.webp"
+  ],
+  "zip": "eucalyptus.zip"
+ },
+ "sweet-fennel-oil": {
+  "product": "/img/p/sweet-fennel-oil.webp",
+  "photos": [
+   "/img/photo/sweet-fennel-oil-1.webp",
+   "/img/photo/sweet-fennel-oil-2.webp"
+  ],
+  "zip": "fennel.zip"
+ },
+ "forgive": {
+  "product": "/img/p/forgive.webp",
+  "photos": [
+   "/img/photo/forgive-1.webp",
+   "/img/photo/forgive-2.webp"
+  ],
+  "zip": "forgive.zip"
+ },
+ "frankincense-essential-oil": {
+  "product": "/img/p/frankincense-essential-oil.webp",
+  "photos": [
+   "/img/photo/frankincense-essential-oil-1.webp",
+   "/img/photo/frankincense-essential-oil-2.webp"
+  ],
+  "zip": "frankincense.zip"
+ },
+ "geranium-oil": {
+  "product": "/img/p/geranium-oil.webp",
+  "photos": [
+   "/img/photo/geranium-oil-1.webp"
+  ],
+  "zip": "geranium.zip"
+ },
+ "ginger-essential-oil": {
+  "product": "/img/p/ginger-essential-oil.webp",
+  "photos": [
+   "/img/photo/ginger-essential-oil-1.webp",
+   "/img/photo/ginger-essential-oil-2.webp"
+  ],
+  "zip": "ginger.zip"
+ },
+ "grapefruit-oil": {
+  "product": "/img/p/grapefruit-oil.webp",
+  "photos": [
+   "/img/photo/grapefruit-oil-1.webp"
+  ],
+  "zip": "grapefruit.zip"
+ },
+ "green-mandarin-oil": {
+  "product": "/img/p/green-mandarin-oil.webp",
+  "photos": [
+   "/img/photo/green-mandarin-oil-1.webp",
+   "/img/photo/green-mandarin-oil-2.webp"
+  ],
+  "zip": "Green Mandarin.zip"
+ },
+ "guaiacwood-oil": {
+  "product": "/img/p/guaiacwood-oil.webp",
+  "photos": [
+   "/img/photo/guaiacwood-oil-1.webp",
+   "/img/photo/guaiacwood-oil-2.webp"
+  ],
+  "zip": "guaiacwood.zip"
+ },
+ "touch-helichrysum-oil": {
+  "product": "/img/p/touch-helichrysum-oil.webp",
+  "photos": [
+   "/img/photo/touch-helichrysum-oil-1.webp",
+   "/img/photo/touch-helichrysum-oil-2.webp"
+  ],
+  "zip": "helichrysum touch.zip"
+ },
+ "helichrysum-oil-nhp": {
+  "product": "/img/p/helichrysum-oil-nhp.webp",
+  "photos": [
+   "/img/photo/helichrysum-oil-nhp-1.webp",
+   "/img/photo/helichrysum-oil-nhp-2.webp"
+  ],
+  "zip": "helichrysum.zip"
+ },
+ "hope-touch": {
+  "product": "/img/p/hope-touch.webp",
+  "photos": [
+   "/img/photo/hope-touch-1.webp",
+   "/img/photo/hope-touch-2.webp",
+   "/img/photo/hope-touch-3.webp"
+  ],
+  "zip": "hope touch.zip"
+ },
+ "immortelle-oil": {
+  "product": "/img/p/immortelle-oil.webp",
+  "photos": [
+   "/img/photo/immortelle-oil-1.webp",
+   "/img/photo/immortelle-oil-2.webp"
+  ],
+  "zip": "Immortelle.zip"
+ },
+ "jasmine-touch": {
+  "product": "/img/p/jasmine-touch.webp",
+  "photos": [],
+  "zip": "jasmine touch.zip"
+ },
+ "jasmine-oil": {
+  "product": "/img/p/jasmine-oil.webp",
+  "photos": [
+   "/img/photo/jasmine-oil-1.webp"
+  ],
+  "zip": "jasmine.zip"
+ },
+ "juniper-berry-oil": {
+  "product": "/img/p/juniper-berry-oil.webp",
+  "photos": [
+   "/img/photo/juniper-berry-oil-1.webp"
+  ],
+  "zip": "Juniper Berry.zip"
+ },
+ "metapwr": {
+  "product": "/img/p/metapwr.webp",
+  "photos": [
+   "/img/photo/metapwr-1.webp"
+  ],
+  "zip": "meta pwr.zip"
+ },
+ "northern-escape-oil-blend": {
+  "product": "/img/p/northern-escape-oil-blend.webp",
+  "photos": [
+   "/img/photo/northern-escape-oil-blend-1.webp",
+   "/img/photo/northern-escape-oil-blend-2.webp"
+  ],
+  "zip": "Northern Escape.zip"
+ },
+ "on-guard-blend": {
+  "product": "/img/p/on-guard-blend.webp",
+  "photos": [],
+  "zip": "on guard.zip"
+ },
+ "passion-oil": {
+  "product": "/img/p/passion-oil.webp",
+  "photos": [
+   "/img/photo/passion-oil-1.webp"
+  ],
+  "zip": "passion.zip"
+ },
+ "pasttense": {
+  "product": "/img/p/pasttense.webp",
+  "photos": [
+   "/img/photo/pasttense-1.webp"
+  ],
+  "zip": "pasttense.zip"
+ },
+ "patchouli-oil-nhp": {
+  "product": "/img/p/patchouli-oil-nhp.webp",
+  "photos": [
+   "/img/photo/patchouli-oil-nhp-1.webp"
+  ],
+  "zip": "Patchouli.zip"
+ },
+ "peace": {
+  "product": "/img/p/peace.webp",
+  "photos": [
+   "/img/photo/peace-1.webp",
+   "/img/photo/peace-2.webp"
+  ],
+  "zip": "peace.zip"
+ },
+ "purify-oil-blend": {
+  "product": "/img/p/purify-oil-blend.webp",
+  "photos": [
+   "/img/photo/purify-oil-blend-1.webp",
+   "/img/photo/purify-oil-blend-2.webp"
+  ],
+  "zip": "purify.zip"
+ },
+ "rescuer": {
+  "product": "/img/p/rescuer.webp",
+  "photos": [],
+  "zip": "rescuer.zip"
+ },
+ "revitazen": {
+  "product": "/img/p/revitazen.webp",
+  "photos": [
+   "/img/photo/revitazen-1.webp"
+  ],
+  "zip": "RevitaZen.zip"
+ },
+ "roman-chamomile-oil-nhp": {
+  "product": "/img/p/roman-chamomile-oil-nhp.webp",
+  "photos": [
+   "/img/photo/roman-chamomile-oil-nhp-1.webp",
+   "/img/photo/roman-chamomile-oil-nhp-2.webp",
+   "/img/photo/roman-chamomile-oil-nhp-3.webp"
+  ],
+  "zip": "Roman Chamomile.zip"
+ },
+ "hawaiian-sandalwood-oil": {
+  "product": "/img/p/hawaiian-sandalwood-oil.webp",
+  "photos": [
+   "/img/photo/hawaiian-sandalwood-oil-1.webp"
+  ],
+  "zip": "Sandalwood (Hawaiian).zip"
+ },
+ "serenity-essential-oil-blend": {
+  "product": "/img/p/serenity-essential-oil-blend.webp",
+  "photos": [
+   "/img/photo/serenity-essential-oil-blend-1.webp",
+   "/img/photo/serenity-essential-oil-blend-2.webp"
+  ],
+  "zip": "serenity.zip"
+ },
+ "shinrin-yoku-blend": {
+  "product": "/img/p/shinrin-yoku-blend.webp",
+  "photos": [
+   "/img/photo/shinrin-yoku-blend-1.webp",
+   "/img/photo/shinrin-yoku-blend-2.webp"
+  ],
+  "zip": "Shinrin-Yoku.zip"
+ },
+ "steady": {
+  "product": "/img/p/steady.webp",
+  "photos": [],
+  "zip": "steady.zip"
+ },
+ "stronger-oil": {
+  "product": "/img/p/stronger-oil.webp",
+  "photos": [],
+  "zip": "stronger.zip"
+ },
+ "supermint-oil-blend": {
+  "product": "/img/p/supermint-oil-blend.webp",
+  "photos": [
+   "/img/photo/supermint-oil-blend-1.webp",
+   "/img/photo/supermint-oil-blend-2.webp"
+  ],
+  "zip": "SuperMint.zip"
+ },
+ "terrashield-essential-oil": {
+  "product": "/img/p/terrashield-essential-oil.webp",
+  "photos": [
+   "/img/photo/terrashield-essential-oil-1.webp"
+  ],
+  "zip": "terrashield.zip"
+ },
+ "thinker-oil": {
+  "product": "/img/p/thinker-oil.webp",
+  "photos": [
+   "/img/photo/thinker-oil-1.webp",
+   "/img/photo/thinker-oil-2.webp"
+  ],
+  "zip": "thinker.zip"
+ },
+ "whisper-touch": {
+  "product": "/img/p/whisper-touch.webp",
+  "photos": [],
+  "zip": "Whisper Touch.zip"
+ },
+ "zengest": {
+  "product": "/img/p/zengest.webp",
+  "photos": [
+   "/img/photo/zengest-1.webp"
+  ],
+  "zip": "zengest.zip"
+ }
+}

@@ -1,0 +1,164 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useLang } from "./i18n";
+import { useAuth, useCatalog, useToast } from "./ctx";
+import { db } from "./api";
+import { dilutionPct, owns, totalDrops } from "./util";
+import { productImg } from "./img";
+
+export function Modal({ title, onClose, children, footer }) {
+  useEffect(() => {
+    const k = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, [onClose]);
+  return (
+    <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="mh"><h3>{title}</h3><button className="x" onClick={onClose} aria-label="close">×</button></div>
+        <div className="mb">{children}</div>
+        {footer && <div className="mf">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* 产品图：有官方图就用，载入失败或没有就画一个瓶子 */
+export function Bottle({ kind = "single" }) {
+  return (
+    <svg className="bottle-ph" viewBox="0 0 60 110" aria-hidden="true">
+      <rect x="19" y="2" width="22" height="22" fill="#0f0f0f" />
+      <path d="M13 30 Q13 24 21 24 H39 Q47 24 47 30 V102 Q47 108 41 108 H19 Q13 108 13 102 Z" fill={kind === "touch" ? "#2a2a2a" : "#6b4a2a"} />
+      <rect x="16" y="52" width="28" height="36" fill="#e8e8e5" />
+    </svg>
+  );
+}
+export function ProductImage({ p, big }) {
+  const [bad, setBad] = useState(false);
+  const hue = (p?.id || "").split("").reduce((s, c) => s + c.charCodeAt(0), 0) % 50 + 15;
+  const src = productImg(p);
+  if (!src || bad) return <Bottle kind={p?.kind} />;
+  return <img src={src} alt={p.name_en || ""} loading={big ? "eager" : "lazy"} referrerPolicy="no-referrer" onError={() => setBad(true)} />;
+}
+
+export function useProductName() {
+  const { pick, cv, lang } = useLang();
+  const cat = useCatalog();
+  return (item) => {
+    if (typeof item === "string") item = { oil: item };
+    const p = item.product && cat.byId?.[item.product];
+    if (lang === "en") return String((p && p.name_en) || item.oil_en || cat.oils?.[item.oil] || item.oil).replace(/\s*\(NHP\)/, "").replace(/[®™]/g, "").replace(/\s+(Essential Oil Blend|Oil Blend|Essential Oil|Oil)$/i, "");
+    return cv(item.oil || (p && p.name_zh) || "");
+  };
+}
+
+export function ProductCard({ p }) {
+  const { pick, t } = useLang();
+  return (
+    <Link to={`/oils/${p.id}`} className="pcard">
+      <div className="img"><ProductImage p={p} /></div>
+      <div className="body">
+        <span className="zh">{pick(p.name_zh, p.name_en)}</span>
+        <span className="en">{pick(p.name_en, p.latin) }</span>
+        <div className="meta"><span>{p.size}{p.nhp ? " · NPN" : ""}</span><span>{p.wholesale}</span></div>
+      </div>
+    </Link>
+  );
+}
+
+export function DropList({ items, owned, link = true }) {
+  const name = useProductName();
+  const { t } = useLang();
+  const max = Math.max(1, ...(items || []).map((i) => Number(i.drops) || 0));
+  return (
+    <div className="droplist">
+      {(items || []).map((i, k) => {
+        const o = owned ? owns(owned, i, null) : null;
+        const nm = name(i);
+        return (
+          <div className="drow" key={k}>
+            <div className="n">
+              {owned && <i className={`dot ${o ? "yes" : "no"}`} title={o ? t("own_status") : t("need_buy")} />}
+              {link && i.product ? <Link to={`/oils/${i.product}`} onClick={(e) => e.stopPropagation()}>{nm}</Link> : <span>{nm}{!i.product && link && <span className="muted small"> · {t("not_in_catalog")}</span>}</span>}
+            </div>
+            <div className="bar"><i style={{ width: i.drops ? `${Math.round((i.drops / max) * 100)}%` : 0 }} /></div>
+            <div className="c">{i.drops ?? "–"}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function Flags({ flags }) {
+  const { t } = useLang();
+  if (!flags?.length) return null;
+  return <div className="chips">{flags.map((f) => <span key={f} className={`pill ${f === "pregnancy_avoid" || f === "hot_oil" ? "rose" : "honey"}`}>{t("flag_" + f)}</span>)}</div>;
+}
+
+export function RecipeCard({ r }) {
+  const { pick, t } = useLang();
+  const cat = useCatalog();
+  let p = null;
+  for (const i of r.items || []) { const x = i.product && cat.byId?.[i.product]; if (x && productImg(x)) { p = x; break; } }
+  const src = p && productImg(p);
+  const n = totalDrops(r.items);
+  const name = useProductName();
+  const oils = (r.items || []).slice(0, 4).map(name).join(" · ");
+  return (
+    <Link to={`/recipes/${r.id}`} className="rcard">
+      <span className="ph">{src && <img src={src} alt="" loading="lazy" />}</span>
+      <span>
+        <span className="t"><span>{pick(r.title_zh, r.title_en)}</span><span>{n ? `${n} ${t("drops")}` : r.choose ? `${r.choose.drops} ${t("drops")}` : ""}</span></span>
+        <span className="d" style={{ display: "block" }}>{oils}</span>
+      </span>
+    </Link>
+  );
+}
+
+/* 一键配油 */
+export function BlendRequest({ recipe, onClose }) {
+  const { t, pick, lang } = useLang();
+  const { member, profile, session } = useAuth();
+  const toast = useToast();
+  const [bottle, setBottle] = useState("b_roll10");
+  const [name, setName] = useState(member?.name || "");
+  const [contact, setContact] = useState(member?.phone || member?.email || session?.user?.email || "");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const submit = async () => {
+    if (!name.trim() || !contact.trim()) return;
+    setBusy(true);
+    try {
+      await db.insert("blend_requests", {
+        member_id: profile?.member_id || null, name: name.trim(), contact: contact.trim(), recipe_id: recipe.id,
+        recipe_title: recipe.title_zh, items: recipe.items, bottle: t(bottle) + ` (${bottle})`, notes: notes.trim(), status: "new",
+      });
+      setDone(true);
+    } catch (e) { toast(t("send_fail")); }
+    setBusy(false);
+  };
+  const ml = bottle === "b_roll10" ? 10 : bottle === "b_30" ? 30 : null;
+  const pct = ml ? dilutionPct(recipe.items, ml) : null;
+  return (
+    <Modal title={t("one_click") + " · " + pick(recipe.title_zh, recipe.title_en)} onClose={onClose}
+      footer={done ? <button className="btn primary" onClick={onClose}>OK</button> : <>
+        <button className="btn" onClick={onClose}>{t("cancel")}</button>
+        <button className="btn honey" disabled={busy || !name.trim() || !contact.trim()} onClick={submit}>{t("submit")}</button></>}>
+      {done ? <p style={{ margin: 0, fontSize: 17 }}>{t("sent")}</p> : <>
+        <p className="muted" style={{ margin: 0 }}>{t("one_click_sub")}</p>
+        <div className="field"><span className="lab">{t("bottle")}</span>
+          <div className="chips">{["b_roll10", "b_30", "b_spray", "b_cream", "b_drops"].map((b) => <button type="button" key={b} className="chip" aria-pressed={bottle === b} onClick={() => setBottle(b)}>{t(b)}</button>)}</div>
+          {pct != null && <span className="small muted">{t("dilution")} {pct}%</span>}
+        </div>
+        <div className="grid2">
+          <div className="field"><label htmlFor="br_n">{t("your_name")}</label><input id="br_n" type="text" value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="field"><label htmlFor="br_c">{t("contact")}</label><input id="br_c" type="text" value={contact} onChange={(e) => setContact(e.target.value)} /></div>
+        </div>
+        <div className="field"><label htmlFor="br_x">{t("notes")}</label><textarea id="br_x" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+      </>}
+    </Modal>
+  );
+}
+
+export function Loading() { const { t } = useLang(); return <div className="empty">{t("loading")}</div>; }

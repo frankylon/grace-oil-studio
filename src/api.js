@@ -1,0 +1,194 @@
+// 数据层：有 Supabase 环境变量时连真数据库，否则进入「演示模式」（资料存在浏览器里）
+import { createClient } from "@supabase/supabase-js";
+
+const URL = import.meta.env.VITE_SUPABASE_URL;
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const DEMO = !(URL && KEY);
+
+let sb = null;
+if (!DEMO) sb = createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+/* ---------------- 目录 ---------------- */
+let catalogPromise = null;
+export function loadCatalog() {
+  if (catalogPromise) return catalogPromise;
+  catalogPromise = (async () => {
+    // 产品与配方随网站打包；数据库只存后台改过或隐藏的配方
+    const base = (await import("./data/catalog.json")).default;
+    let rows = [], prows = [];
+    try { rows = await db.select("recipes"); } catch {}
+    try { prows = await db.select("products"); } catch {}
+    const ov = new Map(rows.map((r) => [r.id, r]));
+    const recipes = [];
+    for (const r of base.recipes) { const o = ov.get(r.id); if (o) { if (!o.hidden) recipes.push({ ...o.data, id: r.id }); ov.delete(r.id); } else recipes.push(r); }
+    for (const o of ov.values()) if (!o.hidden) recipes.push({ ...o.data, id: o.id });
+    recipes.sort((x, y) => (x.sort ?? 0) - (y.sort ?? 0));
+    const pov = new Map(prows.map((r) => [r.id, r]));
+    const products = base.products.filter((p) => !pov.get(p.id)?.hidden).map((p) => (pov.get(p.id) ? { ...p, ...pov.get(p.id).data, id: p.id } : p));
+    return { ...base, recipes, products };
+  })();
+  catalogPromise.catch(() => { catalogPromise = null; });
+  return catalogPromise;
+}
+export function resetCatalog() { catalogPromise = null; }
+
+/* ---------------- 演示数据库 ---------------- */
+const LS = "yuen.demo.v1";
+let demo = null;
+let demoUser = null; // {role, member_id}
+const listeners = new Set();
+async function demoDb() {
+  if (demo) return demo;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LS) || "null"); } catch {}
+  if (saved) demo = saved;
+  else { const m = await import("./data/demo.json"); demo = JSON.parse(JSON.stringify(m.default)); }
+  try { demoUser = JSON.parse(sessionStorage.getItem(LS + ".user") || "null"); } catch {}
+  return demo;
+}
+function persist() { try { localStorage.setItem(LS, JSON.stringify(demo)); } catch {} }
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id" + Math.random().toString(36).slice(2));
+function treeIds(rootId) {
+  const ids = new Set([rootId]); let grew = true;
+  while (grew) { grew = false; for (const m of demo.members) if (m.sponsor_id && ids.has(m.sponsor_id) && !ids.has(m.id)) { ids.add(m.id); grew = true; } }
+  return ids;
+}
+function demoVisible(table, row) {
+  if (["products", "recipes", "levels", "site_meta"].includes(table)) return true;
+  if (!demoUser) return table === "blend_requests" ? false : false;
+  if (demoUser.role === "admin") return true;
+  const me = demoUser.member_id; const tree = treeIds(me);
+  const shares = (id) => id === me || (tree.has(id) && demo.members.find((m) => m.id === id)?.share_health_with_upline);
+  switch (table) {
+    case "members": return tree.has(row.id);
+    case "member_status": case "orders": return tree.has(row.member_id);
+    case "blends": case "needs": return shares(row.member_id);
+    case "blend_requests": return row.member_id === me;
+    default: return false;
+  }
+}
+
+/* ---------------- 通用读写 ---------------- */
+export const db = {
+  async select(table, opt = {}) {
+    if (DEMO) {
+      await demoDb();
+      let rows = (demo[table] || []).filter((r) => demoVisible(table, r));
+      for (const [k, v] of Object.entries(opt.eq || {})) rows = rows.filter((r) => r[k] === v);
+      for (const [k, v] of Object.entries(opt.in || {})) rows = rows.filter((r) => v.includes(r[k]));
+      if (opt.order) { const [c, asc] = opt.order; rows = [...rows].sort((a, b) => String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * (asc ? 1 : -1)); }
+      return JSON.parse(JSON.stringify(rows));
+    }
+    let q = sb.from(table).select(opt.select || "*");
+    for (const [k, v] of Object.entries(opt.eq || {})) q = q.eq(k, v);
+    for (const [k, v] of Object.entries(opt.in || {})) q = q.in(k, v);
+    if (opt.order) q = q.order(opt.order[0], { ascending: !!opt.order[1] });
+    if (opt.limit) q = q.limit(opt.limit);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data;
+  },
+  async insert(table, row) {
+    if (DEMO) {
+      await demoDb();
+      if (table === "blend_requests" || (table === "needs" && demoUser?.role !== "admin")) { /* 允许 */ }
+      else if (demoUser?.role !== "admin") throw new Error("not allowed");
+      const r = { id: uid(), created_at: new Date().toISOString(), ...row };
+      (demo[table] = demo[table] || []).push(r); persist(); return r;
+    }
+    // 客人提交配油申请时没有读取权限，所以不回读
+    if (table === "blend_requests") { const { error } = await sb.from(table).insert(row); if (error) throw error; return row; }
+    const { data, error } = await sb.from(table).insert(row).select();
+    if (error) throw error;
+    return data && data[0];
+  },
+  async update(table, id, patch, idCol = "id") {
+    if (DEMO) {
+      await demoDb(); if (demoUser?.role !== "admin") throw new Error("not allowed");
+      const r = (demo[table] || []).find((x) => x[idCol] === id);
+      if (r) Object.assign(r, patch); else (demo[table] = demo[table] || []).push({ [idCol]: id, ...patch });
+      persist(); return r;
+    }
+    const { error } = await sb.from(table).update(patch).eq(idCol, id);
+    if (error) throw error;
+  },
+  async upsert(table, rows, onConflict = "id") {
+    if (DEMO) {
+      await demoDb(); if (demoUser?.role !== "admin") throw new Error("not allowed");
+      const arr = Array.isArray(rows) ? rows : [rows];
+      for (const row of arr) {
+        const r = (demo[table] = demo[table] || []).find((x) => x[onConflict] === row[onConflict]);
+        if (r) Object.assign(r, row); else demo[table].push({ id: row.id || uid(), ...row });
+      }
+      persist(); return;
+    }
+    const { error } = await sb.from(table).upsert(rows, { onConflict });
+    if (error) throw error;
+  },
+  async remove(table, id, idCol = "id") {
+    if (DEMO) {
+      await demoDb(); if (demoUser?.role !== "admin") throw new Error("not allowed");
+      demo[table] = (demo[table] || []).filter((x) => x[idCol] !== id); persist(); return;
+    }
+    const { error } = await sb.from(table).delete().eq(idCol, id);
+    if (error) throw error;
+  },
+  async rpc(name, args) {
+    if (DEMO) {
+      await demoDb();
+      if (name === "set_share_health" && demoUser?.member_id) {
+        const m = demo.members.find((x) => x.id === demoUser.member_id); if (m) m.share_health_with_upline = args.v; persist();
+      }
+      if (name === "link_my_member") return demoUser?.member_id || null;
+      return null;
+    }
+    const { data, error } = await sb.rpc(name, args);
+    if (error) throw error;
+    return data;
+  },
+};
+
+/* ---------------- 登入 ---------------- */
+export const auth = {
+  async session() {
+    if (DEMO) { await demoDb(); return demoUser ? { user: { id: "demo", email: demoUser.role === "admin" ? "admin@demo" : "venus@demo" } } : null; }
+    const { data } = await sb.auth.getSession(); return data.session;
+  },
+  onChange(cb) {
+    if (DEMO) { listeners.add(cb); return () => listeners.delete(cb); }
+    const { data } = sb.auth.onAuthStateChange((_e, s) => cb(s));
+    return () => data.subscription.unsubscribe();
+  },
+  async sendOtp({ email, phone }) {
+    if (DEMO) throw new Error("demo");
+    const { error } = await sb.auth.signInWithOtp(email ? { email, options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + "/me" } } : { phone });
+    if (error) throw error;
+  },
+  async verifyOtp({ email, phone, token }) {
+    const { error } = await sb.auth.verifyOtp(email ? { email, token, type: "email" } : { phone, token, type: "sms" });
+    if (error) throw error;
+  },
+  async signOut() {
+    if (DEMO) { demoUser = null; try { sessionStorage.removeItem(LS + ".user"); } catch {} listeners.forEach((f) => f(null)); return; }
+    await sb.auth.signOut();
+  },
+  async demoSignIn(role) {
+    await demoDb();
+    demoUser = role === "admin" ? { role: "admin", member_id: null } : { role: "member", member_id: demo.demo_member_id };
+    try { sessionStorage.setItem(LS + ".user", JSON.stringify(demoUser)); } catch {}
+    const s = await auth.session(); listeners.forEach((f) => f(s));
+  },
+  async profile() {
+    if (DEMO) { await demoDb(); return demoUser; }
+    const { data: s } = await sb.auth.getSession();
+    if (!s.session) return null;
+    let { data } = await sb.from("profiles").select("role,member_id").eq("id", s.session.user.id).maybeSingle();
+    if (!data || !data.member_id) {
+      try { await sb.rpc("link_my_member"); } catch {}
+      ({ data } = await sb.from("profiles").select("role,member_id").eq("id", s.session.user.id).maybeSingle());
+    }
+    return data || { role: "member", member_id: null };
+  },
+};
+
+export function resetDemo() { try { localStorage.removeItem(LS); } catch {} demo = null; }
