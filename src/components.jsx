@@ -47,7 +47,7 @@ export function useProductName() {
     if (typeof item === "string") item = { oil: item };
     const p = item.product && cat.byId?.[item.product];
     if (lang === "en") return String((p && p.name_en) || item.oil_en || cat.oils?.[item.oil] || item.oil).replace(/\s*\(NHP\)/, "").replace(/[®™]/g, "").replace(/\s+(Essential Oil Blend|Oil Blend|Essential Oil|Oil)$/i, "");
-    return cv(item.oil || (p && p.name_zh) || "");
+    return cv(String(item.oil || (p && p.name_zh) || "").replace(/\s*\(天然健康产品\)/, ""));
   };
 }
 

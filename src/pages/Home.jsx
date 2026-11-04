@@ -1,163 +1,168 @@
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useLang } from "../i18n";
 import { useCatalog } from "../ctx";
-import { Bottle, Loading, useProductName } from "../components";
-import AnimatedContent from "../rb/AnimatedContent";
-import { asset, hasLocal, productImg } from "../img";
-import { totalDrops } from "../util";
+import { Loading, useProductName } from "../components";
+import { asset } from "../img";
 import "../home.css";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-// 首页文案 [简体, English]
+/* Direction: "The name as a monument" (taste-skill seed 655606138).
+   On this page, the studio's name — 源, "the source" — opens in the middle to let one bottle stand through it. */
+
 const C = {
-  l1: ["说出感受", "Tell us"], l2: ["调好这一瓶", "we mix it"],
-  say: ["doTERRA 精油配方馆。150 款精油，188 条按滴写好的配方，选一种感受，我们帮你调好这一瓶。", "A doTERRA oil studio: 150 oils and 188 blends written out in drops. Pick how you feel and we'll mix the bottle for you."],
+  say: ["温哥华芳疗师手调的 doTERRA 精油。说出你的感受，我按滴为你调好这一瓶。", "Hand-mixed doTERRA blends by a Vancouver aromatherapist. Tell me how you feel and I'll mix the bottle, drop by drop."],
   go: ["按感受配油", "Find my blend"],
-  ih1: ["每一条配方", "Every blend"], ih2: ["都按滴写清楚", "counted in drops"],
-  ip: ["几滴乳香、几滴薰衣草，配多少基底油，涂在哪里，一天几次，都写在配方上。", "How many drops of each oil, how much carrier, where to apply it and how often: it's all on the card."],
-  inote: ["这些是按摩师每天手上在用的配方。", "These are the blends our therapists use every day."],
-  sh: ["今天哪里不舒服", "How do you feel today"], all: ["看全部配方", "All blends"],
-  mix: ["配这瓶", "Mix this one"], see: ["看配方", "See the blend"], drops: ["滴", "drops"],
-  lh1: ["按身体部位", "Blends sorted"], lh2: ["排好的常用配方", "by where you feel it"], lword: ["配方", "Blends"], lmore: ["打开全部 188 条配方", "Open all 188 blends"],
-  gh: ["每款精油都有一页", "Every oil has a page"], gp: ["香气、萃取部位、主要成分、官方用法和注意事项，还有用到它的配方。", "Aroma, plant part, constituents, official directions and cautions, plus the blends that use it."], gl: ["打开精油百科", "Open the oil library"],
-  ah1: ["你的配油和购买", "Your blends and orders"], ah2: ["都记在会员页", "kept on your page"],
-  a1h: ["每次配了什么", "What we mixed"], a1: ["配方、滴数、基底油和用法都存在你的会员页，用完了可以照着再配一瓶。", "Formula, drops, carrier and directions stay on your page, so the next bottle can be the same."],
-  a2h: ["只有你自己看得到", "Yours to see"], a2: ["要不要让推荐你的人看到你的配油和近况，由你自己决定。", "Whether the person who referred you can see your blends and notes is up to you."],
-  login: ["会员登入", "Member sign in"],
-  cs: ["告诉我们你哪里不舒服，我们按配方帮你调好，再通知你来取。", "Tell us how you feel, we'll mix the blend and let you know when it's ready."],
+  where: ["温哥华 · 芳疗工作室", "Vancouver · aromatherapy studio"],
+  oils: ["精油百科", "Oil library"], recipes: ["全部配方", "All blends"],
+  ph1: ["每天", "Oils I"], ph2: ["手上的油", "reach for"],
+  sh: ["四款招牌配方", "Four signature blends"],
+  scap: ["每瓶都按滴数写好，点开就能看用法，按一下就帮你配。", "Every bottle is written out in drops: open one for directions, or tap to have it mixed."],
+  mix: ["帮我配这瓶", "Mix this for me"], drops: ["滴", "drops"],
+  hh1: ["从一句话", "From one line"], hh2: ["到一瓶油", "to one bottle"],
+  hp: ["不用懂精油。告诉我哪里不舒服，剩下的交给我。", "You don't need to know oils. Tell me what's bothering you and leave the rest to me."],
+  ch1: ["告诉我感受", "Tell me how"], ch2: ["我来调", "you feel"],
+  cs: ["配好会通知你来取，配方和滴数都存在你的会员页。", "I'll let you know when it's ready, and the formula stays on your member page."],
 };
-const FEELINGS = [
-  { tag: "肩颈", zh: "肩颈紧", en: "Tight shoulders" }, { tag: "睡眠", zh: "睡不好", en: "Restless nights" },
-  { tag: "情绪", zh: "压力大", en: "Under pressure" }, { tag: "呼吸", zh: "呼吸不顺", en: "Stuffy breathing" },
-  { tag: "消化", zh: "肠胃不适", en: "Unsettled tummy" }, { tag: "肌肤", zh: "肌肤干燥", en: "Dry skin" },
-];
-const P = (f) => asset(`/img/photo/${f}.webp`);
-const GAL = [
-  ["coriander-oil-1", "6%", "14%"], ["jasmine-oil-1", "24%", "4%"], ["roman-chamomile-oil-nhp-2", "70%", "8%"], ["blue-tansy-oil-1", "86%", "26%"],
-  ["zengest-1", "10%", "64%"], ["purify-oil-blend-1", "30%", "78%"], ["peace-2", "66%", "72%"], ["forgive-2", "84%", "60%"],
+
+const OILS = [
+  { id: "frankincense-essential-oil", zh: "几乎每瓶护肤和舒缓配方的底子，香气沉稳，和什么都合得来。", en: "The base of nearly every skin and calming blend I make: steady, and it gets along with everything." },
+  { id: "roman-chamomile-oil-nhp", zh: "睡前和情绪配方用得最多，一两滴就让整瓶变得柔和。", en: "My go-to for evening and mood blends; a drop or two softens the whole bottle." },
+  { id: "ginger-essential-oil", zh: "肩颈、腰腹按摩的暖意来自它，和丝柏一起用效果最稳。", en: "The warmth in shoulder and belly massage blends, steadiest alongside cypress." },
+  { id: "bergamot-essential-oil", zh: "压力大的日子，我会在配方里加它，让香气明亮起来。", en: "On heavy days I add it to lift the aroma and brighten the blend." },
 ];
 
-function Ph({ src, ratio, alt = "", eager, className = "" }) {
-  return <div className={`ph ${ratio} ${className}`}><img src={src} alt={alt} loading={eager ? "eager" : "lazy"} /></div>;
+const SIG = [
+  { id: "r005", grow: 5 }, { id: "r134", grow: 2 }, { id: "r051", grow: 3 }, { id: "r112", grow: 2 },
+];
+
+const STEPS = [
+  { h: ["今天", "Today"], rows: [[["选一种感受或一条配方", "Pick a feeling or a blend"], ["1 分钟", "1 min"]], [["按「帮我配」留下联系方式", "Tap “Mix this for me”, leave a contact"], ["1 分钟", "1 min"]]] },
+  { h: ["当天", "Same day"], rows: [[["按滴调好，确认基底油和浓度", "Mixed by the drop, carrier and strength checked"], ["当天", "same day"]], [["通知你来取", "You get a message to collect"], ["—", "—"]]] },
+  { h: ["之后", "After"], rows: [[["配方与滴数存进会员页", "Formula and drops saved to your page"], ["一直在", "kept"]], [["用完照着再配一瓶", "Run out, mix the same again"], ["随时", "any time"]]] },
+];
+
+const cut = (id) => asset(`/img/p/${id}.webp`);
+
+// Fit the wordmark to its box so it always spans margin to margin on one line
+function useFit(ref, deps) {
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el) return;
+    const fit = () => {
+      const box = el.parentElement.clientWidth; el.style.fontSize = "100px";
+      const w = el.offsetWidth; if (w) el.style.fontSize = `${(100 * box) / w}px`;
+    };
+    fit();
+    document.fonts?.ready.then(fit);
+    document.fonts?.addEventListener?.("loadingdone", fit);
+    window.addEventListener("load", fit);
+    const ro = new ResizeObserver(fit); ro.observe(el.parentElement);
+    return () => { ro.disconnect(); document.fonts?.removeEventListener?.("loadingdone", fit); window.removeEventListener("load", fit); };
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+export function Wordmark({ className = "", bottle, as: Tag = "div", label }) {
+  const ref = useRef(null);
+  useFit(ref, [bottle]);
+  return (
+    <div className={`wmk ${className}`}>
+      <Tag ref={ref} className="wmk-t" aria-label={label}>
+        <span className="wl" aria-hidden="true">Yu</span>
+        {bottle && <span className="wgap" aria-hidden="true"><img src={cut(bottle)} alt="" width="400" height="900" /></span>}
+        <span className="wl" aria-hidden="true">en</span>
+        {label && <span className="sr">{label}</span>}
+      </Tag>
+    </div>
+  );
 }
 
 export default function Home() {
   const { pick } = useLang();
   const cat = useCatalog();
+  const name = useProductName();
   const L = (k) => pick(C[k][0], C[k][1]);
   const root = useRef(null);
-  const data = useMemo(() => {
-    if (!cat.ready) return null;
-    const score = (r) => (r.items || []).filter((i) => i.product && hasLocal(i.product)).length;
-    const feel = FEELINGS.map((f) => {
-      const rs = cat.recipes.filter((r) => r.tags?.includes(f.tag) && r.items?.length >= 2).sort((a, b) => score(b) - score(a));
-      return rs[0] ? { ...f, r: rs[0] } : null;
-    }).filter(Boolean);
-    const rows = ["肌肉骨骼", "神经系统", "日常养护", "皮肤"].flatMap((c) => cat.recipes.filter((r) => r.cat === c).slice(0, 3));
-    return { feel, rows };
-  }, [cat]);
+  const sig = useMemo(() => (cat.ready ? SIG.map((s) => ({ ...s, r: cat.recipes.find((r) => r.id === s.id) })).filter((s) => s.r) : []), [cat]);
+  const scrollFeel = (e) => { e.preventDefault(); document.getElementById("feel")?.scrollIntoView({ behavior: "smooth" }); };
 
   useGSAP(() => {
-    if (!data || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    gsap.utils.toArray(".gx .p").forEach((el, i) => gsap.fromTo(el, { y: 30 + (i % 4) * 14 }, { y: -(30 + (i % 3) * 18), ease: "none", scrollTrigger: { trigger: ".gx", start: "top bottom", end: "bottom top", scrub: true } }));
-    gsap.utils.toArray(".lx .row").forEach((el, i) => gsap.from(el, { y: 18, opacity: 0, duration: 0.6, ease: "power3.out", delay: (i % 4) * 0.06, scrollTrigger: { trigger: el, start: "top 92%", once: true } }));
-    gsap.fromTo(".ix .big img", { scale: 1.08 }, { scale: 1, ease: "none", scrollTrigger: { trigger: ".ix", start: "top bottom", end: "bottom top", scrub: true } });
-  }, { scope: root, dependencies: [!!data] });
+    if (!cat.ready || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // signature move: the monument grows heavier as it leaves
+    gsap.fromTo(".hx .wmk-t", { scale: 1 }, { scale: 0.93, ease: "none", transformOrigin: "50% 100%", scrollTrigger: { trigger: ".hx", start: "top top", end: "bottom top", scrub: true } });
+    gsap.from(".hx .wgap img", { yPercent: 18, opacity: 0, duration: 1.1, ease: "power3.out", delay: 0.35 });
+    gsap.utils.toArray(".px .oil").forEach((el) => {
+      gsap.from(el.querySelector("img"), { y: 60, opacity: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 85%", once: true } });
+      gsap.from(el.querySelector(".cap"), { y: 16, opacity: 0, duration: 0.7, delay: 0.15, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+    });
+    gsap.from(".sx .pn", { y: 40, opacity: 0, duration: 0.8, ease: "power3.out", stagger: 0.08, scrollTrigger: { trigger: ".sx .band", start: "top 85%", once: true } });
+    gsap.from(".hw .slip .grp", { y: 18, opacity: 0, duration: 0.6, ease: "power3.out", stagger: 0.1, scrollTrigger: { trigger: ".hw .slip", start: "top 80%", once: true } });
+    gsap.from(".cx h2 > span", { yPercent: 60, opacity: 0, duration: 0.9, ease: "power3.out", stagger: 0.1, scrollTrigger: { trigger: ".cx", start: "top 70%", once: true } });
+  }, { scope: root, dependencies: [cat.ready] });
 
-  if (!data) return <Loading />;
+  if (!cat.ready) return <Loading />;
   return (
     <div ref={root} className="home">
-      {/* hero */}
-      <section className="hx g12">
-        <Ph className="land" ratio="r1610" src={P("basil-oil-1")} alt="Basil" eager />
-        <h1><span className="line-mask"><span>{L("l1")}</span></span><span className="line-mask l2"><span>{L("l2")}</span></span></h1>
-        <Ph className="tall" ratio="r45" src={P("clary-sage-oil-1")} alt="Clary Sage" eager />
-        <div className="say fade-late"><p className="soft">{L("say")}</p><a className="btn primary" href="#feel" onClick={(e) => { e.preventDefault(); document.getElementById("feel")?.scrollIntoView({ behavior: "smooth" }); }}>{L("go")}</a></div>
+      {/* hero: the name across the middle, one bottle standing through it */}
+      <section className="hx">
+        <div className="hc">
+          <p>{L("say")}</p>
+          <a className="btn primary" href="#feel" onClick={scrollFeel}>{L("go")}</a>
+        </div>
+        <Wordmark as="h1" bottle="frankincense-essential-oil" label={pick("源 精油配方馆 · 温哥华芳疗师手调精油", "Yuen Oil Studio · hand-mixed blends by a Vancouver aromatherapist")} />
+        <div className="bl">{L("where")}</div>
+        <nav className="br" aria-label={L("recipes")}><Link to="/oils">{L("oils")}</Link><Link to="/recipes">{L("recipes")}</Link></nav>
       </section>
 
-      {/* intro */}
-      <section className="ix g12">
-        <h2><span>{L("ih1")}</span><span>{L("ih2")}</span></h2>
-        <Ph className="big" ratio="r34" src={P("roman-chamomile-oil-nhp-3")} alt="Roman Chamomile" />
-        <AnimatedContent className="p" distance={24}><p>{L("ip")}</p></AnimatedContent>
-        <Ph className="small" ratio="r11" src={P("cardamom-oil-1")} alt="Cardamom" />
-        <p className="note soft">{L("inote")}</p>
+      {/* about: pinned title, bottles pass behind it */}
+      <section className="px" aria-labelledby="px-h">
+        <div className="pin"><h2 id="px-h"><span>{L("ph1")}</span><span>{L("ph2")}</span></h2></div>
+        <div className="flow">
+          {OILS.map((o, k) => { const p = cat.byId[o.id]; return (
+            <Link key={o.id} to={`/oils/${o.id}`} className={`oil ${k % 2 ? "r" : "l"}`}>
+              <img src={cut(o.id)} alt={p ? pick(p.name_zh, p.name_en) : ""} width="400" height="900" loading="lazy" />
+              <div className="cap"><b>{p ? name({ product: o.id }) : ""}</b><span className="soft">{p?.latin || (p && pick(p.name_en, p.name_zh))}</span><p>{pick(o.zh, o.en)}</p></div>
+            </Link>); })}
+        </div>
       </section>
 
-      <Showcase data={data} L={L} />
-
-      {/* list */}
-      <section className="lx g12">
-        <h2><span>{L("lh1")}</span><span>{L("lh2")}</span></h2>
-        <span className="word">{L("lword")}</span>
-        <div className="tbl">{data.rows.map((r) => { const c = cat.catById[r.cat]; const n = totalDrops(r.items); return (
-          <Link key={r.id} to={`/recipes/${r.id}`} className="row"><span>{pick(c?.zh, c?.en)}</span><span>{pick(r.title_zh, r.title_en)}</span><span>{n ? `${n} ${L("drops")} →` : "→"}</span></Link>); })}</div>
-        <Ph className="pic" ratio="r45" src={P("frankincense-essential-oil-2")} alt="Frankincense" />
-        <Link className="more link" to="/recipes">{L("lmore")}</Link>
+      {/* showcase: band of unequal panels */}
+      <section className="sx" id="feel" aria-labelledby="sx-h">
+        <h2 id="sx-h">{L("sh")}</h2>
+        <div className="band">
+          {sig.map(({ r, grow }, k) => { const items = r.items.filter((i) => i.product).slice(0, 3); const max = Math.max(...items.map((i) => +i.drops || 0)); return (
+            <div key={r.id} className={`pn ${k === 0 ? "first" : ""}`} style={{ "--g": grow }}>
+              <Link to={`/recipes/${r.id}`} className="ttl">{pick(r.title_zh, r.title_en)}</Link>
+              <div className="bots">{items.map((i) => <img key={i.product} src={cut(i.product)} alt={name(i)} width="400" height="900" loading="lazy" className={+i.drops === max ? "big" : ""} />)}</div>
+              <div className="meta">
+                <span className="soft">{items.map((i) => `${name(i)} ${i.drops}`).join(" · ")} {L("drops")}</span>
+                <Link className="btn primary sm" to={`/recipes/${r.id}?mix=1`}>{L("mix")}</Link>
+              </div>
+            </div>); })}
+        </div>
+        <p className="scap soft">{L("scap")} <Link className="link" to="/recipes">{L("recipes")} →</Link></p>
       </section>
 
-      {/* gallery */}
-      <section className="gx" aria-labelledby="gx-h">
-        <div className="field">{GAL.map(([f, x, y]) => <div key={f} className="p" style={{ left: `calc(${x} * 0.86)`, top: y }}><Ph ratio="r910" src={P(f)} alt="" /></div>)}</div>
-        <div className="c"><h2 id="gx-h">{L("gh")}</h2><p className="soft">{L("gp")}</p><Link className="link" to="/oils">{L("gl")}</Link></div>
+      {/* how it works: itinerary on a slip */}
+      <section className="hw" aria-labelledby="hw-h">
+        <div className="txt"><h2 id="hw-h"><span>{L("hh1")}</span><span>{L("hh2")}</span></h2><p className="soft">{L("hp")}</p></div>
+        <div className="slip">
+          {STEPS.map((g) => (
+            <div key={g.h[1]} className="grp"><b>{pick(g.h[0], g.h[1])}</b>
+              {g.rows.map(([a, b]) => <div key={a[1]} className="row"><span>{pick(a[0], a[1])}</span><i aria-hidden="true" /><span>{pick(b[0], b[1])}</span></div>)}
+            </div>))}
+          <div className="end"><span>{pick("手里一瓶为你调的油", "A bottle mixed for you")}</span><span>{pick("约 1 天", "about a day")}</span></div>
+        </div>
       </section>
 
-      {/* about */}
-      <section className="ax g12">
-        <h2><span style={{ display: "block" }}>{L("ah1")}</span><span style={{ display: "block" }}>{L("ah2")}</span></h2>
-        <Ph className="pic" ratio="r45" src={P("bergamot-essential-oil-3")} alt="Bergamot" />
-        <AnimatedContent className="blk b1" distance={24}><h3>{L("a1h")}</h3><p className="soft">{L("a1")}</p></AnimatedContent>
-        <AnimatedContent className="blk b2" distance={24} delay={0.1}><h3>{L("a2h")}</h3><p className="soft">{L("a2")}</p><Link className="link" to="/login">{L("login")}</Link></AnimatedContent>
-      </section>
-
-      {/* cta */}
-      <section className="cx g12">
-        <p className="s">{L("cs")}</p>
-        <div className="a"><a className="btn primary" href="#feel" onClick={(e) => { e.preventDefault(); document.getElementById("feel")?.scrollIntoView({ behavior: "smooth" }); }}>{L("go")}</a><Link className="link" to="/recipes">{L("all")}</Link></div>
+      {/* cta: the idea again, inverted */}
+      <section className="cx" aria-labelledby="cx-h">
+        <h2 id="cx-h"><span>{L("ch1")}</span><span>{L("ch2")}</span></h2>
+        <div className="base"><p>{L("cs")}</p><a className="btn accent big" href="#feel" onClick={scrollFeel}>{L("go")}</a></div>
       </section>
     </div>
-  );
-}
-
-function Showcase({ data, L }) {
-  const { pick } = useLang();
-  const cat = useCatalog();
-  const name = useProductName();
-  const [i, setI] = useState(0);
-  const f = data.feel[i];
-  if (!f) return null;
-  const items = (f.r.items || []).slice(0, 6);
-  const maxD = Math.max(...items.map((x) => Number(x.drops) || 0));
-  const liftIdx = Math.max(0, items.findIndex((x) => (Number(x.drops) || 0) === maxD));
-  const ordered = [items[liftIdx], ...items.filter((_, k) => k !== liftIdx)];
-  return (
-    <section className="sx g12" id="feel">
-      <div className="side">
-        <h2>{L("sh")}</h2>
-        <div className="feel" role="group" aria-label={L("sh")}>
-          {data.feel.map((x, k) => <button key={x.tag} aria-pressed={k === i} onClick={() => setI(k)}>{pick(x.zh, x.en)}</button>)}
-        </div>
-        <div>
-          <h3 style={{ fontSize: "var(--step-lead)", fontWeight: 500 }}>{pick(f.r.title_zh, f.r.title_en)}</h3>
-          <p className="use soft">{pick(f.r.usage_zh, f.r.usage_en)}</p>
-        </div>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-          <Link className="btn primary" to={`/recipes/${f.r.id}?mix=1`}>{L("mix")}</Link>
-          <Link className="link" to={`/recipes/${f.r.id}`}>{L("see")}</Link>
-        </div>
-      </div>
-      <div className="run" key={f.tag}>
-        {ordered.map((it, k) => { const p = it.product && cat.byId[it.product]; const src = p && productImg(p); return (
-          <AnimatedContent key={k} className={`fr ${k === 0 ? "lift" : ""}`} distance={20} duration={0.6} delay={k * 0.06} trigger="mount">
-            <div className="pic">{src ? <img src={src} alt={p.name_en} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <Bottle kind="single" />}</div>
-            <div className="cap"><span>{name(it)}</span><span>{it.drops ? `${it.drops} ${L("drops")}` : ""}</span></div>
-          </AnimatedContent>); })}
-      </div>
-    </section>
   );
 }

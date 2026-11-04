@@ -4,7 +4,8 @@ import { LangProvider, useLang } from "./i18n";
 import { AuthProvider, CatalogProvider, ToastProvider, useAuth } from "./ctx";
 import { DEMO, auth } from "./api";
 import { OilDetail, Oils, RecipeDetail, Recipes, Search } from "./pages/Public";
-import Home from "./pages/Home";
+import Home, { Wordmark } from "./pages/Home";
+import "./home.css";
 import { asset } from "./img";
 import Login from "./pages/Login";
 import { DownlineView, MyAccount } from "./pages/Member";
@@ -37,20 +38,19 @@ function Header() {
   );
 }
 function Footer() {
-  const { t, lang } = useLang();
+  const { t, pick } = useLang();
   return (
     <footer className="fx">
-      <div className="ph"><img src={asset("/img/photo/hope-touch-3.webp")} alt="" loading="lazy" /></div>
-      <div className="menu">
-        <span className="wm">{lang === "en" ? "Yuen Oil Studio" : t("brand_sub")}</span>
-        <nav aria-label="footer">
-          <Link to="/">{t("find_blend")}</Link>
-          <Link to="/recipes">{t("all_recipes")}</Link>
-          <Link to="/oils">{t("nav_oils")}</Link>
-          <Link to="/login">{t("login")}</Link>
-        </nav>
-        <div className="info"><span>{t("foot_p")}</span><span>{t("independent")}</span></div>
-        <p className="legal">{t("disclaimer")}</p>
+      <div className="cols">
+        <div><span>{pick("源 精油配方馆", "Yuen Oil Studio")}</span><span>{pick("温哥华", "Vancouver, BC")}</span><span>{pick("芳疗师手调 doTERRA 精油", "Hand-mixed doTERRA blends")}</span></div>
+        <nav aria-label="footer"><span>{pick("看看", "Browse")}</span><Link to="/recipes">{t("all_recipes")}</Link><Link to="/oils">{t("nav_oils")}</Link><Link to="/search">{pick("搜索", "Search")}</Link></nav>
+        <div><span>{pick("会员", "Members")}</span><Link to="/login">{t("login")}</Link><Link to="/me">{t("nav_member")}</Link></div>
+        <div><span>{pick("配一瓶", "Get a bottle")}</span><span>{pick("说出你的感受，我按滴为你调好，再通知你来取。", "Tell me how you feel; I mix it by the drop and let you know when it is ready.")}</span></div>
+      </div>
+      <span />
+      <div>
+        <Wordmark />
+        <p className="legal">{t("independent")} {t("disclaimer")}</p>
       </div>
     </footer>
   );
