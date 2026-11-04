@@ -12,7 +12,7 @@ import "../home.css";
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 /* Direction: "The name as a monument" (taste-skill seed 655606138).
-   On this page, the studio's name — 源, "the source" — opens in the middle to let one bottle stand through it. */
+   On this page, the aromatherapist's name, Grace, opens in the middle to let one bottle stand through it. */
 
 const C = {
   say: ["温哥华芳疗师手调的 doTERRA 精油。说出你的感受，我按滴为你调好这一瓶。", "Hand-mixed doTERRA blends by a Vancouver aromatherapist. Tell me how you feel and I'll mix the bottle, drop by drop."],
@@ -71,9 +71,9 @@ export function Wordmark({ className = "", bottle, as: Tag = "div", label }) {
   return (
     <div className={`wmk ${className}`}>
       <Tag ref={ref} className="wmk-t" aria-label={label}>
-        <span className="wl" aria-hidden="true">Yu</span>
+        <span className="wl" aria-hidden="true">Gra</span>
         {bottle && <span className="wgap" aria-hidden="true"><img src={cut(bottle)} alt="" width="400" height="900" /></span>}
-        <span className="wl" aria-hidden="true">en</span>
+        <span className="wl" aria-hidden="true">ce</span>
         {label && <span className="sr">{label}</span>}
       </Tag>
     </div>
@@ -112,7 +112,7 @@ export default function Home() {
           <p>{L("say")}</p>
           <a className="btn primary" href="#feel" onClick={scrollFeel}>{L("go")}</a>
         </div>
-        <Wordmark as="h1" bottle="frankincense-essential-oil" label={pick("源 精油配方馆 · 温哥华芳疗师手调精油", "Yuen Oil Studio · hand-mixed blends by a Vancouver aromatherapist")} />
+        <Wordmark as="h1" bottle="frankincense-essential-oil" label={pick("Grace 芳疗工作室 · 温哥华芳疗师手调精油", "Grace Aromatherapy · hand-mixed blends by a Vancouver aromatherapist")} />
         <div className="bl">{L("where")}</div>
         <nav className="br" aria-label={L("recipes")}><Link to="/oils">{L("oils")}</Link><Link to="/recipes">{L("recipes")}</Link></nav>
       </section>

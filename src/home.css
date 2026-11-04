@@ -7,7 +7,7 @@
 .wmk{width:100%;min-width:0;max-width:100%;overflow:visible;text-align:center;line-height:0}
 .wmk-t{display:inline-flex;align-items:flex-end;white-space:nowrap;font-family:var(--fd);font-weight:500;line-height:.8;letter-spacing:-0.045em;font-optical-sizing:auto;font-kerning:normal;margin:0;will-change:transform}
 .wmk-t .wl{display:block}
-.wmk-t .wgap{display:block;height:.78em;aspect-ratio:400/900;margin:0 .02em 0 .09em;align-self:flex-end;transform:translateY(.02em)}
+.wmk-t .wgap{display:block;height:.78em;aspect-ratio:400/900;margin:0 .03em 0 .13em;align-self:flex-end;transform:translateY(.02em)}
 .wmk-t .wgap img{height:100%;width:auto}
 
 /* hero: name across the middle, corners carry the rest */

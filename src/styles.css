@@ -252,3 +252,4 @@ td.num,th.num{text-align:right}
 .facts div{border-radius:var(--r-sm)}
 .modal,.modal-card,dialog{border-radius:var(--r-lg);overflow:hidden}
 img.ph-img,.photo img,.strip img{border-radius:var(--r)}
+@media (max-width:420px){.brand span{display:none}}

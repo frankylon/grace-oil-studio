@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 
 export const BRAND = {
-  zh: "源 · 精油配方馆",
-  en: "Yuen Oil Studio",
+  zh: "Grace 芳疗工作室",
+  en: "Grace Aromatherapy",
 };
 
 // [简体, English]  繁体由 OpenCC 自动转换
@@ -70,7 +70,7 @@ const S = {
   period: ["数据月份", "Period"], all_members: ["全部会员", "All members"], search: ["搜索", "Search"], status: ["状态", "Status"], kind: ["类型", "Type"], body: ["内容", "Details"], tags: ["标签", "Tags"],
   hidden: ["隐藏", "Hidden"], original_title: ["原始名称（仅后台）", "Original title (admin only)"], loading: ["载入中…", "Loading…"],
   met: ["已达标", "Met"],
-  brand_sub: ["精油配方馆", "Oil Studio"], find_blend: ["按感受配油", "Find my blend"],
+  brand_sub: ["芳疗工作室", "Aromatherapy"], find_blend: ["按感受配油", "Find my blend"],
   foot_h: ["下次见", "Until next time"], foot_p: ["想调一瓶专属的？在任何一条配方按「一键配油」，留下你的情况，我们按你来配。", "Want something just for you? Tap “Mix this for me” on any blend, tell us about yourself, and we'll mix it for you."],
   levels_note: ["等级门槛按 doTERRA 公开资料预设，请对照 doTERRA 加拿大最新薪酬计划核对后再给会员看。改完按保存即生效。", "Thresholds are pre-filled from public doTERRA material. Check them against the current doTERRA Canada compensation plan before members see them."],
   review_flag: ["建议人工审阅", "Needs review"],

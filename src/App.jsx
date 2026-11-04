@@ -21,7 +21,7 @@ function Header() {
     <header className="top">
       {DEMO && <div className="demo-banner">{t("demo_banner")}</div>}
       <div className="wrap row">
-        <Link to="/" className="brand" aria-label={brand}><b>{lang === "en" ? "Yuen" : "源"}</b><span>{lang === "en" ? "Oil Studio" : t("brand_sub")}</span></Link>
+        <Link to="/" className="brand" aria-label={brand}><b>Grace</b><span>{lang === "en" ? "Aromatherapy" : t("brand_sub")}</span></Link>
         <nav className="nav" aria-label="main">
           <NavLink to="/oils">{t("nav_oils")}</NavLink>
           <NavLink to="/recipes">{t("nav_recipes")}</NavLink>
@@ -42,7 +42,7 @@ function Footer() {
   return (
     <footer className="fx">
       <div className="cols">
-        <div><span>{pick("源 精油配方馆", "Yuen Oil Studio")}</span><span>{pick("温哥华", "Vancouver, BC")}</span><span>{pick("芳疗师手调 doTERRA 精油", "Hand-mixed doTERRA blends")}</span></div>
+        <div><span>{pick("Grace 芳疗工作室", "Grace Aromatherapy")}</span><span>{pick("温哥华", "Vancouver, BC")}</span><span>{pick("芳疗师手调 doTERRA 精油", "Hand-mixed doTERRA blends")}</span></div>
         <nav aria-label="footer"><span>{pick("看看", "Browse")}</span><Link to="/recipes">{t("all_recipes")}</Link><Link to="/oils">{t("nav_oils")}</Link><Link to="/search">{pick("搜索", "Search")}</Link></nav>
         <div><span>{pick("会员", "Members")}</span><Link to="/login">{t("login")}</Link><Link to="/me">{t("nav_member")}</Link></div>
         <div><span>{pick("配一瓶", "Get a bottle")}</span><span>{pick("说出你的感受，我按滴为你调好，再通知你来取。", "Tell me how you feel; I mix it by the drop and let you know when it is ready.")}</span></div>
