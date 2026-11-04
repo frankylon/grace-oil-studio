@@ -1,8 +1,9 @@
 // 数据层：有 Supabase 环境变量时连真数据库，否则进入「演示模式」（资料存在浏览器里）
 import { createClient } from "@supabase/supabase-js";
 
-const URL = import.meta.env.VITE_SUPABASE_URL;
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Supabase 的网址和 anon key 本来就是公开给浏览器用的（权限由数据库行级规则把关）
+const URL = import.meta.env.VITE_SUPABASE_URL || (import.meta.env.VITE_DEMO ? "" : "https://wijgatwlgyowqoqroqgj.supabase.co");
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || (import.meta.env.VITE_DEMO ? "" : "sb_publishable_XSO9SsMAJQA2z8WNOsA5pw_SEeMJQay");
 export const DEMO = !(URL && KEY);
 
 let sb = null;
