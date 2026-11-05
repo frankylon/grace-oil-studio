@@ -117,13 +117,12 @@ export function OilDetail() {
         </div>
       </div>
 
-      {productPhotos(p).length > 0 && <div className="photo-strip">{productPhotos(p).slice(0, 3).map((src, i) => <div key={i}><img src={src} alt={p.name_en} loading="lazy" /></div>)}</div>}
       {!!p.pains?.length && <div className="block"><h2>{t("feelings")}</h2><div className="chips">{p.pains.map((x) => <Link key={x} className="chip" to={`/oils?pain=${x}`}>{pick(cat.painById[x]?.zh, cat.painById[x]?.en)}</Link>)}</div></div>}
       {!!p.scenes?.length && <div className="block"><h2>{t("scenes")}</h2><div className="chips">{p.scenes.map((x) => <span key={x} className="chip">{lang === "en" ? cat.vocab?.scenes?.[x] || x : cv(x)}</span>)}</div></div>}
       {about && <div className="block"><h2>{t("about")}</h2><Paras text={about} /></div>}
-      {F("origin") && <div className="block"><h2>{t("origin")}</h2><Paras text={F("origin")} /></div>}
-      {F("tips") && <div className="block"><h2>{t("how_use")}</h2><Tips text={F("tips")} /></div>}
-      {F("directions") && <div className="block"><h2>{t("directions")}</h2><Tips text={F("directions")} /></div>}
+      {F("origin") && !String(about || "").includes(String(F("origin")).slice(0, 20)) && <div className="block"><h2>{t("origin")}</h2><Paras text={F("origin")} /></div>}
+      {(F("tips") || F("directions")) && <div className="block"><h2>{t("how_use")}</h2><Tips text={[F("tips"), F("directions")].filter(Boolean).join("\n")} /></div>}
+      <div className="block ask-box"><div><h2>{pick(`想用${p.name_zh.replace(/精油.*$/, "")}调配？`, `Want a blend with ${p.name_en.replace(/\s*(Essential Oil|Oil).*$/i, "")}?`)}</h2><p className="muted">{pick("告诉 Grace 你的情况，她会判断适不适合你，再搭配其他精油为你调配。", "Tell Grace how you feel; she'll check it suits you and blend it with other oils for you.")}</p></div><button className="btn primary" onClick={() => window.dispatchEvent(new Event("open-consult"))}>{pick("请 Grace 为我调配", "Ask Grace to blend for me")}</button></div>
       {F("cautions") && <div className="block"><h2>{t("cautions")}</h2><div className="notice honey prose">{F("cautions")}</div></div>}
       {recipes.length > 0 && <div className="block"><h2>{t("used_in")} · {recipes.length}</h2><div className="rcards">{recipes.slice(0, 12).map((r) => <RecipeCard key={r.id} r={r} />)}</div></div>}
       {url && <p className="block small"><a href={url} target="_blank" rel="noreferrer">{t("official_page")} ↗</a></p>}
@@ -188,12 +187,12 @@ export function RecipeDetail() {
           <h1 style={{ fontSize: "clamp(2.6rem,1rem + 4.6vw,5rem)" }}>{pick(r.title_zh, r.title_en)}</h1>
           <div className="chips" style={{ marginTop: 10 }}>{(r.tags || []).map((x) => <Link key={x} className="chip" to={`/recipes?tag=${encodeURIComponent(x)}`}>{pick(x, cat.tagsEn?.[x])}</Link>)}</div>
           <div className="block">
-            <h2>{t("formula")}</h2>
+            <h2>{pick("参考配方", "Reference formula")}</h2>
+            <p className="muted small" style={{ marginTop: 0 }}>{pick("这是 Grace 常用的比例，实际调配时会按你的情况调整。", "This is the ratio Grace often uses; she adjusts it to you when blending.")}</p>
             {r.choose && <p className="muted small" style={{ marginTop: 0 }}>{t("choose_one")} · {r.choose.drops} {t("drops")}</p>}
             <DropList items={r.items} owned={owned} />
             {(r.alt_items || []).map((a, i) => <div key={i} style={{ marginTop: 14 }}><p className="muted small" style={{ margin: "0 0 6px" }}>{t("or_alt")}</p><DropList items={a} owned={owned} /></div>)}
             <div className="small muted" style={{ marginTop: 12, display: "flex", gap: 14, flexWrap: "wrap", borderTop: "1px dashed var(--line)", paddingTop: 10 }}>
-              {totalDrops(r.items) > 0 && <span>{t("total")} {totalDrops(r.items)} {t("drops")}</span>}
               {r.carrier && <span>{t("carrier")}: {cv(r.carrier)}</span>}
               {pct != null && <span>{t("dilution")} {pct}%</span>}
             </div>
@@ -202,11 +201,11 @@ export function RecipeDetail() {
           {(r.usage_zh || r.usage_en) && <div className="block"><h2>{t("usage")}</h2><div className="prose"><p>{pick(r.usage_zh, r.usage_en)}</p></div></div>}
           {!!r.flags?.length && <div className="block"><Flags flags={r.flags} /></div>}
           <p className="notice block">{t("disclaimer")}</p>
-          {oils.length > 0 && <div className="block"><h2>{t("nav_oils")}</h2><div className="cards">{oils.map((p) => <ProductCard key={p.id} p={p} />)}</div></div>}
+          {oils.length > 0 && <div className="block"><h2>{pick("用到的精油", "Oils in this blend")}</h2><div className="cards">{oils.map((p) => <ProductCard key={p.id} p={p} />)}</div></div>}
         </div>
         <aside className="side-sticky">
           <div className="order-box">
-            {(() => { const o = oils.find((x) => hasLocal(x.id)) || oils[0]; return o && productImg(o) ? <img src={productImg(o)} alt="" /> : null; })()}
+            <div className="ob-bots">{oils.filter((x) => productImg(x)).sort((a, b) => hasLocal(b.id) - hasLocal(a.id)).slice(0, 3).map((o) => <img key={o.id} src={productImg(o)} alt={pick(o.name_zh, o.name_en)} />)}</div>
             <h2 style={{ fontSize: "1.75rem" }}>{t("one_click")}</h2>
             <p className="muted">{t("one_click_sub")}</p>
             <button className="btn primary" onClick={() => setAsk(true)}>{t("one_click")}</button>

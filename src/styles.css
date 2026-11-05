@@ -303,3 +303,14 @@ img.ph-img,.photo img,.strip img{border-radius:var(--r)}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 @media (max-width:700px){.grid3{grid-template-columns:1fr}}
 textarea{border-radius:var(--r-sm)}
+
+/* cut-out bottles sit straight on the page: no tinted box behind them */
+.pcard .img,.pd-img,.rcard .ph{background:transparent}
+.pcard:hover .img{background:transparent}
+.pd-img{position:sticky;top:88px}
+.ob-bots{display:flex;justify-content:center;align-items:flex-end;gap:0;height:200px}
+.ob-bots img{height:78%;width:auto}
+.ob-bots img:first-child{height:100%;z-index:1}
+.ask-box{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:var(--surface);border-radius:var(--r-lg);padding:24px 28px}
+.ask-box h2{font-size:var(--step-lead)}
+.ask-box p{margin-top:6px;max-width:52ch}

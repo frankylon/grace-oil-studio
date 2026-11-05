@@ -101,14 +101,13 @@ export function RecipeCard({ r }) {
   let p = null;
   for (const i of r.items || []) { const x = i.product && cat.byId?.[i.product]; if (x && productImg(x)) { p = x; break; } }
   const src = p && productImg(p);
-  const n = totalDrops(r.items);
   const name = useProductName();
   const oils = (r.items || []).slice(0, 4).map(name).join(" · ");
   return (
     <Link to={`/recipes/${r.id}`} className="rcard">
       <span className="ph">{src && <img src={src} alt="" loading="lazy" />}</span>
       <span>
-        <span className="t"><span>{pick(r.title_zh, r.title_en)}</span><span>{n ? `${n} ${t("drops")}` : r.choose ? `${r.choose.drops} ${t("drops")}` : ""}</span></span>
+        <span className="t"><span>{pick(r.title_zh, r.title_en)}</span></span>
         <span className="d" style={{ display: "block" }}>{oils}</span>
       </span>
     </Link>

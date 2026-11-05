@@ -110,7 +110,7 @@
 @media (max-width:760px){.cx{min-height:80svh}.cx h2{font-size:15vw}.cx .base{flex-direction:column;align-items:stretch}.cx .base p{font-size:1.0625rem}.cx .btn.big{width:100%}}
 
 /* footer: columns above, wordmark below — revealed as the page slides away */
-.fx{position:relative;min-height:100svh;overflow:hidden;background:var(--ink);color:var(--bg);display:grid;grid-template-rows:auto 1fr auto;padding:40px max(clamp(16px,2vw,32px),env(safe-area-inset-right,0px)) 20px}
+.fx{position:relative;min-height:0;row-gap:clamp(72px,10vw,160px);overflow:hidden;background:var(--ink);color:var(--bg);display:grid;grid-template-rows:auto 1fr auto;padding:40px max(clamp(16px,2vw,32px),env(safe-area-inset-right,0px)) 20px}
 .fx .cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;font-size:1rem}
 .fx .cols>*{display:flex;flex-direction:column;gap:6px;color:var(--frost-soft)}
 .fx .cols>*>:first-child{color:var(--bg)}
