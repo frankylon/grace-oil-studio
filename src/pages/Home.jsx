@@ -34,6 +34,21 @@ const OILS = [
   { id: "roman-chamomile-oil-nhp", zh: "花香柔和带点苹果香，适合睡前和舒缓情绪的调配，也适合敏感的人。", en: "Soft, apple-like floral scent. Suited to evening and calming blends, and gentle enough for sensitive people." },
   { id: "ginger-essential-oil", zh: "取自姜根，带温热感。常用在肩颈、腰腹按摩油里，怕冷的人特别喜欢。", en: "From ginger root, with a warming feel. Often in shoulder and belly massage blends; people who feel the cold love it." },
   { id: "bergamot-essential-oil", zh: "柑橘里带花香，清新明亮。压力大、心情闷的时候，Grace 会用它让配方香气轻快起来。", en: "Citrus with a floral edge, bright and fresh. When life feels heavy, Grace adds it to lift the whole blend." },
+  { id: "eucalyptus-oil", zh: "清凉通透的叶片香气，深呼吸时特别舒服。换季、在室内待久了，很适合用来扩香。", en: "A cool, clear leafy scent that feels lovely on a deep breath. Good for diffusing when seasons change or you've been indoors too long." },
+  { id: "cypress-oil", zh: "像雨后森林的木质清香。久坐、腿脚沉重时，Grace 常把它调进按摩油里。", en: "Like a forest after rain. When you've been sitting too long or your legs feel heavy, Grace adds it to massage blends." },
+];
+
+// 电脑 / iPad：每两支油中间夹一段文字，讲这两支带给你什么
+const PAIRS = [
+  { a: "frankincense-essential-oil", b: "roman-chamomile-oil-nhp", t: ["沉稳与柔和", "Grounded, and soft"],
+    smell: ["乳香的树脂香像一块安静的木头，罗马洋甘菊带着苹果般的甜花香。两种放在一起，是让人慢下来的味道。", "Frankincense smells like quiet, resinous wood; Roman chamomile is a sweet, apple-like floral. Together they slow you down."],
+    use: ["睡前心里还停不下来、皮肤容易敏感的时候，Grace 常用这一对做放松和护肤的底子。", "When your mind won't settle at night or your skin is easily upset, Grace often builds relaxing and skin blends on this pair."] },
+  { a: "ginger-essential-oil", b: "bergamot-essential-oil", t: ["温暖与明亮", "Warm, and bright"],
+    smell: ["生姜辛暖，佛手柑清甜带花香。一个让身体暖起来，一个让心情亮起来。", "Ginger is spicy and warm; bergamot is sweet citrus with a floral edge. One warms the body, the other lifts the mood."],
+    use: ["怕冷、肩颈紧、压力大的日子，适合调成按摩油，或者在家里扩香。", "On cold, tense or heavy days, they work well as a massage oil or in the diffuser at home."] },
+  { a: "eucalyptus-oil", b: "cypress-oil", t: ["清新与通透", "Fresh, and open"],
+    smell: ["尤加利清凉通透，丝柏是雨后森林的木质清香，闻起来像打开了一扇窗。", "Eucalyptus is cool and clear; cypress is a rain-washed forest. It smells like opening a window."],
+    use: ["换季、久坐、想好好深呼吸的时候，可以涂抹在胸背，或者睡前扩香。", "When seasons change, after long hours sitting, or when you want a deeper breath, apply on the chest and back or diffuse before bed."] },
 ];
 
 const SIG = [
@@ -94,6 +109,10 @@ export default function Home() {
     // signature move: the monument grows heavier as it leaves
     gsap.fromTo(".hx .wmk-t", { scale: 1 }, { scale: 0.93, ease: "none", transformOrigin: "50% 100%", scrollTrigger: { trigger: ".hx", start: "top top", end: "bottom top", scrub: true } });
     gsap.from(".hx .wgap img", { yPercent: 18, opacity: 0, duration: 1.1, ease: "power3.out", delay: 0.35 });
+    gsap.utils.toArray(".pp .pr").forEach((el) => {
+      gsap.from(el.querySelectorAll(".pb img"), { y: 50, opacity: 0, duration: 0.9, ease: "power3.out", stagger: 0.12, scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+      gsap.from(el.querySelector(".pt"), { y: 20, opacity: 0, duration: 0.8, delay: 0.1, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 78%", once: true } });
+    });
     gsap.utils.toArray(".px .oil").forEach((el) => {
       gsap.from(el.querySelector("img"), { y: 60, opacity: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 85%", once: true } });
       gsap.from(el.querySelector(".cap"), { y: 16, opacity: 0, duration: 0.7, delay: 0.15, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 80%", once: true } });
@@ -117,7 +136,19 @@ export default function Home() {
         <nav className="br" aria-label={L("recipes")}><Link to="/oils">{L("oils")}</Link><Link to="/recipes">{L("recipes")}</Link></nav>
       </section>
 
-      {/* about: pinned title, bottles pass behind it */}
+      {/* key oils, wide screens: a passage between every two bottles */}
+      <section className="pp" aria-labelledby="pp-h">
+        <h2 id="pp-h">{L("ph1")}{L("ph2")}</h2>
+        {PAIRS.map((pr, k) => { const A = cat.byId[pr.a], B = cat.byId[pr.b]; const bot = (id, P) => (
+          <Link to={`/oils/${id}`} className="pb"><img src={cut(id)} alt={P ? pick(P.name_zh, P.name_en) : ""} width="400" height="900" loading="lazy" /><b>{name({ product: id })}</b></Link>); return (
+          <div key={pr.a} className={`pr ${k % 2 ? "flip" : ""}`}>
+            {bot(pr.a, A)}
+            <div className="pt"><h3>{pick(...pr.t)}</h3><p><span className="lab">{pick("闻起来", "The scent")}</span>{pick(...pr.smell)}</p><p><span className="lab">{pick("适合", "When it helps")}</span>{pick(...pr.use)}</p></div>
+            {bot(pr.b, B)}
+          </div>); })}
+      </section>
+
+      {/* key oils, phones: pinned title, bottles pass behind it */}
       <section className="px" aria-labelledby="px-h">
         <div className="pin"><h2 id="px-h"><span>{L("ph1")}</span><span>{L("ph2")}</span></h2></div>
         <div className="flow">

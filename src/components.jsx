@@ -5,6 +5,7 @@ import { useAuth, useCatalog, useToast } from "./ctx";
 import { db } from "./api";
 import { dilutionPct, owns, totalDrops } from "./util";
 import { productImg } from "./img";
+import RC from "./data/recipe_content.json";
 
 export function Modal({ title, onClose, children, footer }) {
   useEffect(() => {
@@ -51,14 +52,15 @@ export function useProductName() {
   };
 }
 
+export const cleanName = (s) => String(s || "").replace(/\s*[（(]天然健康产品[)）]/, "").replace(/\s*\(NHP\)/, "");
 export function ProductCard({ p }) {
   const { pick, t } = useLang();
   return (
     <Link to={`/oils/${p.id}`} className="pcard">
       <div className="img"><ProductImage p={p} /></div>
       <div className="body">
-        <span className="zh">{pick(p.name_zh, p.name_en)}</span>
-        <span className="en">{pick(p.name_en, p.latin) }</span>
+        <span className="zh">{cleanName(pick(p.name_zh, p.name_en))}</span>
+        <span className="en">{cleanName(pick(p.name_en, p.latin))}</span>
         <div className="meta"><span>{p.size}{p.nhp ? " · NPN" : ""}</span><span>{p.wholesale}</span></div>
       </div>
     </Link>
@@ -107,7 +109,7 @@ export function RecipeCard({ r }) {
     <Link to={`/recipes/${r.id}`} className="rcard">
       <span className="ph">{src && <img src={src} alt="" loading="lazy" />}</span>
       <span>
-        <span className="t"><span>{pick(r.title_zh, r.title_en)}</span></span>
+        <span className="t"><span>{pick(RC[r.id]?.title_zh || r.title_zh, RC[r.id]?.title_en || r.title_en)}</span></span>
         <span className="d" style={{ display: "block" }}>{oils}</span>
       </span>
     </Link>
@@ -118,7 +120,7 @@ export function RecipeCard({ r }) {
 const NEEDS = [["肩颈紧", "Tight shoulders"], ["睡不好", "Poor sleep"], ["压力大", "Stress"], ["呼吸不顺", "Stuffy breathing"], ["肠胃不适", "Tummy"], ["肌肤干燥", "Dry skin"], ["经期不适", "Period comfort"], ["想提神", "Need energy"]];
 
 // recipe 可以不传：不传就是「按我的情况调配」（个人咨询）
-export function BlendRequest({ recipe, onClose }) {
+export function BlendRequest({ recipe, onClose, order }) {
   const { t, pick, cv } = useLang();
   const { member, profile, session } = useAuth();
   const toast = useToast();
@@ -139,8 +141,8 @@ export function BlendRequest({ recipe, onClose }) {
       const need = needs.length ? `【需要】${needs.join("、")}\n` : "";
       await db.insert("blend_requests", {
         member_id: profile?.member_id || null, name: name.trim(), contact: contact.trim(),
-        recipe_id: recipe?.id || null, recipe_title: recipe ? recipe.title_zh : "个人调配咨询",
-        items: recipe?.items || [], bottle: t(bottle) + ` (${bottle})`, notes: need + notes.trim(), status: "new",
+        recipe_id: recipe?.id || null, recipe_title: (order ? (order.kind === "kit" ? "【订购套组】" : "【订购配方油】") : "") + (recipe ? recipe.title_zh : "个人调配咨询"),
+        items: order?.kind === "kit" ? order.items : recipe?.items || [], bottle: order?.kind === "kit" ? `单方套组 ${order.items.length} 支 · ${order.total}` : t(bottle) + ` (${bottle})`, notes: need + notes.trim(), status: "new",
       });
       setDone(true);
     } catch (e) { toast(t("send_fail")); }
@@ -149,18 +151,18 @@ export function BlendRequest({ recipe, onClose }) {
   const ml = bottle === "b_roll10" ? 10 : bottle === "b_30" ? 30 : null;
   const pct = !custom && ml ? dilutionPct(recipe.items, ml) : null;
   return (
-    <Modal title={custom ? t("custom_title") : t("one_click") + " · " + pick(recipe.title_zh, recipe.title_en)} onClose={onClose}
+    <Modal title={custom ? t("custom_title") : (order ? (order.kind === "kit" ? pick("订购单方套组", "Order the oil set") : pick("订购调好的配方油", "Order the blend")) : t("one_click")) + " · " + pick(recipe.title_zh, recipe.title_en)} onClose={onClose}
       footer={done ? <button className="btn primary" onClick={onClose}>OK</button> : <>
         <button className="btn" onClick={onClose}>{t("cancel")}</button>
         <button className="btn honey" disabled={busy || !ok} onClick={submit}>{t("submit")}</button></>}>
       {done ? <p style={{ margin: 0, fontSize: 17 }}>{t("sent")}</p> : <>
-        <p className="muted" style={{ margin: 0 }}>{custom ? t("custom_sub") : t("one_click_sub")}</p>
+        <p className="muted" style={{ margin: 0 }}>{custom ? t("custom_sub") : order?.kind === "kit" ? pick(`套组包括 ${order.items.map((i) => i.oil).join("、")}，会员价合计 ${order.total}。Grace 确认库存后联系你付款和取货。`, `The set includes ${order.items.length} oils, member price total ${order.total}. Grace will confirm stock and contact you about payment and pickup.`) : order ? pick("Grace 按这条配方为你调好，价格按瓶子大小由 Grace 确认后联系你。", "Grace blends it for you; she'll confirm the price for the bottle size and contact you.") : t("one_click_sub")}</p>
         {custom && <div className="field"><span className="lab">{t("custom_needs")}</span>
           <div className="chips">{NEEDS.map(([zh, en]) => <button type="button" key={zh} className="chip" aria-pressed={needs.includes(zh)} onClick={() => toggle(zh)}>{pick(zh, en)}</button>)}</div></div>}
-        <div className="field"><span className="lab">{t("bottle")}</span>
+        {order?.kind !== "kit" && <div className="field"><span className="lab">{t("bottle")}</span>
           <div className="chips">{["b_roll10", "b_30", "b_spray", "b_cream", ...(custom ? [] : ["b_drops"])].map((b) => <button type="button" key={b} className="chip" aria-pressed={bottle === b} onClick={() => setBottle(b)}>{t(b)}</button>)}</div>
           {pct != null && <span className="small muted">{t("dilution")} {pct}%</span>}
-        </div>
+        </div>}
         <div className="grid2">
           <div className="field"><label htmlFor="br_n">{t("your_name")}</label><input id="br_n" type="text" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div className="field"><label htmlFor="br_c">{t("contact")}</label><input id="br_c" type="text" value={contact} onChange={(e) => setContact(e.target.value)} /></div>

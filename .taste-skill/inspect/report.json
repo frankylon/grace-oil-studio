@@ -1,27 +1,28 @@
 {
  "url": "http://localhost:4173/",
- "at": "2026-11-04T22:30:43.852Z",
+ "at": "2026-11-05T02:05:42.378Z",
  "allow": [],
  "viewports": [
   {
    "width": 1440,
    "height": 900,
    "load": "load",
-   "screens": 7,
+   "screens": 8,
    "filled": [
     0.78,
-    0.64,
-    0.31,
-    0.83,
-    0.76,
-    0.97,
-    0.96
+    0.56,
+    0.32,
+    0.51,
+    0.68,
+    0.92,
+    0.94,
+    0.94
    ],
    "motion": {
-    "elements": 19,
+    "elements": 32,
     "css": 0,
     "transitions": 0,
-    "scripted": 19,
+    "scripted": 32,
     "videos": 0,
     "playingVideos": 0
    },
@@ -31,19 +32,19 @@
      "h": 900
     },
     "page": {
-     "height": 5958,
-     "screens": 6.6,
-     "words": 149,
-     "img": 17,
+     "height": 6481,
+     "screens": 7.2,
+     "words": 148,
+     "img": 25,
      "video": 0,
      "canvas": 0,
      "svg": 0,
-     "sections": 5,
+     "sections": 6,
      "horizontalOverflow": 0,
      "overflowCulprits": [],
      "uiFragments": 0,
      "uiAbuse": false,
-     "realPictures": 7,
+     "realPictures": 9,
      "videoCount": 0,
      "uiPictures": 0,
      "pictureSamples": [
@@ -52,8 +53,9 @@
       "roman-chamomile-oil-nhp.webp",
       "ginger-essential-oil.webp",
       "bergamot-essential-oil.webp",
-      "copaiba-essential-oil.webp",
-      "cypress-oil.webp"
+      "eucalyptus-oil.webp",
+      "cypress-oil.webp",
+      "copaiba-essential-oil.webp"
      ],
      "blendText": 0,
      "sideScrollers": 0,
@@ -112,24 +114,87 @@
       "kind": "heading"
      },
      {
-      "text": "认识 主要精油",
-      "words": 2,
-      "chars": 7,
-      "lines": 2,
-      "size": 106.6,
-      "vw": 7.4,
+      "text": "认识主要精油",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 65,
+      "vw": 4.5,
       "font": "Bodoni Moda Variable",
       "weight": 500,
-      "tracking": -0.03,
-      "leading": 0.95,
+      "tracking": -0.02,
+      "leading": 1.02,
       "upper": false,
       "italic": false,
       "mono": false,
       "align": "center",
       "position": "center",
-      "widthRatio": 0.29,
-      "top": 1253,
+      "widthRatio": 0.96,
+      "top": 1066,
       "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "沉稳与柔和",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 39.4,
+      "vw": 2.7,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.34,
+      "top": 1354,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "温暖与明亮",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 39.4,
+      "vw": 2.7,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.34,
+      "top": 1922,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "清新与通透",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 39.4,
+      "vw": 2.7,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.34,
+      "top": 2491,
+      "tag": "h3",
       "kind": "heading"
      },
      {
@@ -149,7 +214,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.8,
-      "top": 2726,
+      "top": 3155,
       "tag": "h2",
       "kind": "heading"
      },
@@ -170,7 +235,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.17,
-      "top": 2851,
+      "top": 3280,
       "tag": "a",
       "kind": "heading"
      },
@@ -191,7 +256,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.14,
-      "top": 2851,
+      "top": 3280,
       "tag": "a",
       "kind": "heading"
      },
@@ -212,7 +277,7 @@
       "align": "left",
       "position": "right",
       "widthRatio": 0.17,
-      "top": 2851,
+      "top": 3280,
       "tag": "a",
       "kind": "heading"
      },
@@ -233,7 +298,7 @@
       "align": "left",
       "position": "right",
       "widthRatio": 0.14,
-      "top": 2851,
+      "top": 3280,
       "tag": "a",
       "kind": "heading"
      },
@@ -254,7 +319,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.35,
-      "top": 3778,
+      "top": 4208,
       "tag": "h2",
       "kind": "heading"
      },
@@ -275,7 +340,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 4550,
+      "top": 4980,
       "tag": "h2",
       "kind": "heading"
      },
@@ -296,17 +361,17 @@
       "align": "center",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 5408,
+      "top": 5930,
       "tag": "div",
       "kind": "heading"
      }
     ],
     "headingSummary": {
-     "count": 10,
+     "count": 13,
      "maxLines": 2,
      "over2Lines": 0,
      "statements": 0,
-     "centered": 3,
+     "centered": 6,
      "medianWords": 1,
      "mixedFontHeadings": 0
     },
@@ -314,12 +379,12 @@
      "families": [
       {
        "family": "Jost Variable",
-       "share": 0.93,
+       "share": 0.91,
        "mono": false
       },
       {
        "family": "Bodoni Moda Variable",
-       "share": 0.07,
+       "share": 0.09,
        "mono": false
       }
      ],
@@ -330,9 +395,9 @@
       24,
       26,
       32,
+      39,
       44,
       65,
-      107,
       144,
       458,
       548
@@ -362,7 +427,7 @@
      "microLabelShare": 0,
      "microSamples": [],
      "upperShare": 0,
-     "centerShare": 0.06,
+     "centerShare": 0.34,
      "smallText": 0
     },
     "eyebrows": [],
@@ -387,7 +452,7 @@
       },
       {
        "color": "#ecf0f2",
-       "top": 3638,
+       "top": 4068,
        "hsl": {
         "h": 200,
         "s": 0.19,
@@ -396,7 +461,7 @@
       },
       {
        "color": "#1f3038",
-       "top": 4410,
+       "top": 4840,
        "hsl": {
         "h": 199,
         "s": 0.29,
@@ -407,15 +472,15 @@
      "textColors": [
       {
        "color": "#1f3038",
-       "share": 0.39
-      },
-      {
-       "color": "#5d6b72",
-       "share": 0.28
+       "share": 0.48
       },
       {
        "color": "#b7c3c9",
-       "share": 0.23
+       "share": 0.22
+      },
+      {
+       "color": "#5d6b72",
+       "share": 0.2
       },
       {
        "color": "#ffffff",
@@ -490,7 +555,7 @@
      "w": 1440,
      "h": 900
     },
-    "pageH": 5958,
+    "pageH": 6481,
     "margins": {
      "left": 29,
      "right": 29
@@ -500,9 +565,9 @@
       "sel": "main",
       "tag": "main",
       "top": 100,
-      "height": 4958,
+      "height": 5388,
       "words": 88,
-      "media": 15,
+      "media": 17,
       "middle": 0,
       "heading": {
        "text": "Gra",
@@ -517,13 +582,13 @@
       "footer": false,
       "hero": true,
       "continues": false,
-      "pinned": true
+      "pinned": false
      },
      {
       "sel": "footer.fx",
       "tag": "footer",
-      "top": 5058,
-      "height": 900,
+      "top": 5488,
+      "height": 993,
       "words": 29,
       "media": 0,
       "middle": 0,
@@ -587,23 +652,22 @@
    "width": 768,
    "height": 1024,
    "load": "load",
-   "screens": 9,
+   "screens": 8,
    "filled": [
     0.69,
-    0.41,
-    0.28,
-    0.96,
-    0.64,
+    0.44,
     0.73,
-    1,
+    0.84,
+    0.56,
+    0.95,
     1,
     1
    ],
    "motion": {
-    "elements": 19,
+    "elements": 32,
     "css": 0,
     "transitions": 0,
-    "scripted": 19,
+    "scripted": 32,
     "videos": 0,
     "playingVideos": 0
    },
@@ -613,30 +677,29 @@
      "h": 1024
     },
     "page": {
-     "height": 7615,
-     "screens": 7.4,
-     "words": 129,
-     "img": 17,
+     "height": 6715,
+     "screens": 6.6,
+     "words": 128,
+     "img": 25,
      "video": 0,
      "canvas": 0,
      "svg": 0,
-     "sections": 5,
+     "sections": 6,
      "horizontalOverflow": 0,
      "overflowCulprits": [],
      "uiFragments": 0,
      "uiAbuse": false,
-     "realPictures": 11,
+     "realPictures": 7,
      "videoCount": 0,
      "uiPictures": 0,
      "pictureSamples": [
       "frankincense-essential-oil.webp",
-      "roman-chamomile-oil-nhp.webp",
-      "ginger-essential-oil.webp",
+      "copaiba-essential-oil.webp",
       "bergamot-essential-oil.webp",
       "frankincense-essential-oil.webp",
       "copaiba-essential-oil.webp",
-      "bergamot-essential-oil.webp",
-      "frankincense-essential-oil.webp"
+      "helichrysum-oil-nhp.webp",
+      "cardamom-oil.webp"
      ],
      "blendText": 0,
      "sideScrollers": 0,
@@ -695,24 +758,87 @@
       "kind": "heading"
      },
      {
-      "text": "认识 主要精油",
-      "words": 2,
-      "chars": 7,
-      "lines": 2,
-      "size": 56.8,
-      "vw": 7.4,
+      "text": "认识主要精油",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 42.1,
+      "vw": 5.5,
       "font": "Bodoni Moda Variable",
       "weight": 500,
-      "tracking": -0.03,
-      "leading": 0.95,
+      "tracking": -0.02,
+      "leading": 1.02,
       "upper": false,
       "italic": false,
       "mono": false,
       "align": "center",
       "position": "center",
-      "widthRatio": 0.29,
-      "top": 1486,
+      "widthRatio": 0.96,
+      "top": 1140,
       "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "沉稳与柔和",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.39,
+      "top": 1247,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "温暖与明亮",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.39,
+      "top": 1630,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "清新与通透",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Bodoni Moda Variable",
+      "weight": 500,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.39,
+      "top": 1979,
+      "tag": "h3",
       "kind": "heading"
      },
      {
@@ -732,7 +858,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 2956,
+      "top": 2415,
       "tag": "h2",
       "kind": "heading"
      },
@@ -753,7 +879,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.42,
-      "top": 5105,
+      "top": 4564,
       "tag": "h2",
       "kind": "heading"
      },
@@ -774,7 +900,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 5930,
+      "top": 5389,
       "tag": "h2",
       "kind": "heading"
      },
@@ -795,30 +921,30 @@
       "align": "center",
       "position": "center",
       "widthRatio": 0.96,
-      "top": 7269,
+      "top": 6369,
       "tag": "div",
       "kind": "heading"
      }
     ],
     "headingSummary": {
-     "count": 6,
+     "count": 9,
      "maxLines": 2,
      "over2Lines": 0,
      "statements": 0,
-     "centered": 3,
-     "medianWords": 2,
+     "centered": 6,
+     "medianWords": 1,
      "mixedFontHeadings": 0
     },
     "type": {
      "families": [
       {
        "family": "Jost Variable",
-       "share": 0.92,
+       "share": 0.91,
        "mono": false
       },
       {
        "family": "Bodoni Moda Variable",
-       "share": 0.08,
+       "share": 0.09,
        "mono": false
       }
      ],
@@ -829,9 +955,9 @@
       23,
       24,
       25,
+      30,
       35,
       42,
-      57,
       77,
       244,
       292
@@ -861,7 +987,7 @@
      "microLabelShare": 0,
      "microSamples": [],
      "upperShare": 0,
-     "centerShare": 0.07,
+     "centerShare": 0.36,
      "smallText": 0
     },
     "eyebrows": [],
@@ -886,7 +1012,7 @@
       },
       {
        "color": "#ecf0f2",
-       "top": 3020,
+       "top": 2478,
        "hsl": {
         "h": 200,
         "s": 0.19,
@@ -895,7 +1021,7 @@
       },
       {
        "color": "#1f3038",
-       "top": 5854,
+       "top": 5312,
        "hsl": {
         "h": 199,
         "s": 0.29,
@@ -906,19 +1032,19 @@
      "textColors": [
       {
        "color": "#1f3038",
-       "share": 0.42
-      },
-      {
-       "color": "#5d6b72",
-       "share": 0.24
+       "share": 0.51
       },
       {
        "color": "#b7c3c9",
        "share": 0.24
       },
       {
+       "color": "#5d6b72",
+       "share": 0.15
+      },
+      {
        "color": "#ffffff",
-       "share": 0.06
+       "share": 0.05
       },
       {
        "color": "#f7f9fa",
@@ -989,7 +1115,7 @@
      "w": 768,
      "h": 1024
     },
-    "pageH": 7615,
+    "pageH": 6715,
     "margins": {
      "left": 16,
      "right": 16
@@ -999,9 +1125,9 @@
       "sel": "main",
       "tag": "main",
       "top": 100,
-      "height": 6491,
+      "height": 5949,
       "words": 86,
-      "media": 14,
+      "media": 16,
       "middle": 0,
       "heading": {
        "text": "Gra",
@@ -1016,17 +1142,21 @@
       "footer": false,
       "hero": true,
       "continues": false,
-      "pinned": true
+      "pinned": false
      },
      {
       "sel": "footer.fx",
       "tag": "footer",
-      "top": 6591,
-      "height": 1024,
+      "top": 6049,
+      "height": 665,
       "words": 29,
       "media": 0,
       "middle": 0,
-      "heading": null,
+      "heading": {
+       "text": "Gra",
+       "size": 292,
+       "tag": "span"
+      },
       "left": 16,
       "right": 16,
       "textLeft": 16,
@@ -1069,21 +1199,22 @@
    "width": 390,
    "height": 844,
    "load": "load",
-   "screens": 7,
+   "screens": 8,
    "filled": [
     0.6,
     0.58,
-    0.89,
-    0.69,
-    0.82,
+    0.59,
+    0.71,
+    0.6,
     0.96,
-    0.97
+    0.96,
+    0.96
    ],
    "motion": {
-    "elements": 19,
+    "elements": 32,
     "css": 0,
     "transitions": 0,
-    "scripted": 19,
+    "scripted": 32,
     "videos": 0,
     "playingVideos": 0
    },
@@ -1093,14 +1224,14 @@
      "h": 844
     },
     "page": {
-     "height": 5416,
-     "screens": 6.4,
-     "words": 128,
-     "img": 17,
+     "height": 5758,
+     "screens": 6.8,
+     "words": 137,
+     "img": 25,
      "video": 0,
      "canvas": 0,
      "svg": 0,
-     "sections": 5,
+     "sections": 6,
      "horizontalOverflow": 0,
      "overflowCulprits": [],
      "uiFragments": 0,
@@ -1224,7 +1355,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.92,
-      "top": 1786,
+      "top": 2264,
       "tag": "h2",
       "kind": "heading"
      },
@@ -1245,7 +1376,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.46,
-      "top": 1863,
+      "top": 2340,
       "tag": "a",
       "kind": "heading"
      },
@@ -1266,7 +1397,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.37,
-      "top": 2271,
+      "top": 2748,
       "tag": "a",
       "kind": "heading"
      },
@@ -1287,7 +1418,7 @@
       "align": "left",
       "position": "right",
       "widthRatio": 0.37,
-      "top": 2271,
+      "top": 2748,
       "tag": "a",
       "kind": "heading"
      },
@@ -1308,7 +1439,7 @@
       "align": "left",
       "position": "left",
       "widthRatio": 0.37,
-      "top": 2679,
+      "top": 3157,
       "tag": "a",
       "kind": "heading"
      },
@@ -1329,7 +1460,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.78,
-      "top": 3132,
+      "top": 3609,
       "tag": "h2",
       "kind": "heading"
      },
@@ -1350,7 +1481,7 @@
       "align": "left",
       "position": "center",
       "widthRatio": 0.92,
-      "top": 3969,
+      "top": 4447,
       "tag": "h2",
       "kind": "heading"
      },
@@ -1371,7 +1502,7 @@
       "align": "center",
       "position": "center",
       "widthRatio": 0.92,
-      "top": 5143,
+      "top": 5484,
       "tag": "div",
       "kind": "heading"
      }
@@ -1389,12 +1520,12 @@
      "families": [
       {
        "family": "Jost Variable",
-       "share": 0.92,
+       "share": 0.93,
        "mono": false
       },
       {
        "family": "Bodoni Moda Variable",
-       "share": 0.08,
+       "share": 0.07,
        "mono": false
       }
      ],
@@ -1436,7 +1567,7 @@
      "microLabelShare": 0,
      "microSamples": [],
      "upperShare": 0,
-     "centerShare": 0.07,
+     "centerShare": 0.06,
      "smallText": 0
     },
     "eyebrows": [],
@@ -1461,7 +1592,7 @@
       },
       {
        "color": "#ecf0f2",
-       "top": 1847,
+       "top": 2324,
        "hsl": {
         "h": 200,
         "s": 0.19,
@@ -1470,7 +1601,7 @@
       },
       {
        "color": "#1f3038",
-       "top": 3897,
+       "top": 4375,
        "hsl": {
         "h": 199,
         "s": 0.29,
@@ -1481,19 +1612,19 @@
      "textColors": [
       {
        "color": "#1f3038",
-       "share": 0.42
-      },
-      {
-       "color": "#b7c3c9",
-       "share": 0.24
+       "share": 0.45
       },
       {
        "color": "#5d6b72",
-       "share": 0.23
+       "share": 0.24
+      },
+      {
+       "color": "#b7c3c9",
+       "share": 0.21
       },
       {
        "color": "#ffffff",
-       "share": 0.06
+       "share": 0.05
       },
       {
        "color": "#f7f9fa",
@@ -1564,7 +1695,7 @@
      "w": 390,
      "h": 844
     },
-    "pageH": 5416,
+    "pageH": 5758,
     "margins": {
      "left": 16,
      "right": 16
@@ -1597,8 +1728,8 @@
       "sel": "main",
       "tag": "main",
       "top": 152,
-      "height": 4420,
-      "words": 84,
+      "height": 4898,
+      "words": 93,
       "media": 1,
       "middle": 0,
       "heading": {
@@ -1619,8 +1750,8 @@
      {
       "sel": "footer.fx",
       "tag": "footer",
-      "top": 4572,
-      "height": 844,
+      "top": 5050,
+      "height": 708,
       "words": 29,
       "media": 0,
       "middle": 0,
@@ -1673,7 +1804,7 @@
    "level": "WARN",
    "id": "size-count",
    "width": 1440,
-   "message": "11 different font sizes (16, 19, 24, 26, 32, 44, 65, 107, 144, 458, 548).",
+   "message": "11 different font sizes (16, 19, 24, 26, 32, 39, 44, 65, 144, 458, 548).",
    "fix": "A page needs about five: display, heading, lead, body, small.",
    "alsoAt": [
     768,
