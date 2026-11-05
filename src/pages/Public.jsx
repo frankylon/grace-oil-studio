@@ -53,11 +53,11 @@ export function Search() {
   );
 }
 
-function FilterRow({ label, hint, items, value, onPick }) {
+function FilterRow({ label, items, value, onPick, grid }) {
   return (
     <div className="frow">
-      <div className="frow-l"><b>{label}</b>{hint && <span>{hint}</span>}</div>
-      <div className="seg2 wrap">{items.map(([k, l, n]) => <button key={k || "all"} type="button" aria-pressed={value === k} onClick={() => onPick(value === k ? "" : k)}>{l}{n != null && <i>{n}</i>}</button>)}</div>
+      <div className="frow-l">{label}</div>
+      <div className={grid ? "fgrid" : "fseg"}>{items.map(([k, l]) => <button key={k || "all"} type="button" aria-pressed={value === k} onClick={() => onPick(value === k ? "" : k)}>{l}</button>)}</div>
     </div>
   );
 }
@@ -81,8 +81,8 @@ export function Oils() {
         <input id="oq" type="search" placeholder={pick("搜索精油名字、香气", "Search oils, scents")} value={q} onChange={(e) => set("q", e.target.value)} />
       </div>
       <div className="fbar">
-        <FilterRow label={pick("我想找", "I'm looking for")} items={[["", t("kind_all")], ...KINDS.map((k) => [k, t("kind_" + k), kCount(k)])]} value={kind} onPick={(v) => set("kind", v)} />
-        <FilterRow label={pick("想改善的感受", "How I'd like to feel")} hint={pick("可以和上面一起选", "combine with the row above")} items={cat.pains.map((p) => [p.id, pick(p.zh, p.en), pCount(p.id)]).filter((x) => x[2] > 0)} value={pain} onPick={(v) => set("pain", v)} />
+        <FilterRow label={pick("类型", "Type")} items={[["", t("kind_all")], ...KINDS.map((k) => [k, t("kind_" + k), kCount(k)]).filter((x) => x[2] > 0)]} value={kind} onPick={(v) => set("kind", v)} />
+        <FilterRow grid label={pick("想改善的感受", "How I'd like to feel")} items={cat.pains.map((p) => [p.id, pick(p.zh, p.en), pCount(p.id)]).filter((x) => x[2] > 0)} value={pain} onPick={(v) => set("pain", v)} />
       </div>
       <div className="fsum"><span>{active.length ? <>{pick("正在看", "Showing")}：<b>{active.join(" · ")}</b> · </> : null}{list.length} {pick("款", "oils")}</span>
         {(kind || pain || q) && <button type="button" className="btn ghost sm" onClick={() => setSp({}, { replace: true })}>{pick("清除筛选", "Clear filters")}</button>}</div>
@@ -191,8 +191,8 @@ export function Recipes() {
         <input id="rq" type="search" placeholder={pick("搜索配方、精油", "Search blends, oils")} value={q} onChange={(e) => set("q", e.target.value)} />
       </div>
       <div className="fbar">
-        <FilterRow label={pick("调理方向", "Direction")} items={[["", t("kind_all")], ...cat.cats.map((x) => [x.id, pick(x.zh, x.en), cCount(x.id)]).filter((x) => x[2] > 0)]} value={c} onPick={(v) => set("cat", v)} />
-        <FilterRow label={pick("部位与场景", "Area & moment")} hint={pick("可以和上面一起选", "combine with the row above")} items={tags.map((x) => [x, pick(x, tagEn(x)), tCount(x)]).filter((x) => x[2] > 0)} value={tag} onPick={(v) => set("tag", v)} />
+        <FilterRow grid label={pick("调理方向", "Direction")} items={[["", t("kind_all")], ...cat.cats.map((x) => [x.id, pick(x.zh, x.en), cCount(x.id)]).filter((x) => x[2] > 0)]} value={c} onPick={(v) => set("cat", v)} />
+        <FilterRow grid label={pick("部位与场景", "Area & moment")} items={tags.map((x) => [x, pick(x, tagEn(x)), tCount(x)]).filter((x) => x[2] > 0)} value={tag} onPick={(v) => set("tag", v)} />
       </div>
       <div className="fsum"><span>{active.length ? <>{pick("正在看", "Showing")}：<b>{active.join(" · ")}</b> · </> : null}{list.length} {pick("条配方", "blends")}</span>
         {(c || tag || q) && <button type="button" className="btn ghost sm" onClick={() => setSp({}, { replace: true })}>{pick("清除筛选", "Clear filters")}</button>}</div>
