@@ -109,10 +109,6 @@ export default function Home() {
     // signature move: the monument grows heavier as it leaves
     gsap.fromTo(".hx .wmk-t", { scale: 1 }, { scale: 0.93, ease: "none", transformOrigin: "50% 100%", scrollTrigger: { trigger: ".hx", start: "top top", end: "bottom top", scrub: true } });
     gsap.from(".hx .wgap img", { yPercent: 18, opacity: 0, duration: 1.1, ease: "power3.out", delay: 0.35 });
-    gsap.utils.toArray(".pp .pr").forEach((el) => {
-      gsap.from(el.querySelectorAll(".pb img"), { y: 50, opacity: 0, duration: 0.9, ease: "power3.out", stagger: 0.12, scrollTrigger: { trigger: el, start: "top 80%", once: true } });
-      gsap.from(el.querySelector(".pt"), { y: 20, opacity: 0, duration: 0.8, delay: 0.1, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 78%", once: true } });
-    });
     gsap.utils.toArray(".px .oil").forEach((el) => {
       gsap.from(el.querySelector("img"), { y: 60, opacity: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 85%", once: true } });
       gsap.from(el.querySelector(".cap"), { y: 16, opacity: 0, duration: 0.7, delay: 0.15, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 80%", once: true } });
@@ -120,6 +116,12 @@ export default function Home() {
     gsap.from(".sx .pn", { y: 40, opacity: 0, duration: 0.8, ease: "power3.out", stagger: 0.08, scrollTrigger: { trigger: ".sx .band", start: "top 85%", once: true } });
     gsap.from(".hw .slip .grp", { y: 18, opacity: 0, duration: 0.6, ease: "power3.out", stagger: 0.1, scrollTrigger: { trigger: ".hw .slip", start: "top 80%", once: true } });
     gsap.from(".cx h2 > span", { yPercent: 60, opacity: 0, duration: 0.9, ease: "power3.out", stagger: 0.1, scrollTrigger: { trigger: ".cx", start: "top 70%", once: true } });
+    // fonts and images change the page height after mount; re-measure so scroll triggers fire in the right place
+    const refresh = () => ScrollTrigger.refresh();
+    document.fonts?.ready.then(refresh);
+    window.addEventListener("load", refresh);
+    const t = setTimeout(refresh, 1200);
+    return () => { window.removeEventListener("load", refresh); clearTimeout(t); };
   }, { scope: root, dependencies: [cat.ready] });
 
   if (!cat.ready) return <Loading />;

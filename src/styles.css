@@ -343,14 +343,15 @@ textarea{border-radius:var(--r-sm)}
 @media (max-width:960px){.rd-hero{grid-template-columns:1fr}}
 .rd-l h1{font-size:clamp(2.4rem,1rem + 4vw,4.5rem)}
 .rd-tag{font-size:var(--step-lead);color:var(--muted);margin-top:10px;max-width:40ch}
-.rd-bots{display:flex;align-items:flex-end;justify-content:center;gap:clamp(8px,2vw,28px);height:clamp(260px,34vw,440px);margin:28px 0 20px}
-.rb{display:flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none;color:inherit;height:100%;justify-content:flex-end;transition:opacity .3s,filter .3s}
-.rb-i{display:block;height:calc(var(--h,1) * 82%);aspect-ratio:4/9;transform-origin:50% 100%;transition:transform .45s var(--ease-out)}
+.rd-l{min-width:0}
+.rd-bots{display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,1.4vw,20px);margin:28px 0 20px;padding-top:28px}
+.rb{flex:1 1 0;min-width:0;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none;color:inherit;transition:opacity .3s,filter .3s}
+.rb-i{display:block;width:100%;aspect-ratio:4/9;transform:scale(var(--h,1));transform-origin:50% 100%;transition:transform .45s var(--ease-out)}
 .rb-i img{width:100%;height:100%;object-fit:contain}
 .rb-i.flat img{object-fit:cover;mix-blend-mode:multiply}
-.rb.on .rb-i{transform:scale(1.18)}
+.rb.on .rb-i{transform:scale(calc(var(--h,1) * 1.15))}
 .rb.off{opacity:.45;filter:saturate(.7)}
-.rb-n{font-size:var(--step-small);color:var(--muted);white-space:nowrap}
+.rb-n{font-size:var(--step-small);color:var(--muted);text-align:center;line-height:1.3}
 .rb.on .rb-n{color:var(--ink)}
 .rd-buy{position:sticky;top:88px;background:var(--surface);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;gap:14px}
 @media (max-width:960px){.rd-buy{position:static}}
@@ -380,7 +381,7 @@ textarea{border-radius:var(--r-sm)}
 .pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:8px}
 .pair{background:var(--surface);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:6px}
 .pair-b{display:flex;gap:4px;height:90px;align-items:flex-end;margin-bottom:6px}
-.pair-b .rb-i{height:100%}
+.pair-b .rb-i{height:100%;width:auto;transform:none}
 img[src*="doterra.com"]{mix-blend-mode:multiply}
 
 /* oil detail */
