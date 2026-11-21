@@ -67,6 +67,9 @@ function demoVisible(table, row) {
     case "blends": case "needs": return shares(row.member_id);
     case "blend_requests": case "bookings": return row.member_id === me;
     case "service_records": return row.status === "final" && shares(row.member_id);
+    case "inv_items": return true;
+    case "inv_holders": { const mine = (demo.inv_holders || []).filter((h) => h.member_id === me).map((h) => h.id); return mine.includes(row.id) || (demo.inv_moves || []).some((m) => ["loan", "repay", "settle"].includes(m.kind) && ((mine.includes(m.from_holder) && m.to_holder === row.id) || (mine.includes(m.to_holder) && m.from_holder === row.id))); }
+    case "inv_moves": { const mine = (demo.inv_holders || []).filter((h) => h.member_id === me).map((h) => h.id); return mine.includes(row.from_holder) || mine.includes(row.to_holder); }
     default: return false;
   }
 }

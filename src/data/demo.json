@@ -12416,5 +12416,248 @@
    "author_name": "Amy（示例）",
    "created_at": "2026-10-26T20:10:00Z"
   }
+ ],
+ "inv_holders": [
+  {
+   "id": "10000000-0000-0000-0000-000000000001",
+   "name": "Grace（我）",
+   "kind": "self",
+   "member_id": null,
+   "active": true,
+   "created_at": "2026-01-01"
+  },
+  {
+   "id": "10000000-0000-0000-0000-000000000002",
+   "name": "工作室仓库",
+   "kind": "place",
+   "member_id": null,
+   "active": true,
+   "created_at": "2026-01-02"
+  },
+  {
+   "id": "10000000-0000-0000-0000-000000000003",
+   "name": "阿梅（下属帐户）",
+   "kind": "member",
+   "member_id": "00000000-0000-0000-0000-000000000003",
+   "active": true,
+   "created_at": "2026-01-03"
+  },
+  {
+   "id": "10000000-0000-0000-0000-000000000004",
+   "name": "Venus",
+   "kind": "member",
+   "member_id": "00000000-0000-0000-0000-000000000001",
+   "active": true,
+   "created_at": "2026-01-04"
+  }
+ ],
+ "inv_items": [
+  {
+   "id": "20000000-0000-0000-0000-000000000001",
+   "name": "薰衣草精油 15ml",
+   "product_id": null,
+   "category": "oil",
+   "unit": "瓶",
+   "cost": 26.67,
+   "active": true
+  },
+  {
+   "id": "20000000-0000-0000-0000-000000000002",
+   "name": "乳香精油 15ml",
+   "product_id": null,
+   "category": "oil",
+   "unit": "瓶",
+   "cost": 85.33,
+   "active": true
+  },
+  {
+   "id": "20000000-0000-0000-0000-000000000003",
+   "name": "椒样薄荷精油 15ml",
+   "product_id": null,
+   "category": "oil",
+   "unit": "瓶",
+   "cost": 28.0,
+   "active": true
+  },
+  {
+   "id": "20000000-0000-0000-0000-000000000004",
+   "name": "10ml 滚珠瓶",
+   "product_id": null,
+   "category": "bottle",
+   "unit": "个",
+   "cost": 1.2,
+   "active": true
+  },
+  {
+   "id": "20000000-0000-0000-0000-000000000005",
+   "name": "精油入门宣传册",
+   "product_id": null,
+   "category": "print",
+   "unit": "本",
+   "cost": 0.8,
+   "active": true
+  }
+ ],
+ "inv_moves": [
+  {
+   "id": "30000000-0000-0000-0000-000000000001",
+   "batch": null,
+   "date": "2026-11-01",
+   "kind": "in",
+   "item_id": "20000000-0000-0000-0000-000000000001",
+   "qty": 6,
+   "from_holder": null,
+   "to_holder": "10000000-0000-0000-0000-000000000001",
+   "unit_price": 26.67,
+   "amount": null,
+   "reason": "",
+   "order_ref": "Grace 帐户 #A1029",
+   "note": "",
+   "created_at": "2026-11-01"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000002",
+   "batch": null,
+   "date": "2026-11-01",
+   "kind": "in",
+   "item_id": "20000000-0000-0000-0000-000000000002",
+   "qty": 3,
+   "from_holder": null,
+   "to_holder": "10000000-0000-0000-0000-000000000001",
+   "unit_price": 85.33,
+   "amount": null,
+   "reason": "",
+   "order_ref": "Grace 帐户 #A1029",
+   "note": "",
+   "created_at": "2026-11-01"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000003",
+   "batch": null,
+   "date": "2026-11-02",
+   "kind": "in",
+   "item_id": "20000000-0000-0000-0000-000000000004",
+   "qty": 100,
+   "from_holder": null,
+   "to_holder": "10000000-0000-0000-0000-000000000002",
+   "unit_price": 1.2,
+   "amount": null,
+   "reason": "",
+   "order_ref": "",
+   "note": "淘宝采购",
+   "created_at": "2026-11-02"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000004",
+   "batch": null,
+   "date": "2026-11-02",
+   "kind": "in",
+   "item_id": "20000000-0000-0000-0000-000000000005",
+   "qty": 200,
+   "from_holder": null,
+   "to_holder": "10000000-0000-0000-0000-000000000002",
+   "unit_price": null,
+   "amount": null,
+   "reason": "",
+   "order_ref": "",
+   "note": "印刷",
+   "created_at": "2026-11-02"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000005",
+   "batch": null,
+   "date": "2026-11-05",
+   "kind": "in",
+   "item_id": "20000000-0000-0000-0000-000000000003",
+   "qty": 4,
+   "from_holder": null,
+   "to_holder": "10000000-0000-0000-0000-000000000003",
+   "unit_price": 28,
+   "amount": null,
+   "reason": "",
+   "order_ref": "用阿梅帐户下单 #B2231",
+   "note": "",
+   "created_at": "2026-11-05"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000006",
+   "batch": null,
+   "date": "2026-11-08",
+   "kind": "loan",
+   "item_id": "20000000-0000-0000-0000-000000000003",
+   "qty": 2,
+   "from_holder": "10000000-0000-0000-0000-000000000003",
+   "to_holder": "10000000-0000-0000-0000-000000000001",
+   "unit_price": null,
+   "amount": null,
+   "reason": "",
+   "order_ref": "",
+   "note": "先拿两支薄荷给客人",
+   "created_at": "2026-11-08"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000007",
+   "batch": null,
+   "date": "2026-11-10",
+   "kind": "loan",
+   "item_id": "20000000-0000-0000-0000-000000000001",
+   "qty": 2,
+   "from_holder": "10000000-0000-0000-0000-000000000001",
+   "to_holder": "10000000-0000-0000-0000-000000000004",
+   "unit_price": null,
+   "amount": null,
+   "reason": "",
+   "order_ref": "",
+   "note": "",
+   "created_at": "2026-11-10"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000008",
+   "batch": null,
+   "date": "2026-11-12",
+   "kind": "out",
+   "item_id": "20000000-0000-0000-0000-000000000001",
+   "qty": 1,
+   "from_holder": "10000000-0000-0000-0000-000000000001",
+   "to_holder": null,
+   "unit_price": 42,
+   "amount": null,
+   "reason": "卖出",
+   "order_ref": "",
+   "note": "",
+   "created_at": "2026-11-12"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000009",
+   "batch": null,
+   "date": "2026-11-15",
+   "kind": "repay",
+   "item_id": "20000000-0000-0000-0000-000000000003",
+   "qty": 1,
+   "from_holder": "10000000-0000-0000-0000-000000000001",
+   "to_holder": "10000000-0000-0000-0000-000000000003",
+   "unit_price": null,
+   "amount": null,
+   "reason": "",
+   "order_ref": "",
+   "note": "",
+   "created_at": "2026-11-15"
+  },
+  {
+   "id": "30000000-0000-0000-0000-000000000010",
+   "batch": null,
+   "date": "2026-11-16",
+   "kind": "transfer",
+   "item_id": "20000000-0000-0000-0000-000000000004",
+   "qty": 20,
+   "from_holder": "10000000-0000-0000-0000-000000000002",
+   "to_holder": "10000000-0000-0000-0000-000000000001",
+   "unit_price": null,
+   "amount": null,
+   "reason": "",
+   "order_ref": "",
+   "note": "",
+   "created_at": "2026-11-16"
+  }
  ]
 }

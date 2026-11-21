@@ -8,6 +8,7 @@ import { Loading, Modal, useProductName } from "../components";
 import { Orders, MemberView, Team } from "./Member";
 import { BookingsAdmin, ServiceHistory, StaffAdmin } from "./Service";
 import { buildTree, money, today } from "../util";
+import { InventoryAdmin } from "./Inventory";
 
 export default function Admin() {
   const { t } = useLang();
@@ -21,7 +22,7 @@ export default function Admin() {
   return (
     <>
       <h1 style={{ fontSize: 30 }}>{t("nav_admin")}</h1>
-      <div className="tabs">{["a_bookings", "a_requests", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
+      <div className="tabs">{["a_bookings", "a_requests", "a_inventory", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
       {tab === "a_bookings" && <BookingsAdmin />}
       {tab === "a_staff" && <StaffAdmin />}
       {tab === "a_requests" && <RequestsAdmin />}
@@ -29,6 +30,7 @@ export default function Admin() {
       {tab === "a_import" && <ImportAdmin />}
       {tab === "a_levels" && <LevelsAdmin />}
       {tab === "a_recipes" && <RecipesAdmin />}
+      {tab === "a_inventory" && <InventoryAdmin />}
     </>
   );
 }

@@ -5,6 +5,7 @@ import { useAuth, useCatalog, useToast } from "../ctx";
 import { db } from "../api";
 import { DropList, Loading } from "../components";
 import { MyBookings, ServiceHistory } from "./Service";
+import { MyStock } from "./Inventory";
 import { buildTree, countTree, daysSince, dilutionPct, ladder, money, ownedSet } from "../util";
 
 export function useMemberData(memberId) {
@@ -48,7 +49,7 @@ export function DownlineView() {
   return <MemberView memberId={id} key={id} />;
 }
 
-const TABS = ["overview", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests"];
+const TABS = ["overview", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock"];
 
 export function MemberView({ memberId, self, admin }) {
   const { t, cv, pick } = useLang();
@@ -64,7 +65,7 @@ export function MemberView({ memberId, self, admin }) {
   const teamN = countTree(tree);
   const isMine = m.id === profile?.member_id;
   const healthVisible = admin || isMine || m.share_health_with_upline;
-  const tabs = TABS.filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self));
+  const tabs = TABS.filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin));
   return (
     <>
       {!self && !admin && <div className="crumbs"><Link to="/me">{t("nav_member")}</Link><span>/</span><span>{cv(m.name)}</span></div>}
@@ -82,6 +83,7 @@ export function MemberView({ memberId, self, admin }) {
       {tab === "my_needs" && (healthVisible ? <Needs d={d} m={m} canPost={isMine} reload={reload} /> : <div className="empty">{t("health_hidden")}</div>)}
       {tab === "my_team" && <Team tree={tree} st={d.st} levels={d.levels} admin={admin} />}
       {tab === "my_requests" && <Requests reqs={d.reqs} />}
+      {tab === "my_stock" && <MyStock memberId={m.id} />}
       {self && <ShareToggle m={m} reload={reload} />}
     </>
   );
