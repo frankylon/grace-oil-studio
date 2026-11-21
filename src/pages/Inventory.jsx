@@ -62,6 +62,8 @@ function useInv() {
       db.select("inv_moves", { order: ["date", false] }).catch(() => []),
       db.select("members", { order: ["name", true] }).catch(() => []),
     ]);
+    const rank = (h) => (members.find((m) => m.id === h.member_id)?.tier === "super" ? 0 : h.kind === "place" ? 2 : 1);
+    holders.sort((a, b) => rank(a) - rank(b) || String(a.name).localeCompare(String(b.name), "zh"));
     setD({ items, holders, moves, members });
   }, []);
   useEffect(() => { load(); }, [load]);

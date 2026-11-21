@@ -53,7 +53,10 @@ function useBooks() {
       db.select("inv_items", { order: ["name", true] }).catch(() => []),
     ]);
     const mset = new Set(members.map((m) => m.id));
-    const editable = holders.filter((h) => h.active !== false && (isAdmin || (h.member_id && mset.has(h.member_id))));
+    // 排序：Grace（源头）→ 各会员按名字 → 仓库等地点
+    const rank = (h) => (members.find((m) => m.id === h.member_id)?.tier === "super" ? 0 : h.kind === "place" ? 2 : 1);
+    const editable = holders.filter((h) => h.active !== false && (isAdmin || (h.member_id && mset.has(h.member_id))))
+      .sort((a, b) => rank(a) - rank(b) || String(a.name).localeCompare(String(b.name), "zh"));
     setD({ holders, entries, members, dts, items, editable });
   }, [isAdmin]);
   useEffect(() => { load(); }, [load]);
@@ -110,7 +113,7 @@ function Ledger({ d, reload, admin, myMember }) {
     <>
       {!admin && !mine && <p className="muted" style={{ marginTop: 0 }}>{pick("这是你自己的账本：精油进货、瓶子、宣传、广告、餐饮、油费这些开支，以及卖精油、doTERRA 奖金这些收入，都可以记在这里。上传收据或订单，系统会自动识别、帮你填好。", "Your own books: log oil orders, bottles, ads, meals, gas and other costs, plus oil sales and doTERRA bonuses. Upload a receipt or order and it's filled in for you.")}</p>}
       <div className="inv-bar">
-        {(admin || accts.length > 1) && <select value={acct} onChange={(e) => setAcct(e.target.value)} aria-label={pick("帐户", "Account")}><option value="">{pick("全部帐户", "All accounts")}</option>{accts.map((h) => <option key={h.id} value={h.id}>{cv(h.name)}</option>)}</select>}
+        {(admin || accts.length > 1) && <select value={acct} onChange={(e) => setAcct(e.target.value)} aria-label={pick("帐户", "Account")}><option value="">{pick("全部帐户", "All accounts")}</option><AcctOptions d={d} /></select>}
         <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label={pick("月份", "Month")}>
           <option value="">{pick("全部时间", "All time")}</option>
           {years.map((y) => <option key={y} value={y}>{y} {pick("全年", "full year")}</option>)}
@@ -140,6 +143,17 @@ function Ledger({ d, reload, admin, myMember }) {
       {edit && <EntryForm d={d} entry={edit} admin={admin} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); reload(); }} />}
     </>
   );
+}
+
+/* 帐户下拉：会员帐户和其他（仓库等）分开 */
+function AcctOptions({ d }) {
+  const { pick, cv } = useLang();
+  const mem = d.editable.filter((h) => h.kind !== "place"), other = d.editable.filter((h) => h.kind === "place");
+  const label = (h) => { const m = d.members.find((x) => x.id === h.member_id); return cv(h.name) + (m?.tier === "super" ? pick("（源头）", " (top)") : ""); };
+  return <>
+    <optgroup label={pick(`会员帐户（${mem.length}）`, `Member accounts (${mem.length})`)}>{mem.map((h) => <option key={h.id} value={h.id}>{label(h)}</option>)}</optgroup>
+    {other.length > 0 && <optgroup label={pick("其他", "Other")}>{other.map((h) => <option key={h.id} value={h.id}>{cv(h.name)}</option>)}</optgroup>}
+  </>;
 }
 
 /* ---------- 记一笔 ---------- */
@@ -254,7 +268,7 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
         </div>}
         <div className="grid3">
           <div className="field"><label htmlFor="fe_d">{pick("日期", "Date")}</label><input id="fe_d" type="date" value={f.date} onChange={set("date")} /></div>
-          {!split && <div className="field"><label htmlFor="fe_h">{pick("记在哪个帐户", "Account")}</label><select id="fe_h" value={f.holder_id} onChange={set("holder_id")} disabled={!isNew && !admin}>{d.editable.map((h) => <option key={h.id} value={h.id}>{cv(h.name)}</option>)}</select></div>}
+          {!split && <div className="field"><label htmlFor="fe_h">{pick("记在哪个帐户", "Account")}</label><select id="fe_h" value={f.holder_id} onChange={set("holder_id")} disabled={!isNew && !admin}><AcctOptions d={d} /></select></div>}
           <div className="field"><label htmlFor="fe_c">{pick("类别", "Category")}</label><select id="fe_c" value={f.category} onChange={set("category")}><option value="">{pick("请选择…", "Choose…")}</option>{[...cats, ...(f.category && !cats.includes(f.category) ? [f.category] : [])].map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
           <div className="field"><label htmlFor="fe_m">{f.kind === "income" ? pick("付款人 / 客人", "From") : pick("商家", "Merchant")}</label><input id="fe_m" type="text" value={f.merchant} onChange={set("merchant")} /></div>
           <div className="field"><label htmlFor="fe_i">{pick("内容", "What for")}</label><input id="fe_i" type="text" value={f.item} onChange={set("item")} placeholder={f.kind === "income" ? pick("例如：卖给客人两支薰衣草", "e.g. two lavender to a client") : pick("例如：10ml 滚珠瓶 100 个", "e.g. 100 roller bottles")} /></div>
