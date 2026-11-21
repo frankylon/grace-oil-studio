@@ -84,6 +84,7 @@ export function MemberView({ memberId, self, admin }) {
         <span className="pill">{pick(...(TIERS[m.tier] || TIERS.customer))}</span>
         {m.doterra_id && <span className="muted mono small">#{m.doterra_id}</span>}
       </div>
+      {isMine && profile?.default_pw && tab !== "my_settings" && <p className="notice honey" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>{pick("你还在用初始密码（手机号后六位），别人容易猜到。建议改一个自己的密码。", "You're still using the first password (last six digits of your phone). Please change it.")}<button className="btn sm" onClick={() => setTab("my_settings")}>{pick("去改密码", "Change it")}</button></p>}
       <div className="tabs" role="tablist">{tabs.map((x) => <button key={x} role="tab" aria-current={tab === x} onClick={() => setTab(x)}>{t(x)}</button>)}</div>
       {tab === "overview" && <><PointsPanel memberId={m.id} admin={admin} /><Overview d={d} m={m} s={s} teamN={teamN} /></>}
       {tab === "my_blends" && (healthVisible ? <Blends d={d} /> : <div className="empty">{t("health_hidden")}</div>)}

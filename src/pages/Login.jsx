@@ -6,7 +6,7 @@ import { auth, DEMO } from "../api";
 
 const ERR = {
   exists: ["这个邮箱已经注册过了，请直接登入；忘记密码可以重设。", "This email is already registered. Sign in, or reset your password."],
-  invalid: ["邮箱或密码不对。", "Wrong email or password."],
+  invalid: ["帐号或密码不对。", "Wrong phone/email or password."],
   weak_password: ["密码至少 8 位。", "Password needs at least 8 characters."],
   bad_email: ["邮箱格式不对。", "That email doesn't look right."],
   no_name: ["请填你的名字。", "Please enter your name."],
@@ -39,7 +39,7 @@ export default function Login() {
   };
   const forgot = async () => {
     setErr(""); setNote("");
-    if (!f.email.trim()) { setErr(pick("先填上你的邮箱。", "Enter your email first.")); return; }
+    if (!f.email.trim() || !f.email.includes("@")) { setErr(pick("先在上面填上你注册用的邮箱。用手机号登入的会员，请联系 Grace 重设密码。", "Enter the email you registered with. Phone sign-in members: ask Grace to reset it.")); return; }
     setBusy(true);
     try { await auth.resetPassword(f.email); setNote(pick("重设密码的邮件已经发出，请到邮箱点链接设新密码。", "We've emailed you a link to set a new password.")); } catch (x) { fail(x); }
     setBusy(false);
@@ -59,10 +59,11 @@ export default function Login() {
       </div>
       {tab === "login" ? (
         <form onSubmit={login} className="lg-form">
-          <div className="field"><label htmlFor="lg_e">{pick("邮箱", "Email")}</label><input id="lg_e" type="email" autoComplete="email" value={f.email} onChange={set("email")} required /></div>
+          <div className="field"><label htmlFor="lg_e">{pick("手机号或邮箱", "Phone or email")}</label><input id="lg_e" type="text" inputMode="email" autoComplete="username" value={f.email} onChange={set("email")} placeholder={pick("例如 6045551234", "e.g. 6045551234")} required /></div>
           <div className="field"><label htmlFor="lg_p">{pick("密码", "Password")}</label><input id="lg_p" type="password" autoComplete="current-password" value={f.password} onChange={set("password")} required /></div>
           <button className="btn primary" disabled={busy || !f.email || !f.password}>{pick("登入", "Sign in")}</button>
-          <button type="button" className="btn ghost sm" onClick={forgot} disabled={busy}>{pick("忘记密码 / 第一次设密码", "Forgot password / set a password")}</button>
+          <p className="muted small" style={{ margin: 0 }}>{pick("doTERRA 会员：帐号是你的手机号，初始密码是手机号后六位。忘记密码请联系 Grace。", "doTERRA members: sign in with your phone number; the first password is its last six digits. Forgot it? Ask Grace.")}</p>
+          <button type="button" className="btn ghost sm" onClick={forgot} disabled={busy}>{pick("用邮箱注册的：忘记密码", "Registered by email: forgot password")}</button>
           <p className="muted small" style={{ margin: 0 }}>{pick("还没有帐户？", "No account yet? ")}<button type="button" className="linkbtn" onClick={() => setTab("register")}>{pick("免费注册", "Register free")}</button></p>
         </form>
       ) : (

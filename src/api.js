@@ -195,7 +195,10 @@ export const auth = {
   },
   async signIn({ email, password }) {
     if (DEMO) throw new Error("demo");
-    const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    const id = email.trim().toLowerCase();
+    // 不含 @ 就当手机号：会员用手机号登入（帐号由管理员开通）
+    const login = id.includes("@") ? id : phoneLoginEmail(id);
+    const { error } = await sb.auth.signInWithPassword({ email: login, password });
     if (error) { const e = new Error(error.message); e.code = /invalid/i.test(error.message) ? "invalid" : ""; throw e; }
   },
   async resetPassword(email) {
@@ -205,7 +208,7 @@ export const auth = {
   },
   async setPassword(password) {
     if (DEMO) return;
-    const { error } = await sb.auth.updateUser({ password });
+    const { error } = await sb.auth.updateUser({ password, data: { default_pw: false } });
     if (error) throw error;
   },
   async verifyOtp({ email, phone, token }) {
@@ -234,6 +237,7 @@ export const auth = {
       ({ data } = await sb.from("profiles").select("role,member_id").eq("id", s.session.user.id).maybeSingle());
     }
     const prof = data || { role: "member", member_id: null };
+    prof.default_pw = !!s.session.user.user_metadata?.default_pw;
     if (prof.member_id) { const { data: mm } = await sb.from("members").select("tier").eq("id", prof.member_id).maybeSingle(); prof.tier = mm?.tier || "customer"; }
     if (prof.role === "admin" || prof.role === "therapist") {
       const { data: st } = await sb.from("staff").select("id,name").eq("user_id", s.session.user.id).maybeSingle();
@@ -267,6 +271,16 @@ export async function aiReceipt(kind, parts, context) {
   }
   const { data, error } = await sb.functions.invoke("receipt-ai", { body: { kind, files: parts, context } });
   if (error) { let code = ""; try { code = (await error.context.json()).error; } catch {} const e = new Error(code || error.message); e.code = code; throw e; }
+  return data;
+}
+
+/* 手机号登入：帐号由管理员开通，初始密码是手机号后六位 */
+export const phoneKey = (p) => { let d = String(p || "").replace(/\D/g, ""); if (d.length === 11 && d[0] === "1") d = d.slice(1); return d; };
+export const phoneLoginEmail = (p) => `p${phoneKey(p)}@members.grace-oil-studio.app`;
+export async function memberLogins(mode, memberIds) {
+  if (DEMO) { await demoDb(); return { results: memberIds.map((id) => { const m = demo.members.find((x) => x.id === id); const d = phoneKey(m?.phone); if (d.length < 7) return { id, name: m?.name, status: "no_phone" }; if (m) { m.login_phone = d; m.login_created_at = new Date().toISOString(); } persist(); return { id, name: m?.name, status: mode === "reset" ? "reset" : "created", login: d }; }) }; }
+  const { data, error } = await sb.functions.invoke("member-login", { body: { mode, member_ids: memberIds } });
+  if (error) { let code = ""; try { code = (await error.context.json()).error; } catch {} throw new Error(code || error.message); }
   return data;
 }
 

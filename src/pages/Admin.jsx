@@ -3,7 +3,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { useLang } from "../i18n";
 import { useAuth, useCatalog, useToast } from "../ctx";
-import { db, resetCatalog } from "../api";
+import { db, resetCatalog, memberLogins, phoneKey } from "../api";
 import { Loading, Modal, useProductName } from "../components";
 import { Orders, MemberView, Team, TIERS } from "./Member";
 import { BookingsAdmin, ServiceHistory, StaffAdmin } from "./Service";
@@ -96,6 +96,7 @@ function MembersAdmin() {
       <aside style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <input id="am_q" type="search" placeholder={t("search")} value={q} onChange={(e) => setQ(e.target.value)} />
         <button className="btn primary" onClick={() => setEditing({})}>+ {t("new_member")}</button>
+        <BulkLogins members={members} reload={reload} />
         <div className="mlist">{list.map((m) => <button key={m.id} className="mitem" aria-current={m.id === sel} onClick={() => setSp({ tab: "a_members", m: m.id })}><b>{cv(m.name)}</b><small>{m.doterra_id || m.email || m.phone || "—"}</small></button>)}</div>
       </aside>
       <section style={{ minWidth: 0 }}>
@@ -141,7 +142,45 @@ function MemberForm({ m, members, onClose, onSaved }) {
   );
 }
 
-function MemberAdminDetail({ m, members, onEdit }) {
+const LOGIN_MSG = { created: ["已开通", "Created"], reset: ["密码已重设为手机后六位", "Password reset"], exists: ["已经开通过", "Already set up"], no_phone: ["没有手机号", "No phone number"], taken: ["这个手机号已被别的帐号用了", "Phone already used"], error: ["出错", "Error"] };
+function LoginBox({ m, onDone }) {
+  const { pick } = useLang();
+  const toast = useToast();
+  const [st, setSt] = useState({ phone: m.login_phone, at: m.login_created_at });
+  const [busy, setBusy] = useState(false);
+  const d = phoneKey(m.phone);
+  const run = async (mode) => {
+    if (mode === "reset" && !window.confirm(pick(`把 ${m.name} 的密码重设回手机号后六位（${d.slice(-6)}）？`, `Reset ${m.name}'s password to the last six digits?`))) return;
+    setBusy(true);
+    try { const r = (await memberLogins(mode, [m.id])).results?.[0]; toast(pick(...(LOGIN_MSG[r?.status] || LOGIN_MSG.error)) + (r?.message ? `：${r.message}` : "")); if (["created", "reset", "exists"].includes(r?.status)) { setSt({ phone: r.login, at: new Date().toISOString() }); onDone && onDone(); } } catch (e) { toast(e.message); }
+    setBusy(false);
+  };
+  return (
+    <div className="login-box">
+      <div><b>{pick("会员登入", "Member sign-in")}</b>
+        {st.phone ? <span className="muted small">{pick(`帐号 ${st.phone}，初始密码是后六位 ${st.phone.slice(-6)}（如果会员自己改过就不是了）`, `Login ${st.phone}; first password ${st.phone.slice(-6)} unless changed`)}</span>
+          : d.length >= 7 ? <span className="muted small">{pick(`还没开通。开通后帐号是 ${d}，密码是 ${d.slice(-6)}`, `Not set up. Login would be ${d}, password ${d.slice(-6)}`)}</span>
+          : <span className="muted small">{pick("先在「编辑」里填上手机号，才能开通。", "Add a phone number first.")}</span>}</div>
+      <div className="acts">{!st.phone ? <button className="btn primary sm" disabled={busy || d.length < 7} onClick={() => run("create")}>{pick("开通登入", "Create login")}</button> : <button className="btn sm" disabled={busy} onClick={() => run("reset")}>{pick("重设密码", "Reset password")}</button>}</div>
+    </div>
+  );
+}
+function BulkLogins({ members, reload }) {
+  const { pick } = useLang();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const todo = members.filter((m) => !m.login_phone && phoneKey(m.phone).length >= 7 && m.tier !== "super");
+  if (!todo.length) return null;
+  const go = async () => {
+    if (!window.confirm(pick(`为 ${todo.length} 位有手机号、还没开通的会员开通登入？帐号是手机号，密码是手机号后六位。`, `Create logins for ${todo.length} members?`))) return;
+    setBusy(true);
+    try { const r = await memberLogins("create", todo.map((m) => m.id)); const ok = (r.results || []).filter((x) => x.status === "created").length; toast(pick(`已开通 ${ok} 位`, `${ok} created`)); reload(); } catch (e) { toast(e.message); }
+    setBusy(false);
+  };
+  return <button className="btn sm" disabled={busy} onClick={go}>{busy ? pick("开通中…", "Working…") : pick(`一键开通登入（${todo.length} 位）`, `Create logins (${todo.length})`)}</button>;
+}
+
+function MemberAdminDetail({ m, members, onEdit, reloadMembers }) {
   const { t, cv, pick } = useLang();
   const [sub, setSub] = useState("services");
   const [k, setK] = useState(0);
@@ -160,6 +199,7 @@ function MemberAdminDetail({ m, members, onEdit }) {
         </div>
         <button className="btn sm" onClick={onEdit}>{t("edit")}</button>
       </div>
+      <LoginBox m={m} onDone={reloadMembers} />
       <div className="tabs">{["services", "status", "orders", "blends", "needs", "team", "preview"].map((x) => <button key={x} aria-current={sub === x} onClick={() => setSub(x)}>{t({ services: "my_services", status: "status_edit", orders: "my_orders", blends: "my_blends", needs: "my_needs", team: "my_team", preview: "nav_member" }[x])}</button>)}</div>
       {sub === "services" && <><p><Link className="btn primary sm" to={`/staff/c/${m.id}`}>{pick("打开服务档案 / 写新记录", "Open client file / new record")}</Link></p><ServiceHistory memberId={m.id} staffView /></>}
       {sub === "status" && <StatusEditor m={m} />}
