@@ -10,18 +10,13 @@ import { today } from "../util";
 import { ensureItem, productItem } from "./Inventory";
 import { useCompData } from "./Business";
 import { RANKS, allocate } from "../comp";
+import { PLAN, isValid, monthStatement, orderEstimate, tierRate } from "../dsplan";
 
 const n = (v) => { const x = Number(v); return isFinite(x) ? x : 0; };
 const cad = (v) => `${n(v) < 0 ? "−" : ""}$${Math.abs(n(v)).toFixed(2)}`;
 const price = (p) => parseFloat(String(p?.wholesale || "").replace(/[^0-9.]/g, "")) || 0;
 export const PAY = { store_collected: ["店家已收款", "Store collected"], direct_doterra: ["客人在 doTERRA 官网自己下单", "Ordered on doTERRA"], pending: ["还没收款", "Not paid yet"], paid: ["已付款给我们", "Paid to us"] };
 export const STATUS = { new: ["新订单", "New"], processing: ["处理中", "Processing"], shipped: ["已发货", "Shipped"], done: ["已完成", "Done"], cancelled: ["已取消", "Cancelled"] };
-/** 一张单的提成：店家 %、员工 %（没有销售员时员工那份也给店家） */
-export function commission(o) {
-  const st = n(o.subtotal) * n(o.store_pct) / 100, sf = n(o.subtotal) * n(o.staff_pct) / 100;
-  return o.rep_id ? { store: st, staff: sf } : { store: st + sf, staff: 0 };
-}
-
 /* ---------- 购物车（专属链接和后台共用） ---------- */
 function Cart({ lines, setLines, showPv }) {
   const { pick, cv } = useLang();
@@ -228,14 +223,16 @@ function OrderDetail({ d, o, onClose, onSaved }) {
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const sub = lines.reduce((s, l) => s + n(l.qty) * n(l.price), 0);
-  const store = d.stores.find((s) => s.id === f.store_id); const rep = d.reps.find((r) => r.id === f.rep_id);
-  const pctS = isNew ? n(store?.store_pct) : n(f.store_pct), pctF = isNew ? n(rep?.staff_pct ?? store?.staff_pct) : n(f.staff_pct);
-  const c = commission({ subtotal: sub, store_pct: pctS, staff_pct: pctF, rep_id: f.rep_id });
+  const rep = d.reps.find((r) => r.id === f.rep_id);
+  const est = isNew ? null : orderEstimate(d, o);
+  const sellerKind = rep ? (rep.store_id ? "staff" : "rep") : "owner";
+  const rate = est?.rate ?? tierRate(sellerKind === "rep" ? PLAN.rep : PLAN.staff, 0);
+  const storeCut = f.store_id ? sub * PLAN.store : 0, sellerCut = sub * rate;
   const save = async (patch = {}) => {
     setBusy(true);
     try {
       const row = { store_id: f.store_id || null, rep_id: f.rep_id || null, customer_name: f.customer_name, customer_phone: f.customer_phone, ship_address: f.ship_address, ship_method: f.ship_method, payment: f.payment, status: f.status, doterra_ref: f.doterra_ref || "", tracking: f.tracking || "", fulfill: f.fulfill || "", note: f.note || "", pv: f.pv === "" || f.pv == null ? null : n(f.pv), items: lines, subtotal: sub, ...patch };
-      if (isNew) await db.insert("ds_orders", { ...row, source: "admin", store_pct: pctS, staff_pct: pctF });
+      if (isNew) await db.insert("ds_orders", { ...row, source: "admin", store_pct: PLAN.store * 100, staff_pct: 0 });
       else await db.update("ds_orders", o.id, row);
       toast(pick("已保存", "Saved")); onSaved();
     } catch (e) { toast(e.message); }
@@ -271,10 +268,12 @@ function OrderDetail({ d, o, onClose, onSaved }) {
       <Cart lines={lines} setLines={setLines} showPv />
       <div className="pt-break">
         <div><span>{pick("金额（会员价）", "Amount")}</span><b>{cad(sub)}</b></div>
-        <div><span>{pick(`店家 ${pctS}%${f.rep_id ? "" : ` ＋ 员工 ${pctF}%`}`, "Store")}</span><b>{cad(c.store)}</b></div>
-        {f.rep_id && <div><span>{pick(`员工 ${pctF}%`, "Staff")}</span><b>{cad(c.staff)}</b></div>}
-        <div className="hi"><span>{pick("我们留下", "We keep")}</span><b>{cad(sub - c.store - c.staff)}</b></div>
+        {f.store_id && <div><span>{pick("门店分成 5%", "Store 5%")}</span><b>{cad(storeCut)}</b></div>}
+        <div><span>{pick(`成交人提成（当月档位 ${Math.round(rate * 100)}%）`, `Seller (${Math.round(rate * 100)}%)`)}</span><b>{cad(sellerCut)}</b></div>
+        <div><span>{pick("有效订单（满 $100）", "Counts as valid order")}</span><b>{sub >= PLAN.validMin ? pick("是", "Yes") : pick("否", "No")}</b></div>
+        <div className="hi"><span>{pick("我们大约留下", "We keep about")}</span><b>{cad(sub - storeCut - sellerCut)}</b></div>
       </div>
+      <p className="muted small" style={{ margin: 0 }}>{pick("提成比例按成交人当月的总销售额定档，月底在「结算」统一算；冲量奖按当月有效订单张数。", "Rates are set by the seller's monthly total; see Settlement.")}</p>
       {!isNew && o.alloc && <p className="notice small">{pick("已按推荐记入：", "Recorded as: ")}{o.alloc.map((x) => `${x.label}（${Math.round(x.pv)} PV：${x.items.join("、")}）`).join("；")}</p>}
       {!isNew && !o.alloc && o.payment !== "direct_doterra" && lines.length > 0 && <AllocPanel orders={[{ ...o, items: lines }]} onApplied={onSaved} />}
       {!isNew && <section className="ds-ful">
@@ -308,22 +307,22 @@ function Perf({ d }) {
       const rep = d.reps.find((r) => r.id === o.rep_id);
       const key = by === "store" ? o.store_id || "none" : by === "rep" ? o.rep_id || "none" : rep?.team || pick("（没有团队）", "(no team)");
       const label = by === "store" ? d.stores.find((s) => s.id === o.store_id)?.name || pick("（没有门店）", "(none)") : by === "rep" ? rep?.name || pick("（门店自己下的）", "(store itself)") : key;
-      const x = (g[key] = g[key] || { label, orders: 0, amt: 0, pv: 0, store: 0, staff: 0, customers: new Set() });
-      const c = commission(o); x.orders++; x.amt += n(o.subtotal); x.pv += n(o.pv); x.store += c.store; x.staff += c.staff; x.customers.add(o.customer_phone || o.customer_name);
+      const x = (g[key] = g[key] || { label, orders: 0, valid: 0, amt: 0, pv: 0, customers: new Set() });
+      x.orders++; if (isValid(o)) x.valid++; x.amt += n(o.subtotal); x.pv += n(o.pv); x.customers.add(o.customer_phone || o.customer_name);
     }
     return Object.values(g).sort((a, b) => b.amt - a.amt);
   }, [os, by]); // eslint-disable-line
-  const tot = rows.reduce((s, r) => ({ amt: s.amt + r.amt, orders: s.orders + r.orders, store: s.store + r.store, staff: s.staff + r.staff }), { amt: 0, orders: 0, store: 0, staff: 0 });
+  const tot = rows.reduce((s, r) => ({ amt: s.amt + r.amt, orders: s.orders + r.orders, valid: s.valid + r.valid }), { amt: 0, orders: 0, valid: 0 });
   return (
     <>
       <div className="inv-bar">
         <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label={pick("月份", "Month")}><option value="">{pick("全部时间", "All time")}</option>{months.map((m) => <option key={m}>{m}</option>)}</select>
         <div className="fseg">{[["store", pick("按门店", "By store")], ["rep", pick("按销售员", "By rep")], ["team", pick("按团队", "By team")]].map(([k, l]) => <button key={k} aria-pressed={by === k} onClick={() => setBy(k)}>{l}</button>)}</div>
       </div>
-      <div className="fin-sum"><div><span>{pick("销售额（会员价）", "Sales")}</span><b>{cad(tot.amt)}</b></div><div><span>{pick("订单", "Orders")}</span><b>{tot.orders}</b></div><div><span>{pick("提成合计（店家＋员工）", "Commissions")}</span><b>{cad(tot.store + tot.staff)}</b></div></div>
+      <div className="fin-sum"><div><span>{pick("销售额（会员价）", "Sales")}</span><b>{cad(tot.amt)}</b></div><div><span>{pick("订单", "Orders")}</span><b>{tot.orders}</b></div><div><span>{pick("有效订单（满 $100）", "Valid orders")}</span><b>{tot.valid}</b></div></div>
       {!rows.length ? <div className="empty">{pick("这段时间没有订单。", "No orders.")}</div> :
-        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>#</th><th>{by === "store" ? pick("门店", "Store") : by === "rep" ? pick("销售员", "Rep") : pick("团队", "Team")}</th><th className="n">{pick("订单", "Orders")}</th><th className="n">{pick("客人", "Customers")}</th><th className="n">{pick("销售额", "Sales")}</th><th className="n">PV</th><th className="n">{pick("店家提成", "Store")}</th><th className="n">{pick("员工提成", "Staff")}</th></tr></thead>
-          <tbody>{rows.map((r, i) => <tr key={r.label + i}><td>{i + 1}</td><td><b>{cv(r.label)}</b></td><td className="n">{r.orders}</td><td className="n">{r.customers.size}</td><td className="n"><b>{cad(r.amt)}</b></td><td className="n">{r.pv ? Math.round(r.pv) : "—"}</td><td className="n">{cad(r.store)}</td><td className="n">{cad(r.staff)}</td></tr>)}</tbody></table></div>}
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>#</th><th>{by === "store" ? pick("门店", "Store") : by === "rep" ? pick("销售员", "Rep") : pick("团队", "Team")}</th><th className="n">{pick("订单", "Orders")}</th><th className="n">{pick("客人", "Customers")}</th><th className="n">{pick("销售额", "Sales")}</th><th className="n">{pick("有效订单", "Valid")}</th><th className="n">{pick("平均每单", "Avg")}</th><th className="n">PV</th></tr></thead>
+          <tbody>{rows.map((r, i) => <tr key={r.label + i}><td>{i + 1}</td><td><b>{cv(r.label)}</b></td><td className="n">{r.orders}</td><td className="n">{r.customers.size}</td><td className="n"><b>{cad(r.amt)}</b></td><td className="n">{r.valid}</td><td className="n">{cad(r.amt / r.orders)}</td><td className="n">{r.pv ? Math.round(r.pv) : "—"}</td></tr>)}</tbody></table></div>}
     </>
   );
 }
@@ -333,26 +332,26 @@ function Settle({ d, load }) {
   const toast = useToast();
   const months = [...new Set([today().slice(0, 7), ...d.orders.map((o) => ym(o.created_at))])].sort().reverse();
   const [month, setMonth] = useState(months[0]);
-  const os = d.orders.filter((o) => o.status !== "cancelled" && ym(o.created_at) === month);
-  const stores = d.stores.map((s) => {
-    const mine = os.filter((o) => o.store_id === s.id);
-    const x = { s, orders: mine, sales: 0, storeC: 0, staffC: 0, collected: 0, settled: mine.length > 0 && mine.every((o) => o.settled) };
-    for (const o of mine) { const c = commission(o); x.sales += n(o.subtotal); x.storeC += c.store; x.staffC += c.staff; if (o.payment === "store_collected") x.collected += n(o.subtotal); }
-    x.net = x.collected - x.storeC - (s.staff_paid_by === "store" ? x.staffC : 0);
-    return x;
-  }).filter((x) => x.orders.length);
-  const reps = d.reps.map((r) => { const mine = os.filter((o) => o.rep_id === r.id); const st = d.stores.find((s) => s.id === r.store_id); return { r, n: mine.length, amt: mine.reduce((a, o) => a + n(o.subtotal), 0), pay: mine.reduce((a, o) => a + commission(o).staff, 0), byStore: st?.staff_paid_by === "store" }; }).filter((x) => x.n);
+  const st = useMemo(() => monthStatement(d, month), [d, month]);
+  const who = (p) => p.kind === "owner" ? pick(`${cv(p.store?.name || "")}（店主自己卖）`, `${p.store?.name || ""} (owner)`) : cv(p.rep?.name || "");
+  const kindL = (p) => p.kind === "rep" ? pick("独立销售", "Independent") : p.kind === "staff" ? pick(`店员 · ${cv(p.store?.name || "")}`, "Store staff") : pick("店主", "Owner");
+  const nextTier = (p) => { const t = p.kind === "rep" ? PLAN.rep : PLAN.staff; const nx = t.find(([a]) => p.sales < a); return nx ? pick(`再卖 ${cad(nx[0] - p.sales)} 到 ${Math.round(nx[1] * 100)}%`, `${cad(nx[0] - p.sales)} to ${Math.round(nx[1] * 100)}%`) : pick("已是最高档", "Top tier"); };
   const markSettled = async (x) => { try { for (const o of x.orders) if (!o.settled) await db.update("ds_orders", o.id, { settled: true }); toast(pick("已标为结清", "Marked settled")); load(); } catch (e) { toast(e.message); } };
   return (
     <>
       <div className="inv-bar"><select value={month} onChange={(e) => setMonth(e.target.value)} aria-label={pick("月份", "Month")}>{months.map((m) => <option key={m}>{m}</option>)}</select></div>
-      <p className="muted small" style={{ marginTop: 0 }}>{pick("算法：店家应交回 ＝ 店家收的款 − 店家提成（员工提成由店家发的话再减员工提成）。正数是店家要转给我们，负数是我们要付给店家。客人自己在 doTERRA 下单的，店家没收款，我们付店家提成。", "Store owes = collected − store commission (− staff commission if the store pays staff). Negative means we pay the store.")}</p>
-      {!stores.length ? <div className="empty">{pick("这个月没有订单。", "No orders this month.")}</div> :
-        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("门店", "Store")}</th><th className="n">{pick("订单", "Orders")}</th><th className="n">{pick("销售额", "Sales")}</th><th className="n">{pick("店家提成", "Store")}</th><th className="n">{pick("员工提成", "Staff")}</th><th className="n">{pick("店家收的款", "Collected")}</th><th className="n">{pick("结算", "Balance")}</th><th /></tr></thead>
-          <tbody>{stores.map((x) => <tr key={x.s.id}><td><b>{cv(x.s.name)}</b><span className="muted small"> {x.s.store_pct}% / {x.s.staff_pct}%{x.s.staff_paid_by === "store" ? pick("（员工提成由店家发）", "") : ""}</span></td><td className="n">{x.orders.length}</td><td className="n">{cad(x.sales)}</td><td className="n">{cad(x.storeC)}</td><td className="n">{cad(x.staffC)}</td><td className="n">{cad(x.collected)}</td><td className={`n ${x.net < 0 ? "neg" : ""}`}><b>{x.net >= 0 ? pick(`店家交回 ${cad(x.net)}`, `Store pays ${cad(x.net)}`) : pick(`我们付 ${cad(-x.net)}`, `We pay ${cad(-x.net)}`)}</b></td><td>{x.settled ? <span className="tag k-in">{pick("已结清", "Settled")}</span> : <button className="btn sm" onClick={() => markSettled(x)}>{pick("标为结清", "Mark settled")}</button>}</td></tr>)}</tbody></table></div>}
-      {reps.length > 0 && <><h3 style={{ margin: "20px 0 8px" }}>{pick("销售员提成", "Rep commissions")}</h3>
-        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("销售员", "Rep")}</th><th className="n">{pick("订单", "Orders")}</th><th className="n">{pick("销售额", "Sales")}</th><th className="n">{pick("提成", "Commission")}</th><th>{pick("谁发", "Paid by")}</th></tr></thead>
-          <tbody>{reps.map((x) => <tr key={x.r.id}><td>{cv(x.r.name)}{x.r.team && <span className="muted small"> · {cv(x.r.team)}</span>}</td><td className="n">{x.n}</td><td className="n">{cad(x.amt)}</td><td className="n"><b>{cad(x.pay)}</b></td><td className="small">{x.byStore ? pick("店家发", "Store") : pick("我们发", "Us")}</td></tr>)}</tbody></table></div></>}
+      <div className="fin-sum"><div><span>{pick("当月销售额", "Sales")}</span><b>{cad(st.sales)}</b></div><div><span>{pick("要发出的分成合计", "Total payout")}</span><b>{cad(st.payout)}</b></div><div><span>{pick("占销售额", "Of sales")}</span><b>{st.sales ? `${(st.payout / st.sales * 100).toFixed(1)}%` : "—"}</b></div></div>
+      <p className="muted small" style={{ marginTop: 0 }}>{pick(`按《合作伙伴分成计划》：独立销售 8% / 10% / 12% / 13%（$0 / $1,000 / $3,000 / $10,000 起）；店员和店主 5% / 7% / 9%（$0 / $2,000 / $5,000 起）；门店分成 5%；当月有效订单（每张满 $100）10 / 25 / 50 / 100 张，冲量奖 $30 / $80 / $200 / $450。谁成交算谁的，不分新老客人。`, "Per the partner plan.")}</p>
+
+      <h3 style={{ margin: "14px 0 8px" }}>{pick("每位成交人", "Sellers")}</h3>
+      {!st.people.length ? <div className="empty">{pick("这个月没有订单。", "No orders this month.")}</div> :
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("成交人", "Seller")}</th><th>{pick("身份", "Type")}</th><th className="n">{pick("销售额", "Sales")}</th><th className="n">{pick("档位", "Rate")}</th><th className="n">{pick("销售提成", "Commission")}</th><th className="n">{pick("有效订单", "Valid orders")}</th><th className="n">{pick("冲量奖", "Bonus")}</th><th className="n">{pick("合计", "Total")}</th><th>{pick("下一档", "Next")}</th><th>{pick("谁发", "Paid by")}</th></tr></thead>
+          <tbody>{st.people.map((p) => <tr key={p.key}><td><b>{who(p)}</b></td><td className="small">{kindL(p)}</td><td className="n">{cad(p.sales)}</td><td className="n">{Math.round(p.rate * 100)}%</td><td className="n">{cad(p.comm)}</td><td className="n">{p.nc}</td><td className="n">{p.mile ? cad(p.mile) : "—"}</td><td className="n"><b>{cad(p.total)}</b></td><td className="small">{nextTier(p)}{p.nextMile ? pick(`；再 ${p.nextMile[0] - p.nc} 张单拿 $${p.nextMile[1]}`, `; ${p.nextMile[0] - p.nc} orders to $${p.nextMile[1]}`) : ""}</td><td className="small">{p.kind === "rep" ? pick("我们发", "Us") : p.kind === "owner" ? pick("结算时扣", "Netted") : p.store?.staff_paid_by === "store" ? pick("店家发", "Store") : pick("我们发", "Us")}</td></tr>)}</tbody></table></div>}
+
+      {st.stores.length > 0 && <><h3 style={{ margin: "18px 0 8px" }}>{pick("门店对账", "Store settlement")}</h3>
+        <p className="muted small" style={{ marginTop: 0 }}>{pick("店家应交回 ＝ 店里代收的款 − 门店分成 5% − 店主自己卖的提成（− 店员提成，如果由店家发）。正数是店家转给我们，负数是我们付给店家。", "Store owes = collected − 5% − owner's commission (− staff if paid by store).")}</p>
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("门店", "Store")}</th><th className="n">{pick("销售额", "Sales")}</th><th className="n">{pick("门店分成 5%", "Store 5%")}</th><th className="n">{pick("店主提成", "Owner")}</th><th className="n">{pick("店员提成", "Staff")}</th><th className="n">{pick("店家代收", "Collected")}</th><th className="n">{pick("结算", "Balance")}</th><th /></tr></thead>
+          <tbody>{st.stores.map((x) => <tr key={x.s.id}><td><b>{cv(x.s.name)}</b></td><td className="n">{cad(x.sales)}</td><td className="n">{cad(x.share)}</td><td className="n">{cad(x.owner?.total || 0)}</td><td className="n">{cad(x.staffTotal)}<span className="muted small">{x.s.staff_paid_by === "store" ? pick("（店家发）", "") : pick("（我们发）", "")}</span></td><td className="n">{cad(x.collected)}</td><td className={`n ${x.net < 0 ? "neg" : ""}`}><b>{x.net >= 0 ? pick(`店家交回 ${cad(x.net)}`, `Store pays ${cad(x.net)}`) : pick(`我们付 ${cad(-x.net)}`, `We pay ${cad(-x.net)}`)}</b></td><td>{x.settled ? <span className="tag k-in">{pick("已结清", "Settled")}</span> : <button className="btn sm" onClick={() => markSettled(x)}>{pick("标为结清", "Mark settled")}</button>}</td></tr>)}</tbody></table></div></>}
     </>
   );
 }
@@ -371,22 +370,20 @@ function Channels({ d, load }) {
     <>
       <section className="biz-card"><h3>{pick("门店", "Stores")}<button className="btn primary sm" style={{ marginLeft: "auto" }} onClick={() => setEs({ store_pct: 15, staff_pct: 10, staff_paid_by: "us" })}>{pick("+ 加门店", "+ Store")}</button></h3>
         {!d.stores.length ? <p className="muted">{pick("还没有门店。", "No stores yet.")}</p> :
-          <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("门店", "Store")}</th><th className="n">{pick("店家 %", "Store %")}</th><th className="n">{pick("员工 %", "Staff %")}</th><th>{pick("专属下单链接", "Order link")}</th><th /></tr></thead>
-            <tbody>{d.stores.map((s) => <tr key={s.id} className={s.active === false ? "off" : ""}><td><b>{cv(s.name)}</b>{s.contact && <span className="muted small"> · {cv(s.contact)}</span>}</td><td className="n">{s.store_pct}%</td><td className="n">{s.staff_pct}%</td><td className="small"><Link to={`/order/${s.code}`}>/order/{s.code}</Link> <button className="btn ghost sm" onClick={() => copy(s.code)}>{pick("复制", "Copy")}</button></td><td><button className="btn ghost sm" onClick={() => setEs(s)}>{pick("编辑", "Edit")}</button></td></tr>)}</tbody></table></div>}
+          <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("门店", "Store")}</th><th>{pick("分成", "Share")}</th><th>{pick("专属下单链接", "Order link")}</th><th /></tr></thead>
+            <tbody>{d.stores.map((s) => <tr key={s.id} className={s.active === false ? "off" : ""}><td><b>{cv(s.name)}</b>{s.contact && <span className="muted small"> · {cv(s.contact)}</span>}</td><td className="small">{pick("门店 5% · 店员 5–9%", "Store 5% · staff 5–9%")}</td><td className="small"><Link to={`/order/${s.code}`}>/order/{s.code}</Link> <button className="btn ghost sm" onClick={() => copy(s.code)}>{pick("复制", "Copy")}</button></td><td><button className="btn ghost sm" onClick={() => setEs(s)}>{pick("编辑", "Edit")}</button></td></tr>)}</tbody></table></div>}
       </section>
       <section className="biz-card"><h3>{pick("销售员", "Reps")}<button className="btn primary sm" style={{ marginLeft: "auto" }} onClick={() => setEr({ store_id: d.stores[0]?.id || "" })}>{pick("+ 加销售员", "+ Rep")}</button></h3>
-        <p className="muted small" style={{ marginTop: 0 }}>{pick("销售员可以属于某个门店（用门店的员工比例），也可以是独立的，单独设比例。每人有自己的下单链接，下的单都算他的业绩。", "Reps can belong to a store or be independent. Each has their own order link.")}</p>
+        <p className="muted small" style={{ marginTop: 0 }}>{pick("按《合作伙伴分成计划》：挂在门店下的是店员（5% / 7% / 9%），没有门店的是独立销售（8% / 10% / 12% / 13%）。每人有自己的下单链接，谁成交算谁的。", "Store staff earn 5–9%; independent reps 8–13%. Each has their own order link.")}</p>
         {!d.reps.length ? <p className="muted">{pick("还没有销售员。", "No reps yet.")}</p> :
-          <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("销售员", "Rep")}</th><th>{pick("门店", "Store")}</th><th>{pick("团队", "Team")}</th><th className="n">{pick("员工 %", "Staff %")}</th><th>{pick("专属下单链接", "Order link")}</th><th /></tr></thead>
-            <tbody>{d.reps.map((r) => { const st = d.stores.find((s) => s.id === r.store_id); return <tr key={r.id} className={r.active === false ? "off" : ""}><td><b>{cv(r.name)}</b></td><td>{st ? cv(st.name) : pick("独立", "Independent")}</td><td>{cv(r.team || "—")}</td><td className="n">{r.staff_pct ?? st?.staff_pct ?? 0}%</td><td className="small"><Link to={`/order/${r.code}`}>/order/{r.code}</Link> <button className="btn ghost sm" onClick={() => copy(r.code)}>{pick("复制", "Copy")}</button></td><td><button className="btn ghost sm" onClick={() => setEr(r)}>{pick("编辑", "Edit")}</button></td></tr>; })}</tbody></table></div>}
+          <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("销售员", "Rep")}</th><th>{pick("门店", "Store")}</th><th>{pick("团队", "Team")}</th><th>{pick("提成档位", "Rates")}</th><th>{pick("专属下单链接", "Order link")}</th><th /></tr></thead>
+            <tbody>{d.reps.map((r) => { const st = d.stores.find((s) => s.id === r.store_id); return <tr key={r.id} className={r.active === false ? "off" : ""}><td><b>{cv(r.name)}</b></td><td>{st ? cv(st.name) : pick("独立", "Independent")}</td><td>{cv(r.team || "—")}</td><td className="small">{st ? pick("店员 5–9%", "Staff 5–9%") : pick("独立 8–13%", "Independent 8–13%")}</td><td className="small"><Link to={`/order/${r.code}`}>/order/{r.code}</Link> <button className="btn ghost sm" onClick={() => copy(r.code)}>{pick("复制", "Copy")}</button></td><td><button className="btn ghost sm" onClick={() => setEr(r)}>{pick("编辑", "Edit")}</button></td></tr>; })}</tbody></table></div>}
       </section>
       {es && <Modal title={es.id ? pick("门店", "Store") : pick("加门店", "Add store")} onClose={() => setEs(null)} footer={<><button className="btn" onClick={() => setEs(null)}>{pick("取消", "Cancel")}</button><button className="btn primary" disabled={!es.name} onClick={() => saveStore(es)}>{pick("保存", "Save")}</button></>}>
         <div className="grid3">
           <div className="field"><label htmlFor="cs_n">{pick("门店名字", "Name")}</label><input id="cs_n" type="text" value={es.name || ""} onChange={(e) => setEs({ ...es, name: e.target.value })} /></div>
           <div className="field"><label htmlFor="cs_c">{pick("链接代码（英文数字）", "Link code")}</label><input id="cs_c" type="text" value={es.code || ""} placeholder={pick("留空自动生成", "Auto")} onChange={(e) => setEs({ ...es, code: e.target.value.replace(/[^A-Za-z0-9-]/g, "") })} /></div>
           <div className="field"><label htmlFor="cs_ct">{pick("联系人 / 电话", "Contact")}</label><input id="cs_ct" type="text" value={es.contact || ""} onChange={(e) => setEs({ ...es, contact: e.target.value })} /></div>
-          <div className="field"><label htmlFor="cs_s">{pick("店家 %", "Store %")}</label><input id="cs_s" type="number" step="0.5" value={es.store_pct ?? ""} onChange={(e) => setEs({ ...es, store_pct: e.target.value })} /></div>
-          <div className="field"><label htmlFor="cs_f">{pick("员工 %", "Staff %")}</label><input id="cs_f" type="number" step="0.5" value={es.staff_pct ?? ""} onChange={(e) => setEs({ ...es, staff_pct: e.target.value })} /></div>
           <div className="field"><label htmlFor="cs_pb">{pick("员工提成由谁发", "Staff paid by")}</label><select id="cs_pb" value={es.staff_paid_by || "us"} onChange={(e) => setEs({ ...es, staff_paid_by: e.target.value })}><option value="us">{pick("我们发", "Us")}</option><option value="store">{pick("店家发（结算时一起扣）", "Store")}</option></select></div>
         </div>
         <div className="field"><label htmlFor="cs_ad">{pick("地址", "Address")}</label><input id="cs_ad" type="text" value={es.address || ""} onChange={(e) => setEs({ ...es, address: e.target.value })} /></div>
@@ -398,7 +395,6 @@ function Channels({ d, load }) {
           <div className="field"><label htmlFor="cr_s">{pick("门店", "Store")}</label><select id="cr_s" value={er.store_id || ""} onChange={(e) => setEr({ ...er, store_id: e.target.value })}><option value="">{pick("独立销售员", "Independent")}</option>{d.stores.map((s) => <option key={s.id} value={s.id}>{cv(s.name)}</option>)}</select></div>
           <div className="field"><label htmlFor="cr_t">{pick("团队（选填）", "Team")}</label><input id="cr_t" type="text" value={er.team || ""} onChange={(e) => setEr({ ...er, team: e.target.value })} /></div>
           <div className="field"><label htmlFor="cr_c">{pick("链接代码", "Link code")}</label><input id="cr_c" type="text" value={er.code || ""} placeholder={pick("留空自动生成", "Auto")} onChange={(e) => setEr({ ...er, code: e.target.value.replace(/[^A-Za-z0-9-]/g, "") })} /></div>
-          <div className="field"><label htmlFor="cr_p">{pick("员工 %（留空用门店的）", "Staff % (blank = store's)")}</label><input id="cr_p" type="number" step="0.5" value={er.staff_pct ?? ""} onChange={(e) => setEr({ ...er, staff_pct: e.target.value })} /></div>
           <div className="field"><label htmlFor="cr_ph">{pick("电话", "Phone")}</label><input id="cr_ph" type="text" value={er.phone || ""} onChange={(e) => setEr({ ...er, phone: e.target.value })} /></div>
         </div>
       </Modal>}
