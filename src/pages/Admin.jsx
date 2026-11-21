@@ -230,12 +230,26 @@ function ItemRows({ items, setItems, mode }) {
 function OrderForm({ m, o, onClose, onSaved }) {
   const { t, pick } = useLang();
   const [lrpMonths, setLrpMonths] = useState(0);
-  useEffect(() => { db.select("member_status", { eq: { member_id: m.id } }).then((r) => setLrpMonths(Number(r[0]?.lrp_months || 0))).catch(() => {}); }, [m.id]);
+  const [accts, setAccts] = useState([]);
+  const [newAcct, setNewAcct] = useState("");
+  useEffect(() => {
+    db.select("member_status", { eq: { member_id: m.id } }).then((r) => setLrpMonths(Number(r[0]?.lrp_months || 0))).catch(() => {});
+    db.select("dt_accounts", { eq: { member_id: m.id }, order: ["created_at", true] }).then((as) => {
+      setAccts(as);
+      setF((x) => { if (x.account_id) return x; const hit = as.find((a) => x.account && (a.label === x.account || a.member_no === x.account)) || (!o?.id && (as.find((a) => a.is_main) || as[0])); return hit ? { ...x, account_id: hit.id, account: hit.label || hit.member_no } : x; });
+    }).catch(() => {});
+  }, [m.id]); // eslint-disable-line
   const toast = useToast();
   const [f, setF] = useState({ date: today(), order_no: "", account: m.accounts?.[0] || "", currency: "CAD", total: null, total_pv: null, payment: "", reason: "", items: [{}], ...o });
   const set = (k, n) => (e) => setF({ ...f, [k]: n ? (e.target.value === "" ? null : Number(e.target.value)) : e.target.value });
   const save = async () => {
-    const row = { ...f, member_id: m.id, items: f.items.filter((i) => i.zh || i.product) };
+    let extra = {};
+    if (f.account_id === "__new") {
+      if (!newAcct.trim()) { toast(pick("请填新帐户的名字", "Enter the new account name")); return; }
+      try { const a = await db.insert("dt_accounts", { member_id: m.id, label: newAcct.trim(), is_main: !accts.length }); extra = { account_id: a.id, account: a.label }; } catch (e) { toast(e.message); return; }
+    }
+    const row = { ...f, ...extra, member_id: m.id, items: f.items.filter((i) => i.zh || i.product) };
+    if (row.account_id === "__new" || row.account_id === "") row.account_id = null;
     try { if (o?.id) { const { id, created_at, ...p } = row; await db.update("orders", o.id, p); } else await db.insert("orders", row); toast(t("saved")); onSaved(); } catch (e) { toast(e.message); }
   };
   return (
@@ -243,7 +257,14 @@ function OrderForm({ m, o, onClose, onSaved }) {
       <div className="grid3">
         <div className="field"><label htmlFor="of_d">{t("date")}</label><input id="of_d" type="date" value={f.date} onChange={set("date")} /></div>
         <div className="field"><label htmlFor="of_n">{t("order")} #</label><input id="of_n" type="text" value={f.order_no} onChange={set("order_no")} /></div>
-        <div className="field"><label htmlFor="of_a">{t("account")}</label><input id="of_a" type="text" list="of_al" value={f.account} onChange={set("account")} /><datalist id="of_al">{(m.accounts || []).map((a) => <option key={a} value={a} />)}</datalist></div>
+        <div className="field"><label htmlFor="of_a">{pick("下单帐户", "Account")}</label>
+          <select id="of_a" value={f.account_id || ""} onChange={(e) => { const a = accts.find((x) => x.id === e.target.value); setF({ ...f, account_id: e.target.value, account: a ? a.label || a.member_no : f.account }); }}>
+            <option value="">{pick("请选择帐户…", "Choose…")}</option>
+            {accts.map((a) => <option key={a.id} value={a.id}>{a.label || a.member_no}{a.member_no && a.label ? ` #${a.member_no}` : ""}{a.is_main ? pick("（主号）", " (main)") : ""}</option>)}
+            <option value="__new">{pick("＋ 新帐户…", "+ New account…")}</option>
+          </select>
+          {f.account_id === "__new" && <input type="text" style={{ marginTop: 6 }} value={newAcct} onChange={(e) => setNewAcct(e.target.value)} placeholder={pick("帐户名字，例如 Amber Teng 小号", "Account name")} aria-label={pick("新帐户名字", "New account name")} />}
+          {!f.account_id && f.account && <span className="muted small">{pick(`原来写的是「${f.account}」`, `Was “${f.account}”`)}</span>}</div>
         <div className="field"><label htmlFor="of_c">CUR</label><select id="of_c" value={f.currency} onChange={set("currency")}>{["CAD", "USD", "RMB"].map((c) => <option key={c}>{c}</option>)}</select></div>
         <div className="field"><label htmlFor="of_t">{t("total")}</label><input id="of_t" type="number" step="0.01" value={f.total ?? ""} onChange={set("total", 1)} /></div>
         <div className="field"><label htmlFor="of_p">PV</label><input id="of_p" type="number" step="0.1" value={f.total_pv ?? ""} onChange={set("total_pv", 1)} /></div>

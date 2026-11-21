@@ -485,7 +485,8 @@
      "tag": "gift",
      "product": "easy-air"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "4b307391-6b09-5249-8d2b-6ee12c8c5a1c",
@@ -535,7 +536,8 @@
      "tag": "",
      "product": "fractionated-coconut-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "011cb8d9-2028-5945-8a78-d78344a02708",
@@ -585,7 +587,8 @@
      "tag": "gift",
      "product": "jasmine-touch"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "4269b008-215f-53a0-850d-d446a10d97bd",
@@ -626,7 +629,8 @@
      "tag": "gift",
      "product": null
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "d103d8c0-e189-5e30-abb9-66440c735fbf",
@@ -658,7 +662,8 @@
      "tag": "",
      "product": null
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "a7506f1b-64e0-5fd1-871c-2ed2d03535e6",
@@ -726,7 +731,8 @@
      "tag": "gift",
      "product": "guaiacwood-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "cb5f5f92-8c45-514d-8055-206edec620d9",
@@ -785,7 +791,8 @@
      "tag": "",
      "product": null
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "92dd7d2e-841f-5f04-8c0b-4f681d71c595",
@@ -835,7 +842,8 @@
      "tag": "gift",
      "product": "eucalyptus-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "2c6c30c2-91cf-51ab-bd47-11d60579d998",
@@ -877,7 +885,8 @@
      "note": "（我之前借你，要还我一瓶）",
      "product": "oregano-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "b798e247-5574-54e5-ab80-3312a995342c",
@@ -954,7 +963,8 @@
      "tag": "gift",
      "product": "copaiba-essential-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000002"
   },
   {
    "id": "7e6e7a8a-9d05-5030-b6ab-aa0c6649e146",
@@ -1004,7 +1014,8 @@
      "tag": "gift",
      "product": "fractionated-coconut-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000002"
   },
   {
    "id": "8a77845e-4e70-5cbe-9156-7b5e6a97e764",
@@ -1045,7 +1056,8 @@
      "tag": "gift",
      "product": "ginger-essential-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000002"
   },
   {
    "id": "8b438e20-7d58-5eac-acf9-7a03159169e0",
@@ -1122,7 +1134,8 @@
      "tag": "gift",
      "product": "frankincense-essential-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000002"
   },
   {
    "id": "e3c748a1-ce5e-5413-991b-0f981904f5f2",
@@ -1154,7 +1167,8 @@
      "tag": "points",
      "product": "rosemary-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000002"
   },
   {
    "id": "3a3f40b7-0dc9-5593-baaa-e89781519095",
@@ -1303,7 +1317,8 @@
      "tag": "gift",
      "product": "clove-bud-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000003"
   },
   {
    "id": "c0a7d0f9-da48-548c-a998-34e6e9f40200",
@@ -1344,7 +1359,8 @@
      "tag": "gift",
      "product": "ginger-essential-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000003"
   },
   {
    "id": "eeb3df77-0e73-5b43-8a0b-e4a51c476e64",
@@ -1430,7 +1446,8 @@
      "tag": "gift",
      "product": "frankincense-essential-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000003"
   },
   {
    "id": "9278c539-7a45-5ade-8f94-fb9cb6260e5e",
@@ -1453,7 +1470,8 @@
      "tag": "",
      "product": null
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000003"
   },
   {
    "id": "6394c241-0d80-54bd-8b6d-8fad288939a2",
@@ -1485,7 +1503,8 @@
      "tag": "points",
      "product": null
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000003"
   },
   {
    "id": "f8fae63d-7eff-5627-921d-7e5ef9ebc27f",
@@ -1571,7 +1590,8 @@
      "tag": "gift",
      "product": null
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000004"
   },
   {
    "id": "59242462-c1d7-5335-a8d4-79f00573bfe8",
@@ -1666,7 +1686,8 @@
      "tag": "gift",
      "product": "frankincense-essential-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000004"
   },
   {
    "id": "b52aeb68-1199-5960-a42a-b6f5f245d402",
@@ -1698,7 +1719,8 @@
      "tag": "points",
      "product": "cedarwood-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000004"
   },
   {
    "id": "5946e30a-437c-547f-869e-7154e9a8d40f",
@@ -1775,7 +1797,8 @@
      "tag": "gift",
      "product": "lavender-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000005"
   },
   {
    "id": "657841b4-9ef2-5efa-a1d3-94b76e182ce9",
@@ -1816,7 +1839,8 @@
      "tag": "",
      "product": "turmeric-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000005"
   },
   {
    "id": "54da8ec9-7ad7-50e7-95ad-427084fa5b41",
@@ -1848,7 +1872,8 @@
      "tag": "points",
      "product": "lemon-eucalyptus-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000005"
   },
   {
    "id": "5f800e94-1158-537a-b93a-7343d6b91cf9",
@@ -1916,7 +1941,8 @@
      "tag": "gift",
      "product": "lavender-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000006"
   },
   {
    "id": "1c3c48f4-79d4-5dc9-b3d4-97ad3cc5ddaa",
@@ -1939,14 +1965,15 @@
      "tag": "points",
      "product": "lemongrass-oil"
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000006"
   },
   {
    "id": "00000000-0000-0000-0000-00000000012d",
    "member_id": "00000000-0000-0000-0000-000000000003",
    "order_no": "DEMO-1",
    "date": "2026-10-05",
-   "account": "",
+   "account": "阿梅 主号",
    "currency": "CAD",
    "total": 189.0,
    "total_pv": 150,
@@ -1969,14 +1996,15 @@
      "pv": 92,
      "price": 105
     }
-   ]
+   ],
+   "account_id": "61000000-0000-0000-0000-000000000009"
   },
   {
    "id": "70000000-0000-0000-0000-000000000001",
    "member_id": "00000000-0000-0000-0000-000000000001",
    "order_no": "4100037",
    "date": "2026-11-06",
-   "account": "",
+   "account": "Venus主号",
    "currency": "CAD",
    "total": 133.0,
    "total_pv": 100,
@@ -1986,14 +2014,15 @@
    "lrp": true,
    "points_earned": 15.0,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "70000000-0000-0000-0000-000000000002",
    "member_id": "00000000-0000-0000-0000-000000000001",
    "order_no": "4100074",
    "date": "2026-11-14",
-   "account": "",
+   "account": "Venus主号",
    "currency": "CAD",
    "total": 40,
    "total_pv": 30,
@@ -2003,14 +2032,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": 20,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000001"
   },
   {
    "id": "70000000-0000-0000-0000-000000000003",
    "member_id": "00000000-0000-0000-0000-000000000002",
    "order_no": "4100111",
    "date": "2026-11-03",
-   "account": "",
+   "account": "小林 主号",
    "currency": "CAD",
    "total": 199.5,
    "total_pv": 150,
@@ -2020,14 +2050,15 @@
    "lrp": true,
    "points_earned": 22.5,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000007"
   },
   {
    "id": "70000000-0000-0000-0000-000000000004",
    "member_id": "00000000-0000-0000-0000-000000000003",
    "order_no": "4100148",
    "date": "2026-11-19",
-   "account": "",
+   "account": "阿梅 妈妈帐户",
    "currency": "CAD",
    "total": 66.5,
    "total_pv": 50,
@@ -2037,14 +2068,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000010"
   },
   {
    "id": "70000000-0000-0000-0000-000000000005",
    "member_id": "00000000-0000-0000-0000-000000000003",
    "order_no": "4100185",
    "date": "2026-11-05",
-   "account": "",
+   "account": "阿梅 妈妈帐户",
    "currency": "CAD",
    "total": 40,
    "total_pv": 30,
@@ -2054,14 +2086,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000010"
   },
   {
    "id": "70000000-0000-0000-0000-000000000006",
    "member_id": "00000000-0000-0000-0000-000000000004",
    "order_no": "4100222",
    "date": "2026-11-20",
-   "account": "",
+   "account": "陈太 主号",
    "currency": "CAD",
    "total": 133.0,
    "total_pv": 100,
@@ -2071,14 +2104,15 @@
    "lrp": true,
    "points_earned": 15.0,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000011"
   },
   {
    "id": "70000000-0000-0000-0000-000000000007",
    "member_id": "00000000-0000-0000-0000-000000000004",
    "order_no": "4100259",
    "date": "2026-11-03",
-   "account": "",
+   "account": "陈太 主号",
    "currency": "CAD",
    "total": 40,
    "total_pv": 30,
@@ -2088,14 +2122,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000011"
   },
   {
    "id": "70000000-0000-0000-0000-000000000008",
    "member_id": "00000000-0000-0000-0000-000000000005",
    "order_no": "4100296",
    "date": "2026-11-08",
-   "account": "",
+   "account": "Kevin 主号",
    "currency": "CAD",
    "total": 166.25,
    "total_pv": 125,
@@ -2105,14 +2140,15 @@
    "lrp": true,
    "points_earned": 18.75,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000012"
   },
   {
    "id": "70000000-0000-0000-0000-000000000009",
    "member_id": "00000000-0000-0000-0000-000000000006",
    "order_no": "4100333",
    "date": "2026-11-04",
-   "account": "",
+   "account": "小雨 主号",
    "currency": "CAD",
    "total": 66.5,
    "total_pv": 50,
@@ -2122,14 +2158,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000013"
   },
   {
    "id": "70000000-0000-0000-0000-000000000010",
    "member_id": "00000000-0000-0000-0000-000000000007",
    "order_no": "4100370",
    "date": "2026-11-15",
-   "account": "",
+   "account": "Jason 主号",
    "currency": "CAD",
    "total": 139.65,
    "total_pv": 105,
@@ -2139,14 +2176,15 @@
    "lrp": true,
    "points_earned": 15.75,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000014"
   },
   {
    "id": "70000000-0000-0000-0000-000000000011",
    "member_id": "00000000-0000-0000-0000-000000000009",
    "order_no": "4100407",
    "date": "2026-11-09",
-   "account": "",
+   "account": "阿强 主号",
    "currency": "CAD",
    "total": 66.5,
    "total_pv": 50,
@@ -2156,14 +2194,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000016"
   },
   {
    "id": "70000000-0000-0000-0000-000000000012",
    "member_id": "00000000-0000-0000-0000-000000000010",
    "order_no": "4100444",
    "date": "2026-11-19",
-   "account": "",
+   "account": "Lily 主号",
    "currency": "CAD",
    "total": 66.5,
    "total_pv": 50,
@@ -2173,14 +2212,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000017"
   },
   {
    "id": "70000000-0000-0000-0000-000000000013",
    "member_id": "00000000-0000-0000-0000-000000000011",
    "order_no": "4100481",
    "date": "2026-11-03",
-   "account": "",
+   "account": "王姐 主号",
    "currency": "CAD",
    "total": 139.65,
    "total_pv": 105,
@@ -2190,14 +2230,15 @@
    "lrp": true,
    "points_earned": 15.75,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000018"
   },
   {
    "id": "70000000-0000-0000-0000-000000000014",
    "member_id": "00000000-0000-0000-0000-000000000012",
    "order_no": "4100518",
    "date": "2026-11-20",
-   "account": "",
+   "account": "Tony 主号",
    "currency": "CAD",
    "total": 279.3,
    "total_pv": 210,
@@ -2207,14 +2248,15 @@
    "lrp": true,
    "points_earned": 31.5,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000019"
   },
   {
    "id": "70000000-0000-0000-0000-000000000015",
    "member_id": "00000000-0000-0000-0000-000000000013",
    "order_no": "4100555",
    "date": "2026-11-09",
-   "account": "",
+   "account": "小芳 主号",
    "currency": "CAD",
    "total": 66.5,
    "total_pv": 50,
@@ -2224,14 +2266,15 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000020"
   },
   {
    "id": "70000000-0000-0000-0000-000000000016",
    "member_id": "00000000-0000-0000-0000-000000000015",
    "order_no": "4100592",
    "date": "2026-11-20",
-   "account": "",
+   "account": "佩佩 主号",
    "currency": "CAD",
    "total": 199.5,
    "total_pv": 150,
@@ -2241,14 +2284,15 @@
    "lrp": true,
    "points_earned": 22.5,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000022"
   },
   {
    "id": "70000000-0000-0000-0000-000000000017",
    "member_id": "00000000-0000-0000-0000-000000000016",
    "order_no": "4100629",
    "date": "2026-11-20",
-   "account": "",
+   "account": "Amy 主号",
    "currency": "CAD",
    "total": 66.5,
    "total_pv": 50,
@@ -2258,7 +2302,26 @@
    "lrp": false,
    "points_earned": null,
    "points_used": null,
-   "created_at": "2026-11-02"
+   "created_at": "2026-11-02",
+   "account_id": "61000000-0000-0000-0000-000000000023"
+  },
+  {
+   "id": "70000000-0000-0000-0000-000000000099",
+   "member_id": "00000000-0000-0000-0000-000000000002",
+   "order_no": "4109999",
+   "date": "2026-11-12",
+   "account": "小林 太太帐户",
+   "account_id": "61000000-0000-0000-0000-000000000008",
+   "currency": "CAD",
+   "total": 140,
+   "total_pv": 105,
+   "payment": "",
+   "reason": "",
+   "items": [],
+   "lrp": true,
+   "points_earned": 10.5,
+   "points_used": null,
+   "created_at": "2026-11-12"
   }
  ],
  "blends": [
@@ -13278,30 +13341,326 @@
  ],
  "dt_accounts": [
   {
-   "id": "60000000-0000-0000-0000-000000000001",
+   "id": "61000000-0000-0000-0000-000000000001",
    "member_id": "00000000-0000-0000-0000-000000000001",
-   "label": "主帐户",
-   "member_no": "1234567",
-   "login": "venus@example.com",
-   "status": "lrp",
-   "lrp_day": 15,
-   "lrp_pv": 125,
-   "last_login": "2026-11-15",
-   "note": "",
-   "created_at": "2026-11-01"
-  },
-  {
-   "id": "60000000-0000-0000-0000-000000000002",
-   "member_id": "00000000-0000-0000-0000-000000000003",
-   "label": "阿梅帐户（Grace 代下单）",
-   "member_no": "2233445",
-   "login": "amei@example.com",
+   "label": "Venus主号",
+   "member_no": "18351872",
+   "login": "",
    "status": "active",
    "lrp_day": null,
    "lrp_pv": null,
-   "last_login": "2026-11-05",
-   "note": "由 Grace 用这个帐户帮她下单",
-   "created_at": "2026-11-02"
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-01"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000002",
+   "member_id": "00000000-0000-0000-0000-000000000001",
+   "label": "Ching Choi 小号",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-02"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000003",
+   "member_id": "00000000-0000-0000-0000-000000000001",
+   "label": "Alvin Teng 小号",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-03"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000004",
+   "member_id": "00000000-0000-0000-0000-000000000001",
+   "label": "Amber Teng小号",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-04"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000005",
+   "member_id": "00000000-0000-0000-0000-000000000001",
+   "label": "Micheal Teng小号",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-05"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000006",
+   "member_id": "00000000-0000-0000-0000-000000000001",
+   "label": "Stella Teng小号",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-06"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000007",
+   "member_id": "00000000-0000-0000-0000-000000000002",
+   "label": "小林 主号",
+   "member_no": "D-1002",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-07"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000008",
+   "member_id": "00000000-0000-0000-0000-000000000002",
+   "label": "小林 太太帐户",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-08"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000009",
+   "member_id": "00000000-0000-0000-0000-000000000003",
+   "label": "阿梅 主号",
+   "member_no": "D-1003",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-09"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000010",
+   "member_id": "00000000-0000-0000-0000-000000000003",
+   "label": "阿梅 妈妈帐户",
+   "member_no": "",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": false,
+   "created_at": "2026-01-10"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000011",
+   "member_id": "00000000-0000-0000-0000-000000000004",
+   "label": "陈太 主号",
+   "member_no": "D-1004",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-11"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000012",
+   "member_id": "00000000-0000-0000-0000-000000000005",
+   "label": "Kevin 主号",
+   "member_no": "D-1005",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-12"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000013",
+   "member_id": "00000000-0000-0000-0000-000000000006",
+   "label": "小雨 主号",
+   "member_no": "D-1006",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-13"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000014",
+   "member_id": "00000000-0000-0000-0000-000000000007",
+   "label": "Jason 主号",
+   "member_no": "D-1007",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-14"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000015",
+   "member_id": "00000000-0000-0000-0000-000000000008",
+   "label": "美玲 主号",
+   "member_no": "D-1008",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-15"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000016",
+   "member_id": "00000000-0000-0000-0000-000000000009",
+   "label": "阿强 主号",
+   "member_no": "D-1009",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-16"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000017",
+   "member_id": "00000000-0000-0000-0000-000000000010",
+   "label": "Lily 主号",
+   "member_no": "D-1010",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-17"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000018",
+   "member_id": "00000000-0000-0000-0000-000000000011",
+   "label": "王姐 主号",
+   "member_no": "D-1011",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-18"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000019",
+   "member_id": "00000000-0000-0000-0000-000000000012",
+   "label": "Tony 主号",
+   "member_no": "D-1012",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-19"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000020",
+   "member_id": "00000000-0000-0000-0000-000000000013",
+   "label": "小芳 主号",
+   "member_no": "D-1013",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-20"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000021",
+   "member_id": "00000000-0000-0000-0000-000000000014",
+   "label": "Ken 主号",
+   "member_no": "D-1014",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-21"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000022",
+   "member_id": "00000000-0000-0000-0000-000000000015",
+   "label": "佩佩 主号",
+   "member_no": "D-1015",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-22"
+  },
+  {
+   "id": "61000000-0000-0000-0000-000000000023",
+   "member_id": "00000000-0000-0000-0000-000000000016",
+   "label": "Amy 主号",
+   "member_no": "D-1016",
+   "login": "",
+   "status": "active",
+   "lrp_day": null,
+   "lrp_pv": null,
+   "last_login": null,
+   "note": "",
+   "is_main": true,
+   "created_at": "2026-01-23"
   }
  ],
  "pts_moves": [
@@ -13312,7 +13671,8 @@
    "kind": "opening",
    "points": 62.48,
    "note": "从 doTERRA 帐户抄过来的结余",
-   "created_at": "2026-01-01"
+   "created_at": "2026-01-01",
+   "account_id": "61000000-0000-0000-0000-000000000001"
   }
  ]
 }

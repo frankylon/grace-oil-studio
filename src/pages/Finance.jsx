@@ -312,7 +312,7 @@ function DtAccounts({ d, reload, admin, myMember }) {
   const shown = members.filter((m) => byMember[m.id] || m.id === myMember || m.doterra_id);
   const save = async (a) => {
     try {
-      const row = { label: a.label || "", member_no: a.member_no || "", login: a.login || "", status: a.status || "active", lrp_day: a.lrp_day === "" || a.lrp_day == null ? null : n(a.lrp_day), lrp_pv: a.lrp_pv === "" || a.lrp_pv == null ? null : n(a.lrp_pv), last_login: a.last_login || null, note: a.note || "" };
+      const row = { is_main: !!a.is_main, label: a.label || "", member_no: a.member_no || "", login: a.login || "", status: a.status || "active", lrp_day: a.lrp_day === "" || a.lrp_day == null ? null : n(a.lrp_day), lrp_pv: a.lrp_pv === "" || a.lrp_pv == null ? null : n(a.lrp_pv), last_login: a.last_login || null, note: a.note || "" };
       if (a.id) await db.update("dt_accounts", a.id, row); else await db.insert("dt_accounts", { ...row, member_id: a.member_id });
       setEdit(null); reload();
     } catch (e) { toast(e.message || "error"); }
@@ -320,14 +320,14 @@ function DtAccounts({ d, reload, admin, myMember }) {
   const del = async (a) => { if (!window.confirm(pick("删除这个帐户记录？", "Delete this account record?"))) return; try { await db.remove("dt_accounts", a.id); setEdit(null); reload(); } catch (e) { toast(e.message || "error"); } };
   return (
     <>
-      <p className="muted" style={{ marginTop: 0 }}>{pick("记下每个人在 doTERRA 官网的帐户：会员号、登入用的电邮或用户名、有没有 LRP 每月订单、几号出单。一个人可以有好几个帐户。为了安全，这里不保存密码。", "Each person's doTERRA website accounts: member number, login email or username, LRP status and order day. One person can have several. Passwords are never stored here.")}</p>
+      <p className="muted" style={{ marginTop: 0 }}>{pick("PV 和积分按帐户算。记下每个人在 doTERRA 官网的帐户（子帐户可以用别的名字，但都归这个人）：会员号、登入用的电邮或用户名、有没有 LRP 每月订单、几号出单。一个人可以有好几个帐户。为了安全，这里不保存密码。", "PV and points are tracked per account. Each person's doTERRA accounts (sub-accounts can carry other names but belong to this person): member number, login email or username, LRP status and order day. One person can have several. Passwords are never stored here.")}</p>
       {!shown.length ? <div className="empty">{pick("还没有帐户记录。", "No accounts yet.")}</div> :
         <div className="dt-list">{shown.map((m) => (
           <div key={m.id} className="dt-m">
             <div className="dt-h"><b>{cv(m.name)}</b>{m.doterra_id && <span className="muted mono small">#{m.doterra_id}</span>}<button className="btn sm" onClick={() => setEdit({ member_id: m.id, member_no: byMember[m.id] ? "" : m.doterra_id || "", status: "active" })}>{pick("加一个帐户", "Add account")}</button></div>
             {(byMember[m.id] || []).map((a) => (
               <button key={a.id} className="dt-a" onClick={() => setEdit(a)}>
-                <span><b>{a.label || pick("doTERRA 帐户", "doTERRA account")}</b>{a.member_no && <span className="mono"> #{a.member_no}</span>}</span>
+                <span><b>{a.label || pick("doTERRA 帐户", "doTERRA account")}</b>{a.is_main && <span className="tag k-in" style={{ marginLeft: 6 }}>{pick("主号", "Main")}</span>}{a.member_no && <span className="mono"> #{a.member_no}</span>}</span>
                 <span className="muted small">{[a.login, pick(...(DT_STATUS[a.status] || DT_STATUS.active)), a.lrp_day && pick(`每月 ${a.lrp_day} 号出单`, `orders on day ${a.lrp_day}`), a.lrp_pv && `LRP ${a.lrp_pv} PV`, a.last_login && pick(`上次登入 ${a.last_login}`, `last login ${a.last_login}`)].filter(Boolean).join(" · ")}</span>
                 {a.note && <span className="small">{a.note}</span>}
               </button>))}
@@ -351,6 +351,7 @@ function DtForm({ a, name, onClose, onSave, onDelete }) {
         <div className="field"><label htmlFor="dt_p">{pick("LRP 每月 PV", "LRP PV")}</label><input id="dt_p" type="number" min="0" value={f.lrp_pv ?? ""} onChange={set("lrp_pv")} /></div>
         <div className="field"><label htmlFor="dt_x">{pick("上次登入 / 核对日期", "Last login / checked")}</label><input id="dt_x" type="date" value={f.last_login ?? ""} onChange={set("last_login")} /></div>
       </div>
+      <label className="chk"><input type="checkbox" checked={!!f.is_main} onChange={(e) => setF({ ...f, is_main: e.target.checked })} /> {pick("这是这个人的主号", "This is the main account")}</label>
       <div className="field"><label htmlFor="dt_o">{pick("备注", "Note")}</label><input id="dt_o" type="text" value={f.note} onChange={set("note")} placeholder={pick("例如：由 Grace 代为下单；绑定的付款卡尾号", "e.g. Grace orders for them; card on file ends in…")} /></div>
       <p className="muted small">{pick("不要在这里填密码。", "Don't put passwords here.")}</p>
     </Modal>
