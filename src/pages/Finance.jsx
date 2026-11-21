@@ -1,27 +1,29 @@
 // 账本：每个帐户（Grace 自己、每位会员 / 下属帐户）各有自己的收入和支出。
-// 收据可以拍照上传，AI 读出日期、商家、金额帮你填表；一张发票可以分摊到几个帐户。
+// 收据可以拍照上传，自动读出日期、商家、金额帮你填表；一张发票可以分摊到几个帐户。
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLang } from "../i18n";
-import { useAuth, useToast } from "../ctx";
+import { useAuth, useCatalog, useToast } from "../ctx";
 import { db, files, aiReceipt, DEMO } from "../api";
 import { Loading, Modal } from "../components";
 import { today } from "../util";
+import { ItemPicker, matchProduct, productItem, ensureItem } from "./Inventory";
 
 export const EXP_CATS = ["精油进货", "瓶子配件", "宣传物料", "广告推广", "餐饮招待", "汽车油费", "停车交通", "快递运费", "活动场地", "日常消耗", "课程学习", "手机网络软件", "其他支出"];
 export const INC_CATS = ["卖精油", "芳疗服务", "doTERRA 奖金", "其他收入"];
 const PAY = { credit: ["信用卡", "Credit card"], debit: ["借记卡", "Debit"], cash: ["现金", "Cash"], etransfer: ["e-Transfer", "e-Transfer"], wechat: ["微信", "WeChat"], alipay: ["支付宝", "Alipay"], other: ["其他", "Other"] };
 const DT_STATUS = { active: ["正常", "Active"], lrp: ["有 LRP 每月订单", "On LRP"], inactive: ["暂停 / 不活跃", "Inactive"], closed: ["已关闭", "Closed"] };
 const AI_ERR = {
-  no_api_key: ["AI 识别还没开通（要先在 Supabase 设置 Claude API Key），可以先手动填写", "AI reading isn't switched on yet (needs a Claude API key). Fill in by hand for now."],
-  no_permission: ["这个帐号还没连上会员，不能用 AI 记账", "This login isn't linked to a member yet."],
+  no_api_key: ["自动识别暂时用不了，请先手动填写", "Automatic reading isn't available right now. Please fill in by hand."],
+  no_permission: ["这个帐号还没连上会员资料，请联系 Grace", "This login isn't linked to a member yet."],
   file_too_large: ["文件太大，请换小一点的图片", "File too large."],
   unsupported_type: ["只支持图片（JPG / PNG / WebP）或 PDF", "Images or PDF only."],
   unreadable: ["没读出内容，请手动填写", "Couldn't read it; please fill in by hand."],
   too_many_files: ["一笔最多 8 张", "Up to 8 files per entry."],
-  claude_error: ["AI 暂时没有响应，请稍后再试或手动填写", "The AI didn't respond; try again or fill in by hand."],
+  claude_error: ["暂时识别不了，请稍后再试或手动填写", "Couldn't read it right now; try again or fill in by hand."],
 };
 const n = (v) => { const x = Number(v); return isFinite(x) ? x : 0; };
 const fmt = (v, c = "CAD") => `${n(v) < 0 ? "−" : ""}${c === "CAD" ? "$" : c + " "}${Math.abs(n(v)).toFixed(2)}`;
+const GOODS = ["精油进货", "瓶子配件", "宣传物料"];
 const ym = (d) => String(d || "").slice(0, 7);
 
 /* ---------- 文件处理 ---------- */
@@ -43,15 +45,16 @@ function useBooks() {
   const { isAdmin, profile } = useAuth();
   const [d, setD] = useState(null);
   const load = useCallback(async () => {
-    const [holders, entries, members, dts] = await Promise.all([
+    const [holders, entries, members, dts, items] = await Promise.all([
       db.select("inv_holders", { order: ["created_at", true] }).catch(() => []),
       db.select("fin_entries", { order: ["date", false] }).catch(() => []),
       db.select("members", { order: ["name", true] }).catch(() => []),
       db.select("dt_accounts", { order: ["created_at", true] }).catch(() => []),
+      db.select("inv_items", { order: ["name", true] }).catch(() => []),
     ]);
     const mset = new Set(members.map((m) => m.id));
     const editable = holders.filter((h) => h.active !== false && (isAdmin || (h.member_id && mset.has(h.member_id))));
-    setD({ holders, entries, members, dts, editable });
+    setD({ holders, entries, members, dts, items, editable });
   }, [isAdmin]);
   useEffect(() => { load(); }, [load]);
   return { d, reload: load, isAdmin, myMember: profile?.member_id || null };
@@ -105,7 +108,7 @@ function Ledger({ d, reload, admin, myMember }) {
   const startNew = async (k) => { const h = await ensureMine(); setEdit({ kind: k, holder_id: acct || h?.id || accts[0]?.id || "" }); };
   return (
     <>
-      {!admin && !mine && <p className="muted" style={{ marginTop: 0 }}>{pick("这是你自己的账本：精油进货、瓶子、宣传、广告、餐饮、油费这些开支，以及卖精油、doTERRA 奖金这些收入，都可以记在这里。拍收据上传，AI 会帮你填好。", "Your own books: log oil orders, bottles, ads, meals, gas and other costs, plus oil sales and doTERRA bonuses. Snap a receipt and the AI fills it in.")}</p>}
+      {!admin && !mine && <p className="muted" style={{ marginTop: 0 }}>{pick("这是你自己的账本：精油进货、瓶子、宣传、广告、餐饮、油费这些开支，以及卖精油、doTERRA 奖金这些收入，都可以记在这里。上传收据或订单，系统会自动识别、帮你填好。", "Your own books: log oil orders, bottles, ads, meals, gas and other costs, plus oil sales and doTERRA bonuses. Upload a receipt or order and it's filled in for you.")}</p>}
       <div className="inv-bar">
         {(admin || accts.length > 1) && <select value={acct} onChange={(e) => setAcct(e.target.value)} aria-label={pick("帐户", "Account")}><option value="">{pick("全部帐户", "All accounts")}</option>{accts.map((h) => <option key={h.id} value={h.id}>{cv(h.name)}</option>)}</select>}
         <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label={pick("月份", "Month")}>
@@ -129,7 +132,7 @@ function Ledger({ d, reload, admin, myMember }) {
             <tr key={e.id} className="click" onClick={() => setEdit(e)}>
               <td className="nw">{e.date}</td>{!acct && <td className="nw">{hName(e.holder_id)}</td>}
               <td className="nw"><span className={`tag ${e.kind === "income" ? "k-in" : "k-out"}`}>{e.category || (e.kind === "income" ? pick("收入", "Income") : pick("支出", "Cost"))}</span></td>
-              <td><b>{e.merchant}</b>{e.item ? <span className="muted"> · {e.item}</span> : ""}{e.alloc_group && <span className="muted small"> · {pick(`分摊（总额 ${fmt(e.alloc_total, e.currency)}）`, `split of ${fmt(e.alloc_total, e.currency)}`)}</span>}</td>
+              <td><b>{e.merchant}</b>{e.item ? <span className="muted"> · {e.item}</span> : ""}{e.inv_batch && <span className="tag k-in" style={{ marginLeft: 6 }}>{pick("已入库", "Stocked")}</span>}{e.alloc_group && <span className="muted small"> · {pick(`分摊（总额 ${fmt(e.alloc_total, e.currency)}）`, `split of ${fmt(e.alloc_total, e.currency)}`)}</span>}</td>
               <td className={`n ${e.kind === "income" ? "" : "out"}`}>{e.kind === "income" ? "+" : "−"}{fmt(e.amount, e.currency)}</td>
               <td className="muted small nw">{e.receipts?.length ? `${e.receipts.length} ${pick("张", "file(s)")}` : "—"}</td>
             </tr>))}</tbody>
@@ -151,6 +154,13 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
   const [parts, setParts] = useState({}); // holder_id -> amount
   const [busy, setBusy] = useState(false);
   const [links, setLinks] = useState([]);
+  const cat = useCatalog();
+  const [stock, setStock] = useState({ on: false, to: entry.holder_id || "", lines: [] });
+  const [stocked, setStocked] = useState([]);
+  useEffect(() => { if (entry.inv_batch) db.select("inv_moves", { eq: { batch: entry.inv_batch } }).then(setStocked).catch(() => {}); }, [entry.inv_batch]);
+  const toLine = (l) => { const p = cat.ready ? matchProduct(l.name, cat.products) : null; const base = p ? productItem(p) : { name: l.name || "", category: /bottle|瓶|roller|spray|喷/i.test(l.name || "") ? "bottle" : /brochure|flyer|card|册|卡|印/i.test(l.name || "") ? "print" : "other", unit: "个", cost: 0 };
+    const ex = d.items.find((x) => (base.product_id && x.product_id === base.product_id) || x.name === base.name);
+    return { ...(ex ? { item_id: ex.id } : base), raw: l.name || "", qty: l.qty != null ? String(l.qty) : "1", price: l.unit_price != null ? String(l.unit_price) : "" }; };
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
   const cats = f.kind === "income" ? INC_CATS : EXP_CATS;
   const holder = d.holders.find((h) => h.id === f.holder_id);
@@ -164,7 +174,7 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
     const all = [...fl, ...prepared]; setFl(all);
     const dup = d.entries.find((e) => e.id !== entry.id && (e.receipt_sha || []).some((s) => prepared.some((p) => p.sha === s)));
     if (dup) { setAi({ msg: pick(`这张收据已经记过了（${dup.date} ${dup.merchant} ${fmt(dup.amount, dup.currency)}）。`, `This receipt was already recorded (${dup.date} ${dup.merchant}).`), bad: true }); return; }
-    setAi({ busy: true, msg: pick(`AI 正在读 ${all.length} 张…（大约 5–30 秒）`, `Reading ${all.length} file(s)… (5–30 s)`) });
+    setAi({ busy: true, msg: pick(`正在识别 ${all.length} 张…（大约 5–30 秒）`, `Reading ${all.length} file(s)… (5–30 s)`) });
     try {
       const payload = []; for (const p of all) payload.push({ mime: p.file.type, name: p.file.name, data: await b64(p.file) });
       const r = await aiReceipt(f.kind, payload, { lang: lang === "en" ? "en" : "zh", categories: cats, account: holder?.name || "" });
@@ -177,10 +187,12 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
         category: cats.includes(x.category) ? x.category : o.category, pay_method: PAY[x.pay_method] ? x.pay_method : o.pay_method,
         note: o.note || [x.card_last4 && `${pick("卡尾号", "Card")} ${x.card_last4}`, x.doterra_member_no && `doTERRA #${x.doterra_member_no}`, x.bill_to && `${pick("抬头", "Bill to")} ${x.bill_to}`].filter(Boolean).join(" · "),
       }));
-      setAi({ msg: pick(`已识别：${x.summary || ""}。请核对金额和日期再保存。`, `Read: ${x.summary || ""}. Check the amount and date before saving.`) });
+      if (f.kind === "expense" && Array.isArray(x.lines) && x.lines.length && !entry.inv_batch) setStock((st) => ({ ...st, on: true, lines: x.lines.map(toLine) }));
+      setAi({ msg: pick(`已识别：${x.summary || ""}${f.kind === "expense" && x.lines?.length ? `，订单里有 ${x.lines.length} 样货，下面可以一起入库` : ""}。请核对金额和日期再保存。`, `Read: ${x.summary || ""}. Check the amount and date before saving.`) });
     } catch (e) { setAi({ msg: pick(...(AI_ERR[e.code] || [e.message, e.message])) + pick("（收据仍会在保存时上传）", " (the file will still be attached)"), bad: true }); }
   };
 
+  useEffect(() => { if (split && !(stock.to in parts)) { const k = Object.keys(parts)[0]; if (k) setStock((st) => ({ ...st, to: k })); } }, [split, parts, stock.to]);
   const targets = split ? Object.entries(parts).filter(([, v]) => v !== "" && n(v) > 0) : [[f.holder_id, f.amount]];
   const splitSum = targets.reduce((a, [, v]) => a + n(v), 0);
   const splitOk = !split || (targets.length >= 2 && Math.abs(splitSum - n(f.amount)) < 0.011);
@@ -193,26 +205,38 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
     if (dupTx && !window.confirm(pick(`同一个商家、同一个单号已经记过（${dupTx.date} ${fmt(dupTx.amount, dupTx.currency)}）。还是要保存吗？`, `Same merchant and number already recorded (${dupTx.date}). Save anyway?`))) return;
     setBusy(true);
     try {
+      let inv_batch = entry.inv_batch || null;
+      const goodLines = stock.on && !entry.inv_batch ? stock.lines.filter((l) => (l.item_id || l.name) && n(l.qty) > 0) : [];
+      if (goodLines.length) {
+        inv_batch = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+        const to = (split ? stock.to : f.holder_id) || f.holder_id;
+        for (const l of goodLines) {
+          const item_id = await ensureItem(d.items, l);
+          await db.insert("inv_moves", { batch: inv_batch, date: f.date, kind: "in", item_id, qty: n(l.qty), from_holder: null, to_holder: to, unit_price: l.price === "" ? null : n(l.price), amount: null, reason: "", order_ref: [f.merchant, f.txn_id].filter(Boolean).join(" ").trim(), note: pick("从账本入库", "From books") + (f.item ? `：${f.item}` : "") });
+        }
+      }
       const base = { date: f.date, kind: f.kind, category: f.category, merchant: f.merchant.trim(), item: f.item.trim(), currency: f.currency, tax: f.tax === "" ? null : n(f.tax), pay_method: f.pay_method, txn_id: f.txn_id.trim(), note: f.note.trim() };
       if (!isNew) {
         let receipts = entry.receipts || [], shas = entry.receipt_sha || [];
         for (const p of fl) { const path = `${entry.holder_id}/${p.sha}.${extOf(p.file)}`; await files.upload(path, p.file); receipts = [...receipts, path]; shas = [...shas, p.sha]; }
-        await db.update("fin_entries", entry.id, { ...base, amount: n(f.amount), receipts, receipt_sha: shas });
+        await db.update("fin_entries", entry.id, { ...base, amount: n(f.amount), receipts, receipt_sha: shas, inv_batch });
       } else {
         const group = split ? (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) : null;
         for (const [hid, amt] of targets) {
           const receipts = [];
           for (const p of fl) { const path = `${hid}/${p.sha}.${extOf(p.file)}`; await files.upload(path, p.file); receipts.push(path); }
-          await db.insert("fin_entries", { ...base, holder_id: hid, amount: n(amt), receipts, receipt_sha: fl.map((p) => p.sha), alloc_group: group, alloc_total: split ? n(f.amount) : null, tax: split && base.tax != null ? Math.round((base.tax * n(amt)) / n(f.amount) * 100) / 100 : base.tax });
+          await db.insert("fin_entries", { ...base, holder_id: hid, amount: n(amt), receipts, receipt_sha: fl.map((p) => p.sha), inv_batch, alloc_group: group, alloc_total: split ? n(f.amount) : null, tax: split && base.tax != null ? Math.round((base.tax * n(amt)) / n(f.amount) * 100) / 100 : base.tax });
         }
       }
-      toast(pick("已保存", "Saved")); onSaved();
+      toast(goodLines.length ? pick(`已保存，${goodLines.length} 样货已入库`, `Saved; ${goodLines.length} item(s) stocked in`) : pick("已保存", "Saved")); onSaved();
     } catch (e) { toast(pick("保存失败：", "Save failed: ") + (e.message || "")); }
     setBusy(false);
   };
   const del = async () => {
     if (!window.confirm(pick("删除这一笔？", "Delete this entry?"))) return;
-    try { await db.remove("fin_entries", entry.id); onSaved(); } catch (e) { toast(e.message || "error"); }
+    try {
+      if (entry.inv_batch && stocked.length && window.confirm(pick(`这一笔入库了 ${stocked.length} 样货，要一起从库存撤销吗？`, `This entry stocked in ${stocked.length} item(s). Remove them from stock too?`))) for (const m of stocked) await db.remove("inv_moves", m.id);
+      await db.remove("fin_entries", entry.id); onSaved(); } catch (e) { toast(e.message || "error"); }
   };
 
   return (
@@ -221,7 +245,7 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
       <div className="fin-form">
         {isNew && <div className="inv-kinds" role="radiogroup">{[["expense", pick("支出", "Cost")], ["income", pick("收入", "Income")]].map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={f.kind === k} onClick={() => setF((x) => ({ ...x, kind: k, category: "" }))}>{l}</button>)}</div>}
         <div className="fin-ai">
-          <div><b>{pick("拍收据，AI 帮你填", "Snap the receipt, AI fills it in")}</b><p className="muted small">{pick("收据、发票、doTERRA 订单截图都可以（图片或 PDF）。一张很长拍了几张，可以一次选多张，会合成一笔。", "Receipts, invoices, doTERRA order screenshots (image or PDF). Several photos of one long receipt become one entry.")}</p>{ai.msg && <p className="small" style={{ color: ai.bad ? "var(--warn)" : "var(--accent)" }}>{ai.msg}</p>}</div>
+          <div><b>{pick("上传收据或订单，自动识别", "Upload a receipt or order")}</b><p className="muted small">{pick("收据、发票、doTERRA 订单截图都可以（图片或 PDF）。一张很长拍了几张，可以一次选多张，会合成一笔。", "Receipts, invoices, doTERRA order screenshots (image or PDF). Several photos of one long receipt become one entry.")}</p>{ai.msg && <p className="small" style={{ color: ai.bad ? "var(--warn)" : "var(--accent)" }}>{ai.msg}</p>}</div>
           <label className="btn primary sm" style={{ cursor: "pointer", flex: "none" }}>{ai.busy ? pick("识别中…", "Reading…") : pick("选择收据", "Choose files")}<input type="file" multiple accept="image/*,application/pdf" hidden disabled={ai.busy} onChange={pickFiles} /></label>
         </div>
         {(fl.length > 0 || links.length > 0) && <div className="fin-thumbs">
@@ -240,6 +264,27 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
           <div className="field"><label htmlFor="fe_x">{pick("单号 / 发票号", "Invoice / order no.")}</label><input id="fe_x" type="text" value={f.txn_id} onChange={set("txn_id")} /></div>
         </div>
         <div className="field"><label htmlFor="fe_n">{pick("备注", "Note")}</label><input id="fe_n" type="text" value={f.note} onChange={set("note")} /></div>
+        {f.kind === "expense" && (entry.inv_batch ? <div className="fin-stock">
+          <b>{pick("这一笔已经入库", "Stocked in from this entry")}</b>
+          <ul>{stocked.map((m) => { const it = d.items.find((x) => x.id === m.item_id); return <li key={m.id}>{it?.name || "?"} × {m.qty} {it?.unit || ""}{m.unit_price != null ? ` @ $${m.unit_price}` : ""} → {cv(d.holders.find((h) => h.id === m.to_holder)?.name || "")}</li>; })}</ul>
+        </div> : (GOODS.includes(f.category) || stock.lines.length > 0) && <div className="fin-stock">
+          <label className="chk"><input type="checkbox" checked={stock.on} onChange={(e) => setStock((st) => ({ ...st, on: e.target.checked, lines: st.lines.length ? st.lines : [{ qty: "1", price: "" }] }))} /> <b>{pick("同时入库", "Also stock in")}</b><span className="muted small">{pick("　把这张单买到的货记进库存", "  add what was bought to stock")}</span></label>
+          {stock.on && <>
+            {split ? <div className="field"><label>{pick("货入库到哪个帐户", "Stock goes to")}</label><select value={stock.to} onChange={(e) => setStock((st) => ({ ...st, to: e.target.value }))}>{Object.keys(parts).map((id) => <option key={id} value={id}>{cv(d.holders.find((h) => h.id === id)?.name || "")}</option>)}</select></div>
+              : <p className="muted small" style={{ margin: 0 }}>{pick(`入库到「${cv(holder?.name || "")}」。用谁的帐户下的单，就记在谁的帐户。`, `Goes into ${holder?.name || ""}'s stock.`)}</p>}
+            <div className="inv-lines">
+              <div className="inv-line head"><span>{pick("品项", "Item")}</span><span>{pick("数量", "Qty")}</span><span>{pick("单价", "Unit price")}</span><span /></div>
+              {stock.lines.map((l, i) => (
+                <div key={i} className="inv-line">
+                  <div>{<ItemPicker d={d} value={l} onChange={(v) => setStock((st) => ({ ...st, lines: st.lines.map((x, j) => (j === i ? { qty: x.qty, price: x.price, raw: x.raw, ...v } : x)) }))} />}{l.raw && <span className="muted small fin-raw">{pick("收据上：", "On receipt: ")}{l.raw}</span>}</div>
+                  <input type="number" min="0" step="any" value={l.qty} onChange={(e) => setStock((st) => ({ ...st, lines: st.lines.map((x, j) => (j === i ? { ...x, qty: e.target.value } : x)) }))} aria-label={pick("数量", "Qty")} placeholder={pick("数量", "Qty")} />
+                  <input type="number" min="0" step="0.01" value={l.price} onChange={(e) => setStock((st) => ({ ...st, lines: st.lines.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)) }))} aria-label={pick("单价", "Unit price")} placeholder={pick("单价", "Price")} />
+                  <button type="button" className="btn ghost sm" onClick={() => setStock((st) => ({ ...st, lines: st.lines.filter((_, j) => j !== i) }))}>{pick("删除", "Remove")}</button>
+                </div>))}
+              <button type="button" className="btn sm" onClick={() => setStock((st) => ({ ...st, lines: [...st.lines, { qty: "1", price: "" }] }))}>{pick("再加一项", "Add a line")}</button>
+            </div>
+          </>}
+        </div>)}
         {isNew && f.kind === "expense" && d.editable.length > 1 && <div className="fin-split">
           <label className="chk"><input type="checkbox" checked={split} onChange={(e) => { setSplit(e.target.checked); if (e.target.checked && !Object.keys(parts).length) setParts({ [f.holder_id]: "" }); }} /> {pick("这张单分摊到几个帐户（例如一次广告、一顿饭大家分）", "Split this across several accounts (e.g. a shared ad or meal)")}</label>
           {split && <>
@@ -251,7 +296,7 @@ function EntryForm({ d, entry, admin, onClose, onSaved }) {
           </>}
         </div>}
         {!isNew && entry.alloc_group && <p className="muted small">{pick(`这是一张分摊单的其中一份，整张单总额 ${fmt(entry.alloc_total, entry.currency)}。`, `One share of a split bill totalling ${fmt(entry.alloc_total, entry.currency)}.`)}</p>}
-        {DEMO && <p className="muted small">{pick("演示模式：AI 识别返回的是示例结果，收据只在这次打开的页面里。", "Demo mode: AI returns a sample result and files stay in this page only.")}</p>}
+        {DEMO && <p className="muted small">{pick("演示模式：识别结果是示例，收据只在这次打开的页面里。", "Demo mode: the reading is a sample and files stay in this page only.")}</p>}
       </div>
     </Modal>
   );

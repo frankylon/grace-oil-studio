@@ -12455,7 +12455,7 @@
   {
    "id": "20000000-0000-0000-0000-000000000001",
    "name": "薰衣草精油 15ml",
-   "product_id": null,
+   "product_id": "lavender-oil",
    "category": "oil",
    "unit": "瓶",
    "cost": 26.67,
@@ -12464,7 +12464,7 @@
   {
    "id": "20000000-0000-0000-0000-000000000002",
    "name": "乳香精油 15ml",
-   "product_id": null,
+   "product_id": "frankincense-essential-oil",
    "category": "oil",
    "unit": "瓶",
    "cost": 85.33,
@@ -12473,7 +12473,7 @@
   {
    "id": "20000000-0000-0000-0000-000000000003",
    "name": "椒样薄荷精油 15ml",
-   "product_id": null,
+   "product_id": "peppermint-essential-oil",
    "category": "oil",
    "unit": "瓶",
    "cost": 28.0,

@@ -475,3 +475,8 @@ img[src*="doterra.com"]{mix-blend-mode:multiply}
 .dt-a{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg);font:inherit;color:inherit;cursor:pointer}
 .dt-a:hover{border-color:var(--accent)}
 @media (max-width:640px){.fin-sum{grid-template-columns:1fr 1fr 1fr;gap:6px}.fin-sum>div{padding:10px}.fin-sum b{font-size:16px}.fin-cat{grid-template-columns:80px 1fr 80px}.fin-ai{flex-direction:column}}
+.fin-stock{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px;background:#fff}
+.fin-stock ul{margin:0;padding-left:18px;font-size:14px}
+.fin-raw{display:block;margin-top:3px}
+.fin-stock .inv-line{grid-template-columns:minmax(0,1fr) 80px 100px auto;align-items:start}
+@media (max-width:640px){.fin-stock .inv-line{grid-template-columns:1fr 1fr}.fin-stock .inv-line>div:first-child{grid-column:1/-1}}

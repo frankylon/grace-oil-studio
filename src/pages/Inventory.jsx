@@ -149,8 +149,38 @@ function DebtsView({ d, onNew }) {
   );
 }
 
+/* 把收据上的货品名对到目录里的精油（英文名或中文名） */
+const STOP = new Set(["essential", "oil", "oils", "blend", "nhp", "doterra", "ml", "mL", "the"]);
+const toks = (x) => String(x || "").toLowerCase().replace(/[®™©]/g, "").replace(/\d+(\.\d+)?\s*(ml|毫升|oz|g|ct|pk)\b/g, " ").replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ").split(" ").filter((w) => w && !STOP.has(w));
+const isTouch = (t) => t.some((w) => /^(touch|roll|on)$/.test(w));
+export function matchProduct(name, products) {
+  const raw = String(name || "");
+  if (/[\u4e00-\u9fff]/.test(raw)) { // 中文名：找包含关系最长的
+    let best = null, sc = 0, alt = null, al = 1e9;
+    for (const p of products || []) { const z = (p.name_zh || "").replace(/\s*[（(].*?[)）]/g, ""); if (!z) continue; if (raw.includes(z) && z.length > sc) { sc = z.length; best = p; } else if (z.includes(raw) && z.length < al) { al = z.length; alt = p; } }
+    return best || alt;
+  }
+  const lt = toks(raw), set = new Set(lt); if (!lt.length) return null;
+  let best = null, score = 0;
+  for (const p of products || []) {
+    const pt = toks(p.name_en); if (!pt.length || !pt.every((w) => set.has(w))) continue;
+    const sc = pt.length * 10 + (isTouch(pt) === isTouch(lt) ? 5 : 0) - (/nhp/i.test(p.name_en) ? 1 : 0);
+    if (sc > score) { score = sc; best = p; }
+  }
+  return best;
+}
+export const productItem = (p) => ({ product_id: p.id, name: p.name_zh.replace(/\s*[（(]天然健康产品[)）]/, ""), category: "oil", cost: parseFloat(String(p.wholesale || "").replace(/[^0-9.]/g, "")) || 0, unit: "瓶" });
+/* 找到或新建品项，返回 id */
+export async function ensureItem(items, l) {
+  if (l.item_id) return l.item_id;
+  const ex = items.find((x) => (l.product_id && x.product_id === l.product_id) || x.name === l.name);
+  if (ex) return ex.id;
+  const r = await db.insert("inv_items", { name: l.name, product_id: l.product_id || null, category: l.category || "other", unit: l.unit || "个", cost: l.cost || 0 });
+  items.push(r); return r.id;
+}
+
 /* 品项选择：已有品项 + 目录里的精油 + 直接新建 */
-function ItemPicker({ d, value, onChange }) {
+export function ItemPicker({ d, value, onChange }) {
   const { pick } = useLang();
   const cat = useCatalog();
   const [q, setQ] = useState("");
@@ -166,7 +196,7 @@ function ItemPicker({ d, value, onChange }) {
       <input type="text" value={open ? q : cur || ""} placeholder={pick("搜索或输入新品项", "Search or type a new item")} onFocus={() => { setOpen(true); setQ(""); }} onBlur={() => setTimeout(() => setOpen(false), 150)} onChange={(e) => setQ(e.target.value)} aria-label={pick("品项", "Item")} />
       {open && (own.length > 0 || prods.length > 0 || ql) && <div className="ipick-list">
         {own.map((x) => <button type="button" key={x.id} onMouseDown={() => choose({ item_id: x.id })}>{x.name}<span>{pick(...(CATS[x.category] || CATS.other))}</span></button>)}
-        {prods.map((p) => <button type="button" key={p.id} onMouseDown={() => choose({ product_id: p.id, name: p.name_zh.replace(/\s*[（(]天然健康产品[)）]/, ""), category: "oil", cost: parseFloat(String(p.wholesale || "").replace(/[^0-9.]/g, "")) || 0, unit: "瓶" })}>{p.name_zh}<span>{pick("目录精油", "Catalog oil")}</span></button>)}
+        {prods.map((p) => <button type="button" key={p.id} onMouseDown={() => choose(productItem(p))}>{p.name_zh}<span>{pick("目录精油", "Catalog oil")}</span></button>)}
         {ql && !own.some((x) => x.name.toLowerCase() === ql) && <button type="button" className="new" onMouseDown={() => choose({ name: q.trim(), category: "other", unit: "个", isNew: true })}>{pick(`新建品项「${q.trim()}」`, `New item “${q.trim()}”`)}</button>}
       </div>}
     </div>
