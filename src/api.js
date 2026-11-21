@@ -153,6 +153,8 @@ export const db = {
         const m = demo.members.find((x) => x.id === demoUser.member_id); if (m) m.share_health_with_upline = args.v; persist();
       }
       if (name === "link_my_member") return demoUser?.member_id || null;
+      if (name === "ds_channel") { const r = (demo.ds_reps || []).find((x) => x.code.toLowerCase() === String(args.c).toLowerCase()); const st = (demo.ds_stores || []).find((x) => (r ? x.id === r.store_id : x.code.toLowerCase() === String(args.c).toLowerCase())); return r || st ? { store: st?.name || "", rep: r?.name || null } : null; }
+      if (name === "ds_place_order") { const r = (demo.ds_reps || []).find((x) => x.code.toLowerCase() === String(args.c).toLowerCase()); const st = (demo.ds_stores || []).find((x) => (r ? x.id === r.store_id : x.code.toLowerCase() === String(args.c).toLowerCase())); if (!r && !st) throw new Error("bad_code"); const o = args.o; const no = "D" + (1001 + (demo.ds_orders || []).length); (demo.ds_orders = demo.ds_orders || []).push({ id: uid(), order_no: no, created_at: new Date().toISOString(), store_id: st?.id || null, rep_id: r?.id || null, source: "link", customer_name: o.name, customer_phone: o.phone, customer_email: o.email, ship_address: o.address, ship_method: o.ship, items: o.items, subtotal: o.items.reduce((s, l) => s + l.qty * l.price, 0), payment: o.payment, status: "new", store_pct: st?.store_pct || 0, staff_pct: r?.staff_pct ?? st?.staff_pct ?? 0, customer_note: o.note, settled: false }); persist(); return no; }
       if (name === "set_member_tier") { const m = demo.members.find((x) => x.id === args.target); if (m) { m.tier = args.t; persist(); } return args.t; }
       return null;
     }

@@ -13818,5 +13818,146 @@
    "created_at": "2026-01-01",
    "account_id": "61000000-0000-0000-0000-000000000001"
   }
+ ],
+ "ds_stores": [
+  {
+   "id": "90000000-0000-0000-0000-000000000001",
+   "name": "源按摩馆 Richmond",
+   "code": "YUENRM",
+   "store_pct": 15,
+   "staff_pct": 10,
+   "staff_paid_by": "us",
+   "contact": "Kitty",
+   "phone": "",
+   "address": "",
+   "active": true,
+   "note": "",
+   "created_at": "2026-11-01"
+  }
+ ],
+ "ds_reps": [
+  {
+   "id": "91000000-0000-0000-0000-000000000001",
+   "store_id": "90000000-0000-0000-0000-000000000001",
+   "name": "Amy（前台）",
+   "code": "AMY",
+   "team": "Richmond",
+   "phone": "",
+   "staff_pct": null,
+   "active": true,
+   "created_at": "2026-11-01"
+  },
+  {
+   "id": "91000000-0000-0000-0000-000000000002",
+   "store_id": null,
+   "name": "阿杰（独立销售）",
+   "code": "JIE",
+   "team": "外场一组",
+   "phone": "",
+   "staff_pct": 12,
+   "active": true,
+   "created_at": "2026-11-02"
+  }
+ ],
+ "ds_orders": [
+  {
+   "id": "92000000-0000-0000-0000-000000000001",
+   "order_no": "D1001",
+   "created_at": "2026-11-05T10:00:00Z",
+   "store_id": "90000000-0000-0000-0000-000000000001",
+   "rep_id": "91000000-0000-0000-0000-000000000001",
+   "source": "link",
+   "customer_name": "王小姐",
+   "customer_phone": "6045550101",
+   "customer_email": "",
+   "ship_address": "",
+   "ship_method": "pickup",
+   "items": [
+    {
+     "product": "lavender-oil",
+     "name": "薰衣草精油",
+     "size": "15 毫升",
+     "qty": 2,
+     "price": 37.5
+    }
+   ],
+   "subtotal": 75,
+   "pv": null,
+   "currency": "CAD",
+   "payment": "store_collected",
+   "status": "done",
+   "fulfill": "stock",
+   "store_pct": 15,
+   "staff_pct": 10,
+   "settled": false,
+   "note": "",
+   "customer_note": ""
+  },
+  {
+   "id": "92000000-0000-0000-0000-000000000002",
+   "order_no": "D1002",
+   "created_at": "2026-11-12T10:00:00Z",
+   "store_id": "90000000-0000-0000-0000-000000000001",
+   "rep_id": null,
+   "source": "link",
+   "customer_name": "陈先生",
+   "customer_phone": "6045550102",
+   "customer_email": "",
+   "ship_address": "123 Main St",
+   "ship_method": "ship",
+   "items": [
+    {
+     "product": "deep-blue",
+     "name": "舒缓复方精油",
+     "size": "5 毫升",
+     "qty": 1,
+     "price": 50
+    }
+   ],
+   "subtotal": 50,
+   "pv": null,
+   "currency": "CAD",
+   "payment": "direct_doterra",
+   "status": "new",
+   "fulfill": "",
+   "store_pct": 15,
+   "staff_pct": 10,
+   "settled": false,
+   "note": "",
+   "customer_note": "请尽快寄"
+  },
+  {
+   "id": "92000000-0000-0000-0000-000000000003",
+   "order_no": "D1003",
+   "created_at": "2026-11-18T10:00:00Z",
+   "store_id": null,
+   "rep_id": "91000000-0000-0000-0000-000000000002",
+   "source": "link",
+   "customer_name": "李太",
+   "customer_phone": "6045550103",
+   "customer_email": "",
+   "ship_address": "456 Oak St",
+   "ship_method": "ship",
+   "items": [
+    {
+     "product": "frankincense-essential-oil",
+     "name": "乳香精油",
+     "size": "15 毫升",
+     "qty": 1,
+     "price": 102
+    }
+   ],
+   "subtotal": 102,
+   "pv": null,
+   "currency": "CAD",
+   "payment": "pending",
+   "status": "processing",
+   "fulfill": "",
+   "store_pct": 0,
+   "staff_pct": 12,
+   "settled": false,
+   "note": "",
+   "customer_note": ""
+  }
  ]
 }

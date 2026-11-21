@@ -9,6 +9,7 @@ import Home, { Wordmark } from "./pages/Home";
 import "./home.css";
 import { asset } from "./img";
 import Login, { ResetPassword } from "./pages/Login";
+import { OrderLink } from "./pages/Dropship";
 import { DownlineView, MyAccount } from "./pages/Member";
 import Admin from "./pages/Admin";
 import { BookPage, ClientChart, RecordEditor, StaffHome } from "./pages/Service";
@@ -77,6 +78,7 @@ function Shell() {
       <Route path="/recipes/:id" element={<RecipeDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/reset" element={<ResetPassword />} />
+      <Route path="/order/:code" element={<OrderLink />} />
       <Route path="/me" element={<MyAccount />} />
       <Route path="/me/m/:id" element={<DownlineView />} />
       <Route path="/admin" element={<Admin />} />
