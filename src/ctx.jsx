@@ -44,7 +44,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
   useEffect(() => { refresh(); return auth.onChange(() => refresh()); }, [refresh]);
-  const value = useMemo(() => ({ ...state, refresh, isAdmin: state.profile?.role === "admin", isStaff: ["admin", "therapist"].includes(state.profile?.role), staffId: state.profile?.staff_id || null }), [state, refresh]);
+  const value = useMemo(() => ({ ...state, refresh, isAdmin: state.profile?.role === "admin" || state.profile?.tier === "super", isSuperAdmin: state.profile?.role === "admin", tier: state.profile?.role === "admin" && !state.profile?.member_id ? "super" : state.profile?.tier || "customer", isBuilder: ["builder", "super"].includes(state.profile?.tier) || state.profile?.role === "admin", isStaff: ["admin", "therapist"].includes(state.profile?.role) || state.profile?.tier === "super", staffId: state.profile?.staff_id || null }), [state, refresh]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 export const useAuth = () => useContext(AuthCtx);

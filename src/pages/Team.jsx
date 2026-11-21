@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../i18n";
-import { useToast } from "../ctx";
+import { useAuth, useToast } from "../ctx";
 import { db } from "../api";
 import { Loading, Modal } from "../components";
 import { buildTree, ladder, money, today } from "../util";
@@ -162,11 +162,28 @@ export function TeamMap({ rootId, admin }) {
   );
 }
 
+const TIERL = { customer: ["普通会员", "Member"], doterra: ["doTERRA 会员", "doTERRA member"], builder: ["经营者", "Builder"], super: ["超级经营者", "Lead builder"] };
+function TierSwitch({ m }) {
+  const { pick } = useLang();
+  const toast = useToast();
+  const { isAdmin, profile } = useAuth();
+  const [tier, setTier] = useState(m.tier || "customer");
+  const opts = isAdmin ? ["customer", "doterra", "builder"] : ["customer", "doterra"];
+  const can = isAdmin || (m.id !== profile?.member_id && ["customer", "doterra"].includes(tier));
+  const go = async (t) => { try { await db.rpc("set_member_tier", { target: m.id, t }); setTier(t); m.tier = t; toast(pick("身份已更新", "Updated")); } catch (e) { toast(pick("没有权限修改", "Not allowed")); } };
+  return (
+    <div className="tier-sw"><span className="muted small">{pick("身份", "Tier")}</span>
+      {can && tier !== "super" ? <div className="fseg">{opts.map((t) => <button key={t} aria-pressed={tier === t} onClick={() => tier !== t && go(t)}>{pick(...TIERL[t])}</button>)}</div> : <b>{pick(...(TIERL[tier] || TIERL.customer))}</b>}
+    </div>
+  );
+}
+
 function NodeDetail({ d, info, m, ym, admin, onClose }) {
   const { pick, cv } = useLang();
   const rk = info.rank, lv = info.lvl;
   return (
     <Modal title={`${cv(m.name)} · ${ym}`} onClose={onClose} footer={<><Link className="btn" to={admin ? `/admin?m=${m.id}` : `/me/m/${m.id}`}>{pick("打开会员页", "Open member page")}</Link><button className="btn primary" onClick={onClose}>{pick("关闭", "Close")}</button></>}>
+      <TierSwitch m={m} />
       <div className="fin-sum">
         <div><span>{pick("本月 PV", "PV this month")}</span><b>{r1(info.pv)}</b></div>
         <div><span>{pick("本月 LRP PV", "LRP PV")}</span><b>{r1(info.lrpPv)}</b></div>

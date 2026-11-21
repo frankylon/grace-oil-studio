@@ -5,7 +5,7 @@ import { useLang } from "../i18n";
 import { useAuth, useCatalog, useToast } from "../ctx";
 import { db, resetCatalog } from "../api";
 import { Loading, Modal, useProductName } from "../components";
-import { Orders, MemberView, Team } from "./Member";
+import { Orders, MemberView, Team, TIERS } from "./Member";
 import { BookingsAdmin, ServiceHistory, StaffAdmin } from "./Service";
 import { buildTree, money, today } from "../util";
 import { InventoryAdmin } from "./Inventory";
@@ -107,9 +107,10 @@ function MembersAdmin() {
 }
 
 function MemberForm({ m, members, onClose, onSaved }) {
-  const { t, cv } = useLang();
+  const { t, cv, pick } = useLang();
+  const { isSuperAdmin } = useAuth();
   const toast = useToast();
-  const [f, setF] = useState({ name: "", name_en: "", email: "", phone: "", doterra_id: "", sponsor_id: null, joined: today(), member_type: "wholesale", accounts: [], admin_notes: "", share_health_with_upline: false, ...m });
+  const [f, setF] = useState({ name: "", name_en: "", email: "", phone: "", doterra_id: "", sponsor_id: null, joined: today(), member_type: "wholesale", tier: "customer", accounts: [], admin_notes: "", share_health_with_upline: false, ...m });
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
   const save = async () => {
     if (!f.name.trim()) return;
@@ -130,6 +131,7 @@ function MemberForm({ m, members, onClose, onSaved }) {
         <div className="field"><label htmlFor="mf_d">{t("doterra_id")}</label><input id="mf_d" type="text" value={f.doterra_id} onChange={set("doterra_id")} /></div>
         <div className="field"><label htmlFor="mf_j">{t("joined")}</label><input id="mf_j" type="date" value={f.joined || ""} onChange={set("joined")} /></div>
         <div className="field"><label htmlFor="mf_s">{t("sponsor")}</label><select id="mf_s" value={f.sponsor_id || ""} onChange={set("sponsor_id")}><option value="">—</option>{members.filter((x) => x.id !== m.id).map((x) => <option key={x.id} value={x.id}>{cv(x.name)}</option>)}</select></div>
+        <div className="field"><label htmlFor="mf_tier">{pick("会员身份", "Member tier")}</label><select id="mf_tier" value={f.tier || "customer"} onChange={set("tier")}>{Object.entries(TIERS).filter(([k]) => k !== "super" || isSuperAdmin || f.tier === "super").map(([k, v]) => <option key={k} value={k}>{pick(...v)}</option>)}</select></div>
         <div className="field"><label htmlFor="mf_t">{t("member_type")}</label><select id="mf_t" value={f.member_type} onChange={set("member_type")}>{["retail", "wholesale", "builder"].map((x) => <option key={x} value={x}>{t("mt_" + x)}</option>)}</select></div>
       </div>
       <div className="field"><label htmlFor="mf_a">{t("account")}（, ）</label><input id="mf_a" type="text" value={Array.isArray(f.accounts) ? f.accounts.join(", ") : f.accounts} onChange={set("accounts")} /></div>

@@ -59,7 +59,7 @@ function demoVisible(table, row) {
   if (!demoUser) return false;
   if (demoUser.role === "admin") return true;
   if (demoUser.role === "therapist") return ["staff", "members", "blends", "needs", "bookings", "service_records", "service_notes"].includes(table);
-  const me = demoUser.member_id; const tree = treeIds(me);
+  const me = demoUser.member_id; const myTier = demo.members.find((x) => x.id === me)?.tier; const tree = ["builder", "super"].includes(myTier) ? treeIds(me) : new Set([me]);
   const shares = (id) => id === me || (tree.has(id) && demo.members.find((m) => m.id === id)?.share_health_with_upline);
   switch (table) {
     case "members": return tree.has(row.id);
@@ -153,6 +153,7 @@ export const db = {
         const m = demo.members.find((x) => x.id === demoUser.member_id); if (m) m.share_health_with_upline = args.v; persist();
       }
       if (name === "link_my_member") return demoUser?.member_id || null;
+      if (name === "set_member_tier") { const m = demo.members.find((x) => x.id === args.target); if (m) { m.tier = args.t; persist(); } return args.t; }
       return null;
     }
     const { data, error } = await sb.rpc(name, args);
@@ -177,6 +178,35 @@ export const auth = {
     const { error } = await sb.auth.signInWithOtp(email ? { email, options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + "/me" } } : { phone });
     if (error) throw error;
   },
+  async register({ name, email, phone, password, ref }) {
+    if (DEMO) {
+      await demoDb();
+      const m = { id: uid(), name, email, phone, tier: "customer", member_type: "retail", sponsor_id: (demo.members.find((x) => ref && (x.doterra_id === ref || x.email === ref)) || {}).id || null, joined: new Date().toISOString().slice(0, 10), accounts: [], created_at: new Date().toISOString() };
+      demo.members.push(m); persist();
+      demoUser = { role: "member", member_id: m.id }; try { sessionStorage.setItem(LS + ".user", JSON.stringify(demoUser)); } catch {}
+      const s = await auth.session(); listeners.forEach((f) => f(s)); return;
+    }
+    const { data, error } = await sb.functions.invoke("register", { body: { name, email, phone, password, ref } });
+    if (error) { let code = ""; try { code = (await error.context.json()).error; } catch {} const e = new Error(code || error.message); e.code = code; throw e; }
+    if (data?.error) { const e = new Error(data.error); e.code = data.error; throw e; }
+    const { error: e2 } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    if (e2) throw e2;
+  },
+  async signIn({ email, password }) {
+    if (DEMO) throw new Error("demo");
+    const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    if (error) { const e = new Error(error.message); e.code = /invalid/i.test(error.message) ? "invalid" : ""; throw e; }
+  },
+  async resetPassword(email) {
+    if (DEMO) throw new Error("demo");
+    const { error } = await sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: window.location.origin + "/reset" });
+    if (error) throw error;
+  },
+  async setPassword(password) {
+    if (DEMO) return;
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) throw error;
+  },
   async verifyOtp({ email, phone, token }) {
     const { error } = await sb.auth.verifyOtp(email ? { email, token, type: "email" } : { phone, token, type: "sms" });
     if (error) throw error;
@@ -194,7 +224,7 @@ export const auth = {
     const s = await auth.session(); listeners.forEach((f) => f(s));
   },
   async profile() {
-    if (DEMO) { await demoDb(); return demoUser; }
+    if (DEMO) { await demoDb(); if (!demoUser) return null; const mm = demoUser.member_id && demo.members.find((x) => x.id === demoUser.member_id); return { ...demoUser, tier: demoUser.role === "admin" ? "super" : mm?.tier || "customer" }; }
     const { data: s } = await sb.auth.getSession();
     if (!s.session) return null;
     let { data } = await sb.from("profiles").select("role,member_id").eq("id", s.session.user.id).maybeSingle();
@@ -203,6 +233,7 @@ export const auth = {
       ({ data } = await sb.from("profiles").select("role,member_id").eq("id", s.session.user.id).maybeSingle());
     }
     const prof = data || { role: "member", member_id: null };
+    if (prof.member_id) { const { data: mm } = await sb.from("members").select("tier").eq("id", prof.member_id).maybeSingle(); prof.tier = mm?.tier || "customer"; }
     if (prof.role === "admin" || prof.role === "therapist") {
       const { data: st } = await sb.from("staff").select("id,name").eq("user_id", s.session.user.id).maybeSingle();
       prof.staff_id = st?.id || null; prof.staff_name = st?.name || "";

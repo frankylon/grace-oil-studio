@@ -8,7 +8,7 @@ import { OilDetail, Oils, RecipeDetail, Recipes, Search } from "./pages/Public";
 import Home, { Wordmark } from "./pages/Home";
 import "./home.css";
 import { asset } from "./img";
-import Login from "./pages/Login";
+import Login, { ResetPassword } from "./pages/Login";
 import { DownlineView, MyAccount } from "./pages/Member";
 import Admin from "./pages/Admin";
 import { BookPage, ClientChart, RecordEditor, StaffHome } from "./pages/Service";
@@ -76,6 +76,7 @@ function Shell() {
       <Route path="/recipes" element={<Recipes />} />
       <Route path="/recipes/:id" element={<RecipeDetail />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/reset" element={<ResetPassword />} />
       <Route path="/me" element={<MyAccount />} />
       <Route path="/me/m/:id" element={<DownlineView />} />
       <Route path="/admin" element={<Admin />} />

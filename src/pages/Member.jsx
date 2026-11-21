@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useLang } from "../i18n";
 import { useAuth, useCatalog, useToast } from "../ctx";
-import { db } from "../api";
+import { db, auth } from "../api";
 import { DropList, Loading } from "../components";
 import { MyBookings, ServiceHistory } from "./Service";
 import { MyStock } from "./Inventory";
@@ -51,13 +51,18 @@ export function DownlineView() {
   return <MemberView memberId={id} key={id} />;
 }
 
-const TABS = ["overview", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock", "my_books"];
+export const TIERS = { customer: ["普通会员", "Member"], doterra: ["doTERRA 会员", "doTERRA member"], builder: ["经营者", "Builder"], super: ["超级经营者", "Lead builder"] };
+const TIER_TABS = {
+  customer: ["my_services", "my_blends", "my_needs", "my_bookings", "my_requests", "my_settings"],
+  doterra: ["overview", "my_orders", "my_services", "my_blends", "my_needs", "my_bookings", "my_requests", "my_stock", "my_books", "my_settings"],
+};
+const TABS = ["overview", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock", "my_books", "my_settings"];
 
 export function MemberView({ memberId, self, admin }) {
   const { t, cv, pick } = useLang();
   const { d, err, reload } = useMemberData(memberId);
   const { profile } = useAuth();
-  const [tab, setTab] = useState("overview");
+  const [tab0, setTab] = useState(null);
   if (err) return <div className="empty">{t("load_fail")}</div>;
   if (!d) return <Loading />;
   if (!d.member) return <div className="empty">{t("forbidden")}</div>;
@@ -67,13 +72,15 @@ export function MemberView({ memberId, self, admin }) {
   const teamN = countTree(tree);
   const isMine = m.id === profile?.member_id;
   const healthVisible = admin || isMine || m.share_health_with_upline;
-  const tabs = TABS.filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin) && (x !== "my_books" || (isMine && !admin)));
+  const tierTabs = admin ? TABS : TIER_TABS[m.tier] || TABS;
+  const tabs = TABS.filter((x) => tierTabs.includes(x) && (x !== "my_settings" || isMine)).filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin) && (x !== "my_books" || (isMine && !admin)));
+  const tab = tab0 && tabs.includes(tab0) ? tab0 : tabs[0];
   return (
     <>
       {!self && !admin && <div className="crumbs"><Link to="/me">{t("nav_member")}</Link><span>/</span><span>{cv(m.name)}</span></div>}
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
         <h1 style={{ fontSize: "clamp(26px,4vw,36px)" }}>{self ? `${t("hello")}，${cv(m.name)}` : cv(m.name)}</h1>
-        <span className="pill">{t("mt_" + (m.member_type || "wholesale"))}</span>
+        <span className="pill">{pick(...(TIERS[m.tier] || TIERS.customer))}</span>
         {m.doterra_id && <span className="muted mono small">#{m.doterra_id}</span>}
       </div>
       <div className="tabs" role="tablist">{tabs.map((x) => <button key={x} role="tab" aria-current={tab === x} onClick={() => setTab(x)}>{t(x)}</button>)}</div>
@@ -87,8 +94,34 @@ export function MemberView({ memberId, self, admin }) {
       {tab === "my_requests" && <Requests reqs={d.reqs} />}
       {tab === "my_stock" && <MyStock memberId={m.id} />}
       {tab === "my_books" && <Books />}
+      {tab === "my_settings" && <MySettings m={m} />}
       {self && <ShareToggle m={m} reload={reload} />}
     </>
+  );
+}
+
+function MySettings({ m }) {
+  const { pick } = useLang();
+  const toast = useToast();
+  const [p1, setP1] = useState(""); const [p2, setP2] = useState(""); const [busy, setBusy] = useState(false);
+  const save = async (e) => {
+    e.preventDefault();
+    if (p1.length < 8) { toast(pick("密码至少 8 位", "At least 8 characters")); return; }
+    if (p1 !== p2) { toast(pick("两次输入的密码不一样", "Passwords don't match")); return; }
+    setBusy(true);
+    try { await auth.setPassword(p1); setP1(""); setP2(""); toast(pick("密码已更新", "Password updated")); } catch (x) { toast(x.message || "error"); }
+    setBusy(false);
+  };
+  return (
+    <div className="grid2" style={{ alignItems: "start" }}>
+      <div className="panel pad"><h3 style={{ marginTop: 0 }}>{pick("我的资料", "My details")}</h3>
+        <p className="muted" style={{ margin: 0 }}>{[m.email, m.phone, m.doterra_id && `#${m.doterra_id}`].filter(Boolean).join(" · ")}</p>
+        <p className="muted small">{pick("资料要改的话，请联系 Grace 或你的上线。", "To change these, contact Grace or your upline.")}</p></div>
+      <form onSubmit={save} className="panel pad lg-form"><h3 style={{ margin: 0 }}>{pick("设置 / 修改密码", "Set or change password")}</h3>
+        <div className="field"><label htmlFor="st_p1">{pick("新密码（至少 8 位）", "New password (8+)")}</label><input id="st_p1" type="password" autoComplete="new-password" value={p1} onChange={(e) => setP1(e.target.value)} /></div>
+        <div className="field"><label htmlFor="st_p2">{pick("再输入一次", "Repeat")}</label><input id="st_p2" type="password" autoComplete="new-password" value={p2} onChange={(e) => setP2(e.target.value)} /></div>
+        <button className="btn primary" disabled={busy || !p1}>{pick("保存密码", "Save password")}</button></form>
+    </div>
   );
 }
 
