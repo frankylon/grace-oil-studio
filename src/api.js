@@ -63,7 +63,7 @@ function demoVisible(table, row) {
   const shares = (id) => id === me || (tree.has(id) && demo.members.find((m) => m.id === id)?.share_health_with_upline);
   switch (table) {
     case "members": return tree.has(row.id);
-    case "member_status": case "orders": return tree.has(row.member_id);
+    case "member_status": case "orders": case "pts_moves": return tree.has(row.member_id);
     case "blends": case "needs": return shares(row.member_id);
     case "blend_requests": case "bookings": return row.member_id === me;
     case "service_records": return row.status === "final" && shares(row.member_id);

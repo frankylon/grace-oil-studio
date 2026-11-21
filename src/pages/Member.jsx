@@ -7,6 +7,7 @@ import { DropList, Loading } from "../components";
 import { MyBookings, ServiceHistory } from "./Service";
 import { MyStock } from "./Inventory";
 import { Books } from "./Finance";
+import { TeamMap, PointsPanel } from "./Team";
 import { buildTree, countTree, daysSince, dilutionPct, ladder, money, ownedSet } from "../util";
 
 export function useMemberData(memberId) {
@@ -76,13 +77,13 @@ export function MemberView({ memberId, self, admin }) {
         {m.doterra_id && <span className="muted mono small">#{m.doterra_id}</span>}
       </div>
       <div className="tabs" role="tablist">{tabs.map((x) => <button key={x} role="tab" aria-current={tab === x} onClick={() => setTab(x)}>{t(x)}</button>)}</div>
-      {tab === "overview" && <Overview d={d} m={m} s={s} teamN={teamN} />}
+      {tab === "overview" && <><PointsPanel memberId={m.id} admin={admin} /><Overview d={d} m={m} s={s} teamN={teamN} /></>}
       {tab === "my_blends" && (healthVisible ? <Blends d={d} /> : <div className="empty">{t("health_hidden")}</div>)}
       {tab === "my_services" && (healthVisible ? <ServiceHistory memberId={m.id} staffView={admin} /> : <div className="empty">{t("health_hidden")}</div>)}
       {tab === "my_bookings" && <MyBookings memberId={m.id} />}
       {tab === "my_orders" && <Orders orders={d.orders} />}
       {tab === "my_needs" && (healthVisible ? <Needs d={d} m={m} canPost={isMine} reload={reload} /> : <div className="empty">{t("health_hidden")}</div>)}
-      {tab === "my_team" && <Team tree={tree} st={d.st} levels={d.levels} admin={admin} />}
+      {tab === "my_team" && <TeamMap rootId={m.id} admin={admin} />}
       {tab === "my_requests" && <Requests reqs={d.reqs} />}
       {tab === "my_stock" && <MyStock memberId={m.id} />}
       {tab === "my_books" && <Books />}
@@ -141,10 +142,7 @@ function Overview({ d, m, s, teamN }) {
   return (
     <>
       <div className="stats">
-        <Stat k={t("points")} v={Number(s.points || 0).toLocaleString()} />
         <Stat k={t("balance")} v={money(s.balance_owed || 0, s.currency || "CAD")} warn={Number(s.balance_owed) > 0} />
-        <Stat k={t("pv_month")} v={Number(s.pv || 0).toLocaleString()} />
-        <Stat k={t("lrp_pv")} v={Number(s.lrp_pv || 0).toLocaleString()} />
         <Stat k={t("lrp_months")} v={s.lrp_months || 0} />
         {builder && <Stat k={t("ov")} v={Number(s.ov || 0).toLocaleString()} />}
         {teamN > 0 && <Stat k={t("team_size")} v={teamN} />}

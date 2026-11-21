@@ -10,6 +10,7 @@ import { BookingsAdmin, ServiceHistory, StaffAdmin } from "./Service";
 import { buildTree, money, today } from "../util";
 import { InventoryAdmin } from "./Inventory";
 import { Books } from "./Finance";
+import { TeamMap, lrpRate } from "./Team";
 
 export default function Admin() {
   const { t } = useLang();
@@ -23,7 +24,7 @@ export default function Admin() {
   return (
     <>
       <h1 style={{ fontSize: 30 }}>{t("nav_admin")}</h1>
-      <div className="tabs">{["a_bookings", "a_requests", "a_inventory", "a_finance", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
+      <div className="tabs">{["a_bookings", "a_requests", "a_tree", "a_inventory", "a_finance", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
       {tab === "a_bookings" && <BookingsAdmin />}
       {tab === "a_staff" && <StaffAdmin />}
       {tab === "a_requests" && <RequestsAdmin />}
@@ -33,6 +34,7 @@ export default function Admin() {
       {tab === "a_recipes" && <RecipesAdmin />}
       {tab === "a_inventory" && <InventoryAdmin />}
       {tab === "a_finance" && <Books admin />}
+      {tab === "a_tree" && <TeamMap admin />}
     </>
   );
 }
@@ -226,7 +228,9 @@ function ItemRows({ items, setItems, mode }) {
 }
 
 function OrderForm({ m, o, onClose, onSaved }) {
-  const { t } = useLang();
+  const { t, pick } = useLang();
+  const [lrpMonths, setLrpMonths] = useState(0);
+  useEffect(() => { db.select("member_status", { eq: { member_id: m.id } }).then((r) => setLrpMonths(Number(r[0]?.lrp_months || 0))).catch(() => {}); }, [m.id]);
   const toast = useToast();
   const [f, setF] = useState({ date: today(), order_no: "", account: m.accounts?.[0] || "", currency: "CAD", total: null, total_pv: null, payment: "", reason: "", items: [{}], ...o });
   const set = (k, n) => (e) => setF({ ...f, [k]: n ? (e.target.value === "" ? null : Number(e.target.value)) : e.target.value });
@@ -243,6 +247,12 @@ function OrderForm({ m, o, onClose, onSaved }) {
         <div className="field"><label htmlFor="of_c">CUR</label><select id="of_c" value={f.currency} onChange={set("currency")}>{["CAD", "USD", "RMB"].map((c) => <option key={c}>{c}</option>)}</select></div>
         <div className="field"><label htmlFor="of_t">{t("total")}</label><input id="of_t" type="number" step="0.01" value={f.total ?? ""} onChange={set("total", 1)} /></div>
         <div className="field"><label htmlFor="of_p">PV</label><input id="of_p" type="number" step="0.1" value={f.total_pv ?? ""} onChange={set("total_pv", 1)} /></div>
+      </div>
+      <div className="of-pts">
+        <label className="chk"><input type="checkbox" checked={!!f.lrp} onChange={(e) => setF({ ...f, lrp: e.target.checked })} /> {pick("这是 LRP 每月订单", "This is an LRP order")}</label>
+        <div className="field"><label htmlFor="of_pe">{pick("这单获得积分", "Points earned")}</label><input id="of_pe" type="number" step="0.01" value={f.points_earned ?? ""} onChange={set("points_earned", 1)} placeholder={f.lrp && f.total_pv ? pick(`建议 ${Math.round(f.total_pv * lrpRate(lrpMonths) * 100) / 100}`, `Suggested ${Math.round(f.total_pv * lrpRate(lrpMonths) * 100) / 100}`) : ""} />
+          {f.lrp && f.total_pv && f.points_earned == null ? <button type="button" className="btn ghost sm" onClick={() => setF({ ...f, points_earned: Math.round(f.total_pv * lrpRate(lrpMonths) * 100) / 100 })}>{pick(`按 ${Math.round(lrpRate(lrpMonths) * 100)}% 填入`, `Use ${Math.round(lrpRate(lrpMonths) * 100)}%`)}</button> : null}</div>
+        <div className="field"><label htmlFor="of_pu">{pick("这单用掉积分", "Points redeemed")}</label><input id="of_pu" type="number" step="0.01" value={f.points_used ?? ""} onChange={set("points_used", 1)} /></div>
       </div>
       <div className="grid2">
         <div className="field"><label htmlFor="of_pay">{t("payment")}</label><input id="of_pay" type="text" value={f.payment} onChange={set("payment")} /></div>
