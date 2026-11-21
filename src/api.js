@@ -170,7 +170,8 @@ export const auth = {
   },
   onChange(cb) {
     if (DEMO) { listeners.add(cb); return () => listeners.delete(cb); }
-    const { data } = sb.auth.onAuthStateChange((_e, s) => cb(s));
+    // 不能在这个回调里直接再调 Supabase（会互相等待卡死），所以放到下一轮再处理
+    const { data } = sb.auth.onAuthStateChange((_e, s) => { setTimeout(() => cb(s), 0); });
     return () => data.subscription.unsubscribe();
   },
   async sendOtp({ email, phone }) {
