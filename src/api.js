@@ -68,7 +68,9 @@ function demoVisible(table, row) {
     case "blend_requests": case "bookings": return row.member_id === me;
     case "service_records": return row.status === "final" && shares(row.member_id);
     case "inv_items": return true;
-    case "inv_holders": { const mine = (demo.inv_holders || []).filter((h) => h.member_id === me).map((h) => h.id); return mine.includes(row.id) || (demo.inv_moves || []).some((m) => ["loan", "repay", "settle"].includes(m.kind) && ((mine.includes(m.from_holder) && m.to_holder === row.id) || (mine.includes(m.to_holder) && m.from_holder === row.id))); }
+    case "fin_entries": { const h = (demo.inv_holders || []).find((x) => x.id === row.holder_id); return !!h?.member_id && tree.has(h.member_id); }
+    case "dt_accounts": return tree.has(row.member_id);
+    case "inv_holders": if (row.member_id && tree.has(row.member_id)) return true; { const mine = (demo.inv_holders || []).filter((h) => h.member_id === me).map((h) => h.id); return mine.includes(row.id) || (demo.inv_moves || []).some((m) => ["loan", "repay", "settle"].includes(m.kind) && ((mine.includes(m.from_holder) && m.to_holder === row.id) || (mine.includes(m.to_holder) && m.from_holder === row.id))); }
     case "inv_moves": { const mine = (demo.inv_holders || []).filter((h) => h.member_id === me).map((h) => h.id); return mine.includes(row.from_holder) || mine.includes(row.to_holder); }
     default: return false;
   }
@@ -99,6 +101,7 @@ export const db = {
       await demoDb();
       const staff = ["admin", "therapist"].includes(demoUser?.role);
       if (table === "blend_requests" || table === "bookings" || (table === "needs" && demoUser)) { /* 允许 */ }
+      else if (demoUser?.role === "member" && ["fin_entries", "dt_accounts", "inv_holders"].includes(table)) { /* 会员给自己记账 */ }
       else if (staff && ["service_records", "service_notes", "members", "blends"].includes(table)) { /* 芳疗师可写 */ }
       else if (demoUser?.role !== "admin") throw new Error("not allowed");
       const r = { id: uid(), created_at: new Date().toISOString(), ...row };
@@ -113,7 +116,7 @@ export const db = {
   async update(table, id, patch, idCol = "id") {
     if (DEMO) {
       await demoDb();
-      if (demoUser?.role !== "admin" && !(demoUser?.role === "therapist" && ["bookings", "service_records"].includes(table))) throw new Error("not allowed");
+      if (demoUser?.role !== "admin" && !(demoUser?.role === "therapist" && ["bookings", "service_records"].includes(table)) && !(demoUser?.role === "member" && ["fin_entries", "dt_accounts"].includes(table))) throw new Error("not allowed");
       const r = (demo[table] || []).find((x) => x[idCol] === id);
       if (r) Object.assign(r, patch); else (demo[table] = demo[table] || []).push({ [idCol]: id, ...patch });
       persist(); return r;
@@ -136,7 +139,7 @@ export const db = {
   },
   async remove(table, id, idCol = "id") {
     if (DEMO) {
-      await demoDb(); if (demoUser?.role !== "admin") throw new Error("not allowed");
+      await demoDb(); if (demoUser?.role !== "admin" && !(demoUser?.role === "member" && ["fin_entries", "dt_accounts"].includes(table))) throw new Error("not allowed");
       demo[table] = (demo[table] || []).filter((x) => x[idCol] !== id); persist(); return;
     }
     const { error } = await sb.from(table).delete().eq(idCol, id);
@@ -206,5 +209,32 @@ export const auth = {
     return prof;
   },
 };
+
+/* ---------------- 收据文件 + AI 识别 ---------------- */
+const demoFiles = new Map(); // 演示模式：文件只放在这次打开的页面里
+export const files = {
+  async upload(path, file) {
+    if (DEMO) { demoFiles.set(path, URL_.createObjectURL(file)); return path; }
+    const { error } = await sb.storage.from("receipts").upload(path, file, { upsert: true, contentType: file.type });
+    if (error && !/exists/i.test(error.message)) throw error;
+    return path;
+  },
+  async url(path) {
+    if (DEMO) return demoFiles.get(path) || null;
+    const { data, error } = await sb.storage.from("receipts").createSignedUrl(path, 600);
+    if (error) throw error; return data.signedUrl;
+  },
+  async remove(paths) { if (DEMO || !paths?.length) return; await sb.storage.from("receipts").remove(paths); },
+};
+const URL_ = globalThis.URL;
+export async function aiReceipt(kind, parts, context) {
+  if (DEMO) {
+    await new Promise((r) => setTimeout(r, 900));
+    return { fields: { date: new Date().toISOString().slice(0, 10), merchant: "doTERRA Canada", txn_id: "DEMO-" + Math.floor(Math.random() * 90000 + 10000), item: kind === "income" ? "精油销售" : "精油订单（演示识别结果）", amount: 128.45, currency: "CAD", tax: 6.12, category: kind === "income" ? "卖精油" : "精油进货", pay_method: "credit", summary: "演示模式：没有真的读收据，这是示例结果" } };
+  }
+  const { data, error } = await sb.functions.invoke("receipt-ai", { body: { kind, files: parts, context } });
+  if (error) { let code = ""; try { code = (await error.context.json()).error; } catch {} const e = new Error(code || error.message); e.code = code; throw e; }
+  return data;
+}
 
 export function resetDemo() { try { localStorage.removeItem(LS); } catch {} demo = null; }
