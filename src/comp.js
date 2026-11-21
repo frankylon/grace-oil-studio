@@ -68,6 +68,7 @@ export function computeMonth(data, ym) {
   const S = new Map(accts.map((a) => [a.id, sponsorOf(a)]));
   const E = new Map(accts.map((a) => [a.id, a.enroller_account_id && byId.has(a.enroller_account_id) ? a.enroller_account_id : S.get(a.id)]));
   const kids = new Map(); for (const a of accts) { const p = S.get(a.id); if (p) { if (!kids.has(p)) kids.set(p, []); kids.get(p).push(a.id); } }
+  const peMap = new Map(); for (const a of accts) { const e = E.get(a.id); if (e) { if (!peMap.has(e)) peMap.set(e, []); peMap.get(e).push(a.id); } }
   // 入会日期：填了用填的；否则用会员加入日期；再否则第一张订单
   const firstOrder = new Map(); for (const o of orders) if (o.account_id && (!firstOrder.has(o.account_id) || o.date < firstOrder.get(o.account_id))) firstOrder.set(o.account_id, o.date);
   const enrollDate = (id) => { const a = byId.get(id); return a?.enroll_date || (a?.is_main && memById.get(a.member_id)?.joined) || firstOrder.get(id) || a?.created_at?.slice(0, 10) || "2000-01-01"; };
@@ -117,7 +118,7 @@ export function computeMonth(data, ym) {
     const fl1 = fl.filter((k) => R.get(k).po3Level >= 1).length, fl2 = fl.filter((k) => R.get(k).po3Level >= 2).length;
     const po3Level = !l1 ? 0 : fl2 >= 3 ? 3 : fl1 >= 3 ? 2 : 1;
     // PGV：亲自推荐、12 个月内入会的帐户本月 Rewards PV
-    const pe = accts.filter((a) => E.get(a.id) === id).map((a) => a.id);
+    const pe = peMap.get(id) || [];
     const pgv = pe.filter(isNew12).reduce((s, k) => s + M(k).rpv, 0);
     const boost = po3Level ? (BOOST.find((b) => pgv >= b.pgv && po3Level >= b.minLevel)?.amt || 0) : 0;
     R.set(id, { id, pv: me.pv, rpv: me.rpv, ov, rank, subBest, subBestPE, fl, pe, po3: { level: po3Level, l1, podR, podOther, podVol, podPE, fl1, fl2, base: po3Level ? PO3.base[po3Level - 1] : 0, boost, pgv }, legBest, legBestPE, orders: me.orders });
@@ -141,7 +142,7 @@ export function computeMonth(data, ym) {
     const uni = lv.map((ids, i) => { const level = i + 1; const vol = ids.reduce((s, k) => s + M(k).uniPv, 0); const pct = UNI_PCT[level]; const open = !wc && level >= 2 && level <= maxLevel && r.pv >= 100; return { level, people: ids.length, vol, pct, open, amt: open ? vol * pct : 0 }; });
     // Fast Start：我推荐的（20%）、我推荐的人推荐的（10%）、再一层（5%）
     const fs = []; const qual = !wc && r.pv >= 100;
-    const walkE = (id, depth) => { if (depth > 3) return; accts.filter((x) => E.get(x.id) === id).forEach((x) => { const v = M(x.id).fsPv; if (v) fs.push({ acct: x.id, depth, vol: v, amt: qual ? v * FAST_START[depth - 1] : 0 }); walkE(x.id, depth + 1); }); };
+    const walkE = (id, depth) => { if (depth > 3) return; (peMap.get(id) || []).forEach((xid) => { const v = M(xid).fsPv; if (v) fs.push({ acct: xid, depth, vol: v, amt: qual ? v * FAST_START[depth - 1] : 0 }); walkE(xid, depth + 1); }); };
     walkE(a.id, 1);
     r.tgv = { value: tgv, pe: tgvPE, ok: tgvOk, need: rk.tgv?.need || 0, levels: rk.tgv?.levels || 0 };
     r.uni = uni; r.uniTotal = uni.reduce((s, x) => s + x.amt, 0); r.maxLevel = maxLevel;
@@ -290,4 +291,72 @@ export function advise(data, ym, acctId, R0) {
   walk(acctId, 1);
   tips.sort((a, b) => (b.info ? -1 : 0) - (a.info ? -1 : 0) || b.roi - a.roi || b.gain - a.gain);
   return { r, tips, legs, fsWin, name };
+}
+
+/* ---------------- 分销订单 → 团队里怎样下单最划算 ----------------
+ * units：拆好的单品 [{ id, label, pv, order }]（套组算一件，不拆）。
+ * 逐件（PV 大的先）试放到每个候选帐户，按规则重算全团队奖金，放到多拿最多的那个；
+ * 多开一张单有运费，所以放到「这次还没用到的帐户」时扣一点（shipPenalty）。
+ * 另外比较：整张单让客人开新会员帐户下（挂在某个帐户下面，拿 Fast Start）。
+ */
+export function allocate(data, ym, units, opt = {}) {
+  const o = { lrp: true, shipPenalty: 5, maxCand: 60, ...opt };
+  const ours = data.accts.filter((a) => a.acct_type !== "wc" || true).map((a) => a.id);
+  const R0 = computeMonth(data, ym);
+  const total = (R) => teamTotal(R, ours);
+  const base = total(R0);
+  const byId = new Map(data.accts.map((a) => [a.id, a]));
+  // 候选：有缺口的帐户（自己不到 100、Po3 没到第 3 级、离下一级 OV 不远）＋默认帐户
+  let cand = data.accts.filter((a) => {
+    const r = R0.get(a.id); if (!r) return false;
+    if (r.rpv < 100) return true;
+    if (r.po3.level < 3) return true;
+    const ov = r.next?.items.find((x) => x.key === "ov"); return ov && ov.left <= 1500;
+  }).map((a) => a.id);
+  if (o.defaultAcct && !cand.includes(o.defaultAcct)) cand.unshift(o.defaultAcct);
+  cand = cand.slice(0, o.maxCand);
+  let cur = data, curTotal = base, curR = R0; const used = new Set(); const plan = [];
+  const sorted = [...units].sort((a, b) => b.pv - a.pv);
+  for (const u of sorted) {
+    let best = null;
+    for (const id of cand) {
+      const a = byId.get(id);
+      const d2 = withOrders(cur, [{ acct: id, member_id: a.member_id, pv: u.pv, lrp: o.lrp }], ym);
+      const R2 = computeMonth(d2, ym); const t = total(R2);
+      const score = t - curTotal - (used.has(id) ? 0 : o.shipPenalty) + (id === o.defaultAcct ? 0.01 : 0);
+      if (!best || score > best.score) best = { id, d2, R2, t, score };
+    }
+    if (!best) break;
+    // 谁因为这件多拿了：找变化最大的帐户
+    let ben = null, bd = 0;
+    for (const id of ours) { const dlt = (best.R2.get(id)?.total || 0) - (curR.get(id)?.total || 0); if (dlt > bd) { bd = dlt; ben = id; } }
+    const why = [];
+    if (ben) {
+      const a0 = curR.get(ben), a1 = best.R2.get(ben);
+      if (a1.rank > a0.rank) why.push(`升到 ${RANKS[a1.rank].zh}`);
+      if (a1.po3.level > a0.po3.level) why.push(`Power of 3 到第 ${a1.po3.level} 级`);
+      if (a1.po3.boost > a0.po3.boost) why.push("拿到加码");
+      if (a0.pv < 100 && a1.pv >= 100) why.push("够 100 PV，佣金资格达标");
+      if (!why.length) why.push("层级提成增加");
+      if (ben !== best.id) { const ba = byId.get(ben); const bm = data.members.find((x) => x.id === ba?.member_id); why.unshift(`${bm?.name || ""}${ba?.label ? ` · ${ba.label}` : ""}：`); }
+    }
+    plan.push({ unit: u, acct: best.id, gain: best.t - curTotal, ben, benGain: bd, why: why[0]?.endsWith("：") ? why[0] + why.slice(1).join("、") : why.join("、") });
+    used.add(best.id); cur = best.d2; curTotal = best.t; curR = best.R2;
+  }
+  // 全部下在默认帐户（对照）
+  let baseline = null;
+  if (o.defaultAcct) { const a = byId.get(o.defaultAcct); const sumPv = units.reduce((s, u) => s + u.pv, 0); baseline = total(computeMonth(withOrders(data, [{ acct: o.defaultAcct, member_id: a.member_id, pv: sumPv, lrp: o.lrp }], ym), ym)) - base; }
+  // 新会员：整张单（这次全部件数）由客人开新帐户下，挂在某个帐户下面
+  let newMember = null;
+  const sumPv = units.reduce((s, u) => s + u.pv, 0);
+  const hubs = data.accts.filter((a) => (R0.get(a.id)?.pv || 0) >= 100 && a.acct_type !== "wc").map((a) => a.id).slice(0, 40);
+  for (const h of hubs) {
+    const na = { id: `sim-nm-${h}`, member_id: null, label: "新会员", sponsor_account_id: h, enroller_account_id: h, enroll_date: SIM_DATE(ym), acct_type: "wc" };
+    const t = total(computeMonth(withOrders(data, [{ acct: na.id, member_id: null, pv: sumPv, lrp: false, newAcct: na }], ym), ym)) - base;
+    if (!newMember || t > newMember.gain) newMember = { hub: h, gain: t };
+  }
+  // 合并成「每个帐户下一张单」
+  const byAcct = new Map();
+  for (const p of plan) { const x = byAcct.get(p.acct) || { acct: p.acct, units: [], pv: 0, gain: 0, why: new Set() }; x.units.push(p.unit); x.pv += p.unit.pv; x.gain += p.gain; if (p.why) x.why.add(p.why); byAcct.set(p.acct, x); }
+  return { plan, orders: [...byAcct.values()].map((x) => ({ ...x, why: [...x.why].join("；") })).sort((a, b) => b.gain - a.gain), gain: curTotal - base, baseline, newMember, sumPv };
 }

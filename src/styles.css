@@ -588,3 +588,4 @@ td.neg b{color:var(--warn)}
 .ds-pay{display:grid;gap:8px;margin-bottom:12px}
 .ds-ful{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:8px;background:#fff}
 .ds-ful-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ds-ful-row select{width:auto}
+.ds-alloc{border:1px solid #bfe0dc;background:#f3faf9;border-radius:var(--r);padding:12px 14px;display:grid;gap:10px}

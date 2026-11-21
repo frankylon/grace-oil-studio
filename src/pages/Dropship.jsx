@@ -8,6 +8,8 @@ import { db } from "../api";
 import { Loading, Modal, cleanName } from "../components";
 import { today } from "../util";
 import { ensureItem, productItem } from "./Inventory";
+import { useCompData } from "./Business";
+import { RANKS, allocate } from "../comp";
 
 const n = (v) => { const x = Number(v); return isFinite(x) ? x : 0; };
 const cad = (v) => `${n(v) < 0 ? "−" : ""}$${Math.abs(n(v)).toFixed(2)}`;
@@ -21,7 +23,7 @@ export function commission(o) {
 }
 
 /* ---------- 购物车（专属链接和后台共用） ---------- */
-function Cart({ lines, setLines }) {
+function Cart({ lines, setLines, showPv }) {
   const { pick, cv } = useLang();
   const cat = useCatalog();
   const [q, setQ] = useState("");
@@ -35,9 +37,9 @@ function Cart({ lines, setLines }) {
       <div className="ds-search"><input type="search" placeholder={pick("搜产品：名字或编号，例如 薰衣草 / Lavender", "Search products")} value={q} onChange={(e) => setQ(e.target.value)} />
         {found.length > 0 && <div className="ipick-list">{found.map((p) => <button type="button" key={p.id} onMouseDown={() => add(p)}>{cv(cleanName(p.name_zh))} {p.size && <span>{p.size}</span>}<span>{cad(price(p))}</span></button>)}</div>}</div>
       {!lines.length ? <p className="muted small">{pick("还没有加产品。", "No products yet.")}</p> :
-        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("产品", "Product")}</th><th className="n">{pick("会员价", "Price")}</th><th className="n">{pick("数量", "Qty")}</th><th className="n">{pick("小计", "Total")}</th><th /></tr></thead>
-          <tbody>{lines.map((l, i) => <tr key={l.product}><td>{cv(l.name)} <span className="muted small">{l.size}</span></td><td className="n">{cad(l.price)}</td><td className="n"><input type="number" min="1" value={l.qty} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, qty: Math.max(1, n(e.target.value)) } : x)))} style={{ width: 70, textAlign: "right" }} aria-label={pick("数量", "Qty")} /></td><td className="n">{cad(l.qty * l.price)}</td><td><button type="button" className="btn ghost sm" onClick={() => setLines(lines.filter((_, j) => j !== i))}>{pick("删除", "Remove")}</button></td></tr>)}
-            <tr><td colSpan={3} className="n"><b>{pick("合计（会员价）", "Total (member price)")}</b></td><td className="n"><b>{cad(total)}</b></td><td /></tr></tbody></table></div>}
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("产品", "Product")}</th><th className="n">{pick("会员价", "Price")}</th><th className="n">{pick("数量", "Qty")}</th>{showPv && <th className="n">{pick("每件 PV", "PV each")}</th>}<th className="n">{pick("小计", "Total")}</th><th /></tr></thead>
+          <tbody>{lines.map((l, i) => <tr key={l.product}><td>{cv(l.name)} <span className="muted small">{l.size}</span></td><td className="n">{cad(l.price)}</td><td className="n"><input type="number" min="1" value={l.qty} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, qty: Math.max(1, n(e.target.value)) } : x)))} style={{ width: 70, textAlign: "right" }} aria-label={pick("数量", "Qty")} /></td>{showPv && <td className="n"><input type="number" step="0.5" value={l.pv ?? ""} placeholder={String(linePv(l))} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, pv: e.target.value === "" ? null : n(e.target.value) } : x)))} style={{ width: 80, textAlign: "right" }} aria-label="PV" /></td>}<td className="n">{cad(l.qty * l.price)}</td><td><button type="button" className="btn ghost sm" onClick={() => setLines(lines.filter((_, j) => j !== i))}>{pick("删除", "Remove")}</button></td></tr>)}
+            <tr><td colSpan={showPv ? 4 : 3} className="n"><b>{pick("合计（会员价）", "Total (member price)")}</b></td><td className="n"><b>{cad(total)}</b></td><td /></tr></tbody></table></div>}
     </div>
   );
 }
@@ -95,6 +97,61 @@ export function OrderLink() {
   );
 }
 
+/* ---------- 推荐：在团队架构里怎样下单最划算 ---------- */
+export const PV_RATE = 0.75; // 产品目录没有 PV：先按会员价（加币）× 0.75 估算，可以逐行改
+const isKit = (l) => /套组|kit|collection|系列组合/i.test(`${l.name} ${l.name_en || ""}`);
+export const linePv = (l) => (l.pv != null && l.pv !== "" ? n(l.pv) : Math.round(n(l.price) * PV_RATE * 10) / 10);
+export function AllocPanel({ orders, onApplied }) {
+  const { pick, cv } = useLang();
+  const toast = useToast();
+  const cd = useCompData();
+  const [lrp, setLrp] = useState(true);
+  const [def, setDef] = useState("");
+  const [res, setRes] = useState(null);
+  const [busy, setBusy] = useState(false);
+  if (!cd) return <Loading />;
+  const label = (id) => { const a = cd.accts.find((x) => x.id === id); const m = cd.members.find((x) => x.id === a?.member_id); return a ? `${cv(m?.name || "")} · ${cv(a.label || a.member_no || "")}` : "—"; };
+  const units = orders.flatMap((o) => (o.items || []).flatMap((l, li) => isKit(l) || n(l.qty) <= 1 ? [{ id: `${o.id}-${li}`, label: cv(l.name), pv: linePv(l) * (isKit(l) ? n(l.qty) : 1), order: o.order_no, line: l, qty: isKit(l) ? n(l.qty) : 1 }] : Array.from({ length: n(l.qty) }, (_, k) => ({ id: `${o.id}-${li}-${k}`, label: cv(l.name), pv: linePv(l), order: o.order_no, line: l, qty: 1 }))));
+  const run = () => { setBusy(true); setTimeout(() => { setRes(allocate(cd, today().slice(0, 7), units, { lrp, defaultAcct: def || undefined })); setBusy(false); }, 30); };
+  // 按推荐把订单记进系统（每个帐户一张），PV 会算进团队
+  const apply = async () => {
+    if (!window.confirm(pick("按推荐把这些订单记进团队订单？（以后实际在 doTERRA 下单后，可以在会员页补上订单号）", "Record these orders to the team?"))) return;
+    setBusy(true);
+    try {
+      for (const g of res.orders) {
+        const a = cd.accts.find((x) => x.id === g.acct);
+        const items = []; for (const u of g.units) { const ex = items.find((x) => x.product === u.line.product); if (ex) ex.qty += u.qty; else items.push({ product: u.line.product, zh: u.line.name, en: u.line.name_en || "", qty: u.qty, price: u.line.price, pv: linePv(u.line) }); }
+        await db.insert("orders", { member_id: a.member_id, account_id: a.id, account: a.label || a.member_no || "", date: today(), order_no: "", currency: "CAD", total: items.reduce((s, x) => s + x.qty * n(x.price), 0), total_pv: g.pv, lrp, payment: "", reason: `分销 ${[...new Set(g.units.map((u) => u.order))].join(" ")}`, items });
+      }
+      for (const o of orders) await db.update("ds_orders", o.id, { alloc: res.orders.map((g) => ({ acct: g.acct, label: label(g.acct), pv: g.pv, items: g.units.filter((u) => u.order === o.order_no).map((u) => u.label) })).filter((x) => x.items.length), fulfill: "company", status: o.status === "new" ? "processing" : o.status });
+      toast(pick("已记进团队订单", "Recorded")); onApplied && onApplied();
+    } catch (e) { toast(e.message); }
+    setBusy(false);
+  };
+  return (
+    <section className="ds-alloc">
+      <b>{pick("推荐：在团队架构里怎样下单最划算", "Best way to place this in the team")}</b>
+      <p className="muted small" style={{ margin: 0 }}>{pick(`把订单拆成一件件单品（套组整件不拆），逐件试放到团队每个帐户，按 doTERRA 规则重算全团队奖金，放到多拿最多的地方；多开一张单按 $5 运费扣分。PV 现在按会员价 × ${PV_RATE} 估算，可以在上面逐行改。最终由下单的人决定。`, "Splits the order into single items (kits stay whole), tries each item on every team account and keeps the placement that earns the team the most.")}</p>
+      <div className="ds-ful-row">
+        <label className="chk"><input type="checkbox" checked={lrp} onChange={(e) => setLrp(e.target.checked)} /> {pick("按 Rewards 订单下", "As Rewards orders")}</label>
+        <select value={def} onChange={(e) => setDef(e.target.value)} aria-label={pick("平时默认下单的帐户", "Default account")}><option value="">{pick("对照：平时默认下在哪个帐户（选填）", "Default account (optional)")}</option>{cd.accts.map((a) => <option key={a.id} value={a.id}>{label(a.id)}</option>)}</select>
+        <button type="button" className="btn primary sm" disabled={busy || !units.length} onClick={run}>{busy ? pick("计算中…", "Working…") : pick(`计算推荐（${units.length} 件，${Math.round(units.reduce((s, u) => s + u.pv, 0))} PV）`, `Recommend (${units.length} items)`)}</button>
+      </div>
+      {res && <>
+        <div className="pt-break">
+          <div className="hi"><span>{pick("按推荐拆单，团队多拿", "Split as recommended")}</span><b>${Math.round(res.gain)}</b></div>
+          {res.baseline != null && <div><span>{pick("全部下在默认帐户", "All on default account")}</span><b>${Math.round(res.baseline)}</b></div>}
+          {res.newMember && <div className={res.newMember.gain > res.gain ? "hi" : ""}><span>{pick("让客人开新会员帐户下", "Customer enrols as new member")}</span><b>${Math.round(res.newMember.gain)}</b></div>}
+        </div>
+        {res.newMember && res.newMember.gain > res.gain && <p className="small">{pick(`👉 这张单最划算的是让客人开新会员（挂在 ${label(res.newMember.hub)} 下面），推荐人拿 Fast Start。`, `Best: enrol the customer under ${label(res.newMember.hub)}.`)}</p>}
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("在这个帐户下一张单", "Place on account")}</th><th>{pick("产品", "Items")}</th><th className="n">PV</th><th>{pick("为什么", "Why")}</th><th className="n">{pick("团队多拿", "Team +")}</th></tr></thead>
+          <tbody>{res.orders.map((g) => <tr key={g.acct}><td><b>{label(g.acct)}</b></td><td className="small">{g.units.map((u) => u.label + (orders.length > 1 ? `（${u.order}）` : "")).join("、")}</td><td className="n">{Math.round(g.pv)}</td><td className="small">{g.why || "—"}</td><td className="n"><b>${Math.round(g.gain)}</b></td></tr>)}</tbody></table></div>
+        <button type="button" className="btn sm" disabled={busy} onClick={apply}>{pick("按推荐记进团队订单", "Record as recommended")}</button>
+      </>}
+    </section>
+  );
+}
+
 /* ---------- 后台 ---------- */
 function useDs() {
   const [d, setD] = useState(null);
@@ -135,6 +192,7 @@ function Orders({ d, load }) {
   const [store, setStore] = useState("");
   const [month, setMonth] = useState("");
   const [ed, setEd] = useState(null);
+  const [batch, setBatch] = useState(false);
   const sName = (id) => d.stores.find((s) => s.id === id)?.name || "—";
   const rName = (id) => d.reps.find((r) => r.id === id)?.name || "";
   const list = d.orders.filter((o) => (st === "all" || (st === "open" ? ["new", "processing"].includes(o.status) : o.status === st)) && (!store || o.store_id === store) && (!month || ym(o.created_at) === month));
@@ -145,13 +203,17 @@ function Orders({ d, load }) {
         <select value={st} onChange={(e) => setSt(e.target.value)} aria-label={pick("状态", "Status")}><option value="open">{pick("待处理", "To do")}</option><option value="all">{pick("全部", "All")}</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{pick(...v)}</option>)}</select>
         <select value={store} onChange={(e) => setStore(e.target.value)} aria-label={pick("门店", "Store")}><option value="">{pick("全部门店", "All stores")}</option>{d.stores.map((s) => <option key={s.id} value={s.id}>{cv(s.name)}</option>)}</select>
         <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label={pick("月份", "Month")}><option value="">{pick("全部月份", "All months")}</option>{months.map((m) => <option key={m}>{m}</option>)}</select>
-        <div className="acts"><button className="btn primary sm" onClick={() => setEd({ new: true })} disabled={!d.stores.length && !d.reps.length}>{pick("+ 代客下单", "+ New order")}</button></div>
+        <div className="acts"><button className="btn sm" disabled={!d.orders.some((o) => ["new", "processing"].includes(o.status) && !o.alloc && o.payment !== "direct_doterra")} onClick={() => setBatch(true)}>{pick("一起推荐（待处理订单）", "Recommend all open")}</button><button className="btn primary sm" onClick={() => setEd({ new: true })} disabled={!d.stores.length && !d.reps.length}>{pick("+ 代客下单", "+ New order")}</button></div>
       </div>
       {!d.stores.length && <p className="notice">{pick("先到「门店与销售员」加一个门店，就会有它的专属下单链接。", "Add a store first under Stores & reps.")}</p>}
       {!list.length ? <div className="empty">{pick("没有订单。", "No orders.")}</div> :
         <div className="inv-tbl-wrap"><table className="inv-tbl fin-tbl"><thead><tr><th>{pick("单号", "No.")}</th><th>{pick("日期", "Date")}</th><th>{pick("门店 / 销售员", "Store / rep")}</th><th>{pick("客人", "Customer")}</th><th className="n">{pick("金额", "Amount")}</th><th>{pick("付款", "Payment")}</th><th>{pick("状态", "Status")}</th></tr></thead>
           <tbody>{list.map((o) => <tr key={o.id} className="click" onClick={() => setEd(o)}><td className="mono">{o.order_no}</td><td className="nw">{String(o.created_at).slice(0, 10)}</td><td>{cv(sName(o.store_id))}{o.rep_id && <span className="muted small"> · {cv(rName(o.rep_id))}</span>}</td><td>{cv(o.customer_name)}<span className="muted small"> {o.customer_phone}</span></td><td className="n">{cad(o.subtotal)}</td><td className="small">{pick(...(PAY[o.payment] || PAY.pending))}</td><td><span className={`tag ${o.status === "done" || o.status === "shipped" ? "k-in" : o.status === "cancelled" ? "k-out" : ""}`}>{pick(...STATUS[o.status])}</span></td></tr>)}</tbody></table></div>}
       {ed && <OrderDetail d={d} o={ed} onClose={() => setEd(null)} onSaved={() => { setEd(null); load(); }} />}
+      {batch && <Modal title={pick("待处理的分销订单：一起推荐下单方式", "Recommend all open orders")} onClose={() => setBatch(false)} footer={<button className="btn primary" onClick={() => setBatch(false)}>{pick("关闭", "Close")}</button>}>
+        <p className="muted small" style={{ marginTop: 0 }}>{pick("把所有还没分配、不是客人自己在 doTERRA 下的待处理订单放在一起算，可以把几张单的单品凑到同一个帐户，补缺口更有效。", "All open orders are pooled so items from several orders can fill the same gaps.")}</p>
+        <AllocPanel orders={d.orders.filter((o) => ["new", "processing"].includes(o.status) && !o.alloc && o.payment !== "direct_doterra")} onApplied={() => { setBatch(false); load(); }} />
+      </Modal>}
     </>
   );
 }
@@ -206,13 +268,15 @@ function OrderDetail({ d, o, onClose, onSaved }) {
       </div>
       <div className="field"><label htmlFor="do_ad">{f.ship_method === "pickup" ? pick("到店取货", "Pickup") : pick("寄送地址", "Address")}</label><input id="do_ad" type="text" value={f.ship_address || ""} onChange={set("ship_address")} /></div>
       {f.customer_note && <p className="notice">{pick("客人备注：", "Customer note: ")}{cv(f.customer_note)}</p>}
-      <Cart lines={lines} setLines={setLines} />
+      <Cart lines={lines} setLines={setLines} showPv />
       <div className="pt-break">
         <div><span>{pick("金额（会员价）", "Amount")}</span><b>{cad(sub)}</b></div>
         <div><span>{pick(`店家 ${pctS}%${f.rep_id ? "" : ` ＋ 员工 ${pctF}%`}`, "Store")}</span><b>{cad(c.store)}</b></div>
         {f.rep_id && <div><span>{pick(`员工 ${pctF}%`, "Staff")}</span><b>{cad(c.staff)}</b></div>}
         <div className="hi"><span>{pick("我们留下", "We keep")}</span><b>{cad(sub - c.store - c.staff)}</b></div>
       </div>
+      {!isNew && o.alloc && <p className="notice small">{pick("已按推荐记入：", "Recorded as: ")}{o.alloc.map((x) => `${x.label}（${Math.round(x.pv)} PV：${x.items.join("、")}）`).join("；")}</p>}
+      {!isNew && !o.alloc && o.payment !== "direct_doterra" && lines.length > 0 && <AllocPanel orders={[{ ...o, items: lines }]} onApplied={onSaved} />}
       {!isNew && <section className="ds-ful">
         <b>{pick("发货", "Fulfilment")}</b>
         {o.fulfill === "stock" ? <p className="small">{pick(`已经用现货发货（从「${cv(d.holders.find((h) => h.id === o.holder_id)?.name || "")}」出库）。`, "Shipped from stock.")}</p> :
