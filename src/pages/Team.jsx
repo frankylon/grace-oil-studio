@@ -7,7 +7,8 @@ import { useLang } from "../i18n";
 import { useAuth, useToast } from "../ctx";
 import { db } from "../api";
 import { Loading, Modal } from "../components";
-import { buildTree, ladder, money, today } from "../util";
+import { buildTree, money, today } from "../util";
+import { RANKS, computeMonth, fmtUsd } from "../comp";
 
 const GAPN = { pv: ["个人 PV", "PV"], lrp_pv: ["LRP PV", "LRP PV"], ov: ["团队 OV", "OV"], legs: ["达标直属线", "Legs"], lrp_months: ["连续 LRP 月数", "LRP months"], points: ["积分", "Points"] };
 const n = (v) => { const x = Number(v); return isFinite(x) ? x : 0; };
@@ -88,15 +89,17 @@ export function TeamMap({ rootId, admin }) {
     const roots = rootId ? [buildTree(d.members, rootId)].filter(Boolean)
       : d.members.filter((m) => !m.sponsor_id || !d.members.some((x) => x.id === m.sponsor_id)).map((m) => buildTree(d.members, m.id));
     const info = {};
+    const CR = computeMonth(d, ym);
     const walk = (node) => {
       const pm = personMonth(node.m.id, d, ym);
       const s = d.st[node.m.id] || {};
       let team = pm.pv; let size = 0;
       for (const c of node.children) { const ci = walk(c); team += ci.team; size += 1 + ci.size; }
-      const stat = { ...s, pv: pm.pv, lrp_pv: pm.lrpPv, ov: team, points: pm.pts };
-      const rank = ladder(d.levels, "rank", stat, s.rank);
-      const lvl = ladder(d.levels, "member", stat, s.member_level);
-      info[node.m.id] = { ...pm, team, size, rank, lvl, s };
+      // 每个帐户的级别（按 doTERRA 新制度估算）；这个人显示最高的那个帐户
+      const ranks = pm.rows.filter((x) => !x.a.none).map((x) => ({ a: x.a, r: CR.get(x.a.id) })).filter((x) => x.r);
+      const best = ranks.sort((x, y) => y.r.rank - x.r.rank || (y.a.is_main ? 1 : 0) - (x.a.is_main ? 1 : 0))[0];
+      const bonus = ranks.reduce((t, x) => t + x.r.total, 0);
+      info[node.m.id] = { ...pm, team, size, s, best: best?.r || null, bestAcct: best?.a || null, bonus, CR };
       return info[node.m.id];
     };
     roots.forEach(walk);
@@ -119,18 +122,18 @@ export function TeamMap({ rootId, admin }) {
   const Node = ({ node }) => {
     const i = model.info[node.m.id];
     const open = !collapsed.has(node.m.id) && node.depth < depth;
-    const gap = i.rank?.next && i.rank.gaps.find((g) => g.left > 0);
+    const gap = i.best?.next && i.best.next.items.find((g) => g.left > 0);
     return (
       <li>
         <div className={`tm-card ${i.pv ? "" : "zero"} ${hit(node.m) ? "hit" : ""} ${sel === node.m.id ? "on" : ""}`}>
           <button className="tm-main" onClick={() => setSel(node.m.id)}>
             <span className="tm-name">{cv(node.m.name)}</span>
-            <span className="tm-sub">{[i.rank?.cur && pick(i.rank.cur.name_zh, i.rank.cur.name_en), node.m.doterra_id && `#${node.m.doterra_id}`].filter(Boolean).join(" · ") || " "}</span>
+            <span className="tm-sub">{[i.best && i.best.rank > 0 && pick(RANKS[i.best.rank].zh, RANKS[i.best.rank].en), node.m.doterra_id && `#${node.m.doterra_id}`].filter(Boolean).join(" · ") || " "}</span>
             <span className="tm-pv"><b>{r1(i.pv)}</b> PV{i.rows.length > 1 ? <small>{pick(`${i.rows.length} 个帐户合计`, `${i.rows.length} accounts`)}</small> : i.lrpPv >= 50 && <em>LRP</em>}</span>
             {i.rows.length > 1 ? <span className="tm-accts">{i.rows.map((r) => <span key={r.a.id} className={r.pv ? "" : "z"}><i>{r.a.none ? pick("未指定帐户", "Unassigned") : cv(r.a.label || r.a.member_no || "")}</i><b>{r1(r.pv)}</b>{r.lrpPv >= 50 && <em>L</em>}<u>{r1(r.pts)}</u></span>)}</span>
               : <span className="tm-row"><span>{pick("订单", "Orders")} {i.orders.length}</span><span>{pick("积分", "Pts")} {r1(i.pts)}</span></span>}
             {node.children.length > 0 && <span className="tm-row"><span>{pick("团队", "Team")} {i.size}{pick(" 人", "")}</span><span>OV {r1(i.team)}</span></span>}
-            {gap && <span className="tm-gap">{pick(`距 ${i.rank.next.name_zh} 差 ${r1(gap.left)} ${gap.unit === "legs" ? "条线" : gap.unit === "months" ? "个月" : gap.unit === "pts" ? "积分" : gap.unit}`, `${r1(gap.left)} ${gap.unit} to ${i.rank.next.name_en}`)}</span>}
+            {gap && <span className="tm-gap">{pick(`距 ${i.best.next.rank.zh} 差 ${r1(gap.left)} ${gap.unit === "legs" ? "条线" : gap.key === "ov" ? "OV" : "PV"}`, `${r1(gap.left)} ${gap.unit === "legs" ? "legs" : gap.key === "ov" ? "OV" : "PV"} to ${i.best.next.rank.en}`)}</span>}
           </button>
           {node.children.length > 0 && <button className="tm-tog" onClick={() => toggle(node.m.id)} aria-expanded={open} aria-label={open ? pick("收起", "Collapse") : pick("展开", "Expand")}>{open ? "−" : `+${i.size}`}</button>}
         </div>
@@ -180,7 +183,7 @@ function TierSwitch({ m }) {
 
 function NodeDetail({ d, info, m, ym, admin, onClose }) {
   const { pick, cv } = useLang();
-  const rk = info.rank, lv = info.lvl;
+  const nx = info.best?.next;
   return (
     <Modal title={`${cv(m.name)} · ${ym}`} onClose={onClose} footer={<><Link className="btn" to={admin ? `/admin?m=${m.id}` : `/me/m/${m.id}`}>{pick("打开会员页", "Open member page")}</Link><button className="btn primary" onClick={onClose}>{pick("关闭", "Close")}</button></>}>
       <TierSwitch m={m} />
@@ -191,9 +194,10 @@ function NodeDetail({ d, info, m, ym, admin, onClose }) {
       </div>
       {info.size > 0 && <p className="muted small" style={{ margin: 0 }}>{pick(`团队 ${info.size} 人，团队 PV（OV）${r1(info.team)}`, `Team of ${info.size}, team PV (OV) ${r1(info.team)}`)}</p>}
       {info.ptsFromReport && <p className="muted small" style={{ margin: 0 }}>{pick("积分来自导入的月报表。", "Points from the imported monthly report.")}</p>}
-      {[rk, lv].filter((x) => x?.next).map((x, k) => <div key={k} className="tm-next"><b>{pick(`下一级：${x.next.name_zh}`, `Next: ${x.next.name_en}`)}</b>{x.gaps.map((g) => <span key={g.key}>{pick(...(GAPN[g.key] || [g.key, g.key]))} {r1(g.have)} / {r1(g.need)}{g.left > 0 ? pick(`，还差 ${r1(g.left)}`, `, ${r1(g.left)} to go`) : " ✓"}</span>)}</div>)}
-      {info.rows.length > 0 && <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("帐户", "Account")}</th><th className="n">{pick("本月 PV", "PV")}</th><th className="n">LRP PV</th><th className="n">{pick("订单", "Orders")}</th><th className="n">{pick("积分", "Points")}</th></tr></thead>
-        <tbody>{info.rows.map((r) => <tr key={r.a.id}><td>{r.a.none ? <span className="muted">{pick("未指定帐户", "Unassigned")}</span> : <><b>{cv(r.a.label || "doTERRA")}</b>{r.a.is_main && <span className="tag k-in" style={{ marginLeft: 6 }}>{pick("主号", "Main")}</span>}{r.a.member_no && <span className="muted small mono"> #{r.a.member_no}</span>}</>}</td><td className="n"><b>{r1(r.pv)}</b></td><td className="n">{r1(r.lrpPv)}</td><td className="n">{r.orders.length}</td><td className="n">{r1(r.pts)}</td></tr>)}</tbody></table></div>}
+      {nx && <div className="tm-next"><b>{pick(`下一级：${nx.rank.zh}`, `Next: ${nx.rank.en}`)}{info.bestAcct && info.rows.length > 1 ? <span className="muted small">{pick(`（${cv(info.bestAcct.label || "")}）`, ` (${info.bestAcct.label || ""})`)}</span> : null}</b>{nx.items.map((g) => <span key={g.key}>{pick(g.zh, g.en)} {r1(g.have)} / {r1(g.need)}{g.left > 0 ? pick(`，还差 ${r1(g.left)}`, `, ${r1(g.left)} to go`) : " ✓"}</span>)}</div>}
+      {info.bonus > 0 && <p className="small" style={{ margin: 0 }}>{pick(`本月预计奖金（估算）${fmtUsd(info.bonus)}，明细看会员页的「事业进度」。`, `Estimated bonus this month ${fmtUsd(info.bonus)}; see Business on the member page.`)}</p>}
+      {info.rows.length > 0 && <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("帐户", "Account")}</th><th className="n">{pick("本月 PV", "PV")}</th><th className="n">LRP PV</th><th className="n">{pick("订单", "Orders")}</th><th className="n">{pick("积分", "Points")}</th><th>{pick("级别", "Rank")}</th></tr></thead>
+        <tbody>{info.rows.map((r) => <tr key={r.a.id}><td>{r.a.none ? <span className="muted">{pick("未指定帐户", "Unassigned")}</span> : <><b>{cv(r.a.label || "doTERRA")}</b>{r.a.is_main && <span className="tag k-in" style={{ marginLeft: 6 }}>{pick("主号", "Main")}</span>}{r.a.member_no && <span className="muted small mono"> #{r.a.member_no}</span>}</>}</td><td className="n"><b>{r1(r.pv)}</b></td><td className="n">{r1(r.lrpPv)}</td><td className="n">{r.orders.length}</td><td className="n">{r1(r.pts)}</td><td className="small">{(() => { const c = info.CR.get(r.a.id); return c ? pick(RANKS[c.rank].zh, RANKS[c.rank].en) : "—"; })()}</td></tr>)}</tbody></table></div>}
       <h4 style={{ margin: "8px 0 0" }}>{pick("这个月的订单", "Orders this month")}</h4>
       {!info.orders.length ? <p className="muted">{pick("这个月还没有订单。", "No orders this month.")}</p> :
         <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("日期", "Date")}</th><th>{pick("单号", "Order")}</th><th className="n">PV</th><th className="n">{pick("金额", "Total")}</th><th>{pick("积分", "Points")}</th></tr></thead>
@@ -207,6 +211,7 @@ const PK = { opening: ["开户结余", "Opening balance"], earn: ["获得", "Ear
 export function PointsPanel({ memberId, admin }) {
   const { pick, cv } = useLang();
   const toast = useToast();
+  const { isBuilder, isAdmin: viewerAdmin } = useAuth();
   const [d, setD] = useState(null);
   const [f, setF] = useState(null);
   const load = async () => {
@@ -231,6 +236,19 @@ export function PointsPanel({ memberId, admin }) {
     try { await db.insert("pts_moves", { member_id: memberId, account_id: f.account_id && !String(f.account_id).startsWith("none") ? f.account_id : null, date: f.date, kind: f.kind, points: f.kind === "adjust" ? n(f.points) : sign * Math.abs(n(f.points)), note: f.note }); setF(null); load(); } catch (e) { toast(e.message || "error"); }
   };
   const real = pm.rows.filter((r) => !r.a.none);
+  if (!(admin || isBuilder || viewerAdmin)) {
+    // 消费者：只看每个帐户里有多少免费积分
+    const cards = real.length ? real : pm.rows;
+    return (
+      <div className="block">
+        <h2>{pick("我的免费积分", "My free product credit")}</h2>
+        <p className="muted small" style={{ marginTop: -6 }}>{pick("每月 Rewards 订单累积的积分，可以在 doTERRA 换免费产品。", "Points from your monthly Rewards orders, redeemable for free products at doTERRA.")}</p>
+        {cards.length > 1 ? <div className="acct-grid">{cards.map((r) => <div key={r.a.id} className="acct-card"><div className="ah"><b>{r.a.none ? pick("其他订单", "Other orders") : cv(r.a.label || "doTERRA")}</b>{r.a.member_no && <span className="muted small mono">#{r.a.member_no}</span>}</div><div className="credit"><b>{r1(r.pts)}</b><span>{pick("积分", "points")}</span></div></div>)}</div>
+          : <div className="acct-card" style={{ maxWidth: 320 }}><div className="credit"><b>{r1(pm.pts)}</b><span>{pick("积分", "points")}</span></div></div>}
+        <p className="muted small" style={{ marginBottom: 28 }}>{pick("想知道怎样多拿积分、下个月几号下单最划算，可以问 Grace。", "Ask Grace how to earn more points.")}</p>
+      </div>
+    );
+  }
   return (
     <div className="block">
       <h2>{pick("PV 与积分", "PV & points")}</h2>

@@ -326,7 +326,7 @@ function DtAccounts({ d, reload, admin, myMember }) {
   const shown = members.filter((m) => byMember[m.id] || m.id === myMember || m.doterra_id);
   const save = async (a) => {
     try {
-      const row = { is_main: !!a.is_main, label: a.label || "", member_no: a.member_no || "", login: a.login || "", status: a.status || "active", lrp_day: a.lrp_day === "" || a.lrp_day == null ? null : n(a.lrp_day), lrp_pv: a.lrp_pv === "" || a.lrp_pv == null ? null : n(a.lrp_pv), last_login: a.last_login || null, note: a.note || "" };
+      const row = { is_main: !!a.is_main, sponsor_account_id: a.sponsor_account_id || null, enroller_account_id: a.enroller_account_id || null, enroll_date: a.enroll_date || null, acct_type: a.acct_type || "wa", label: a.label || "", member_no: a.member_no || "", login: a.login || "", status: a.status || "active", lrp_day: a.lrp_day === "" || a.lrp_day == null ? null : n(a.lrp_day), lrp_pv: a.lrp_pv === "" || a.lrp_pv == null ? null : n(a.lrp_pv), last_login: a.last_login || null, note: a.note || "" };
       if (a.id) await db.update("dt_accounts", a.id, row); else await db.insert("dt_accounts", { ...row, member_id: a.member_id });
       setEdit(null); reload();
     } catch (e) { toast(e.message || "error"); }
@@ -346,11 +346,11 @@ function DtAccounts({ d, reload, admin, myMember }) {
                 {a.note && <span className="small">{a.note}</span>}
               </button>))}
           </div>))}</div>}
-      {edit && <DtForm a={edit} name={cv(d.members.find((m) => m.id === edit.member_id)?.name || "")} onClose={() => setEdit(null)} onSave={save} onDelete={edit.id ? () => del(edit) : null} />}
+      {edit && <DtForm a={edit} all={d.dts.filter((x) => x.id !== edit.id).map((x) => ({ id: x.id, label: `${cv(d.members.find((m) => m.id === x.member_id)?.name || "")} · ${x.label || x.member_no || "doTERRA"}${x.member_no ? ` #${x.member_no}` : ""}` }))} name={cv(d.members.find((m) => m.id === edit.member_id)?.name || "")} onClose={() => setEdit(null)} onSave={save} onDelete={edit.id ? () => del(edit) : null} />}
     </>
   );
 }
-function DtForm({ a, name, onClose, onSave, onDelete }) {
+function DtForm({ a, all = [], name, onClose, onSave, onDelete }) {
   const { pick } = useLang();
   const [f, setF] = useState({ label: "", member_no: "", login: "", status: "active", lrp_day: "", lrp_pv: "", last_login: "", note: "", ...a });
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -364,6 +364,12 @@ function DtForm({ a, name, onClose, onSave, onDelete }) {
         <div className="field"><label htmlFor="dt_d">{pick("LRP 每月几号出单", "LRP order day")}</label><input id="dt_d" type="number" min="1" max="28" value={f.lrp_day ?? ""} onChange={set("lrp_day")} /></div>
         <div className="field"><label htmlFor="dt_p">{pick("LRP 每月 PV", "LRP PV")}</label><input id="dt_p" type="number" min="0" value={f.lrp_pv ?? ""} onChange={set("lrp_pv")} /></div>
         <div className="field"><label htmlFor="dt_x">{pick("上次登入 / 核对日期", "Last login / checked")}</label><input id="dt_x" type="date" value={f.last_login ?? ""} onChange={set("last_login")} /></div>
+      </div>
+      <div className="grid3">
+        <div className="field"><label htmlFor="dt_sp">{pick("安置上线（Sponsor）", "Sponsor (placed under)")}</label><select id="dt_sp" value={f.sponsor_account_id || ""} onChange={set("sponsor_account_id")}><option value="">{pick("没填：按会员关系自动推算", "Auto (from member tree)")}</option>{all.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}</select></div>
+        <div className="field"><label htmlFor="dt_en">{pick("推荐人（Enroller）", "Enroller")}</label><select id="dt_en" value={f.enroller_account_id || ""} onChange={set("enroller_account_id")}><option value="">{pick("没填：等于安置上线", "Same as sponsor")}</option>{all.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}</select></div>
+        <div className="field"><label htmlFor="dt_ed">{pick("入会日期", "Enrolment date")}</label><input id="dt_ed" type="date" value={f.enroll_date || ""} onChange={set("enroll_date")} /></div>
+        <div className="field"><label htmlFor="dt_ty">{pick("帐户类型", "Type")}</label><select id="dt_ty" value={f.acct_type || "wa"} onChange={set("acct_type")}><option value="wa">{pick("健康倡导者 WA（可拿佣金）", "Wellness Advocate")}</option><option value="wc">{pick("批发客户 WC（不拿佣金）", "Wholesale Customer")}</option></select></div>
       </div>
       <label className="chk"><input type="checkbox" checked={!!f.is_main} onChange={(e) => setF({ ...f, is_main: e.target.checked })} /> {pick("这是这个人的主号", "This is the main account")}</label>
       <div className="field"><label htmlFor="dt_o">{pick("备注", "Note")}</label><input id="dt_o" type="text" value={f.note} onChange={set("note")} placeholder={pick("例如：由 Grace 代为下单；绑定的付款卡尾号", "e.g. Grace orders for them; card on file ends in…")} /></div>

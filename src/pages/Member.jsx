@@ -8,6 +8,7 @@ import { MyBookings, ServiceHistory } from "./Service";
 import { MyStock } from "./Inventory";
 import { Books } from "./Finance";
 import { TeamMap, PointsPanel } from "./Team";
+import { BusinessCenter } from "./Business";
 import { buildTree, countTree, daysSince, dilutionPct, ladder, money, ownedSet } from "../util";
 
 export function useMemberData(memberId) {
@@ -56,7 +57,7 @@ const TIER_TABS = {
   customer: ["my_services", "my_blends", "my_needs", "my_bookings", "my_requests", "my_settings"],
   doterra: ["overview", "my_orders", "my_services", "my_blends", "my_needs", "my_bookings", "my_requests", "my_stock", "my_books", "my_settings"],
 };
-const TABS = ["overview", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock", "my_books", "my_settings"];
+const TABS = ["overview", "my_business", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock", "my_books", "my_settings"];
 
 export function MemberView({ memberId, self, admin }) {
   const { t, cv, pick } = useLang();
@@ -73,7 +74,7 @@ export function MemberView({ memberId, self, admin }) {
   const isMine = m.id === profile?.member_id;
   const healthVisible = admin || isMine || m.share_health_with_upline;
   const tierTabs = admin ? TABS : TIER_TABS[m.tier] || TABS;
-  const tabs = TABS.filter((x) => tierTabs.includes(x) && (x !== "my_settings" || isMine)).filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin) && (x !== "my_books" || (isMine && !admin)));
+  const tabs = TABS.filter((x) => tierTabs.includes(x) && (x !== "my_settings" || isMine) && (x !== "my_business" || ["builder", "super"].includes(m.tier))).filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin) && (x !== "my_books" || (isMine && !admin)));
   const tab = tab0 && tabs.includes(tab0) ? tab0 : tabs[0];
   return (
     <>
@@ -95,6 +96,7 @@ export function MemberView({ memberId, self, admin }) {
       {tab === "my_stock" && <MyStock memberId={m.id} />}
       {tab === "my_books" && <Books />}
       {tab === "my_settings" && <MySettings m={m} />}
+      {tab === "my_business" && <BusinessCenter memberId={m.id} />}
       {self && <ShareToggle m={m} reload={reload} />}
     </>
   );
@@ -171,7 +173,7 @@ function Overview({ d, m, s, teamN }) {
     }
     return [...map.values()].sort((a, b) => b.last.localeCompare(a.last));
   }, [d.orders]);
-  const builder = m.member_type === "builder" || s.rank;
+  const builder = ["builder", "super"].includes(m.tier);
   return (
     <>
       <div className="stats">
@@ -181,12 +183,6 @@ function Overview({ d, m, s, teamN }) {
         {teamN > 0 && <Stat k={t("team_size")} v={teamN} />}
       </div>
       {(s.period || s.updated_at) && <p className="small muted">{s.period ? `${t("data_as_of")} ${s.period} · ` : ""}{s.updated_at ? `${t("updated")} ${String(s.updated_at).slice(0, 10)}` : ""}</p>}
-      <div className="ladders">
-        <Ladder title={t("member_level")} lad={ladder(d.levels, "member", s, s.member_level || (m.member_type === "retail" ? "retail" : s.lrp_pv >= 50 ? "lrp" : "wholesale"))} />
-        <Ladder title={t("points_reward")} lad={ladder(d.levels, "reward", s)} />
-        {builder && <Ladder title={t("rank")} lad={ladder(d.levels, "rank", s, s.rank)} />}
-        {builder && <Ladder title={t("bonus")} lad={ladder(d.levels, "bonus", s)} />}
-      </div>
       {owned.length > 0 && <div className="block"><h2>{t("owned_oils")}</h2>
         <div className="chips">{owned.map((o, i) => <OwnedChip key={i} o={o} />)}</div></div>}
     </>
