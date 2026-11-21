@@ -9,6 +9,7 @@ import { db } from "../api";
 import { Loading, Modal } from "../components";
 import { buildTree, money, today } from "../util";
 import { RANKS, computeMonth, fmtUsd } from "../comp";
+import { Advisor } from "./Business";
 
 const GAPN = { pv: ["个人 PV", "PV"], lrp_pv: ["LRP PV", "LRP PV"], ov: ["团队 OV", "OV"], legs: ["达标直属线", "Legs"], lrp_months: ["连续 LRP 月数", "LRP months"], points: ["积分", "Points"] };
 const n = (v) => { const x = Number(v); return isFinite(x) ? x : 0; };
@@ -183,9 +184,11 @@ function TierSwitch({ m }) {
 
 function NodeDetail({ d, info, m, ym, admin, onClose }) {
   const { pick, cv } = useLang();
+  const [adv, setAdv] = useState(null);
+  if (adv) return <Modal title={pick(`自动分析 · ${cv(m.name)}`, `Analysis · ${m.name}`)} onClose={onClose} footer={<><button className="btn" onClick={() => setAdv(null)}>{pick("返回", "Back")}</button><button className="btn primary" onClick={onClose}>{pick("关闭", "Close")}</button></>}><Advisor memberId={m.id} acctId={adv} /></Modal>;
   const nx = info.best?.next;
   return (
-    <Modal title={`${cv(m.name)} · ${ym}`} onClose={onClose} footer={<><Link className="btn" to={admin ? `/admin?m=${m.id}` : `/me/m/${m.id}`}>{pick("打开会员页", "Open member page")}</Link><button className="btn primary" onClick={onClose}>{pick("关闭", "Close")}</button></>}>
+    <Modal title={`${cv(m.name)} · ${ym}`} onClose={onClose} footer={<>{info.bestAcct && <button className="btn" onClick={() => setAdv(info.bestAcct.id)}>{pick("自动分析", "Analyse")}</button>}<Link className="btn" to={admin ? `/admin?m=${m.id}` : `/me/m/${m.id}`}>{pick("打开会员页", "Open member page")}</Link><button className="btn primary" onClick={onClose}>{pick("关闭", "Close")}</button></>}>
       <TierSwitch m={m} />
       <div className="fin-sum">
         <div><span>{pick("本月 PV", "PV this month")}</span><b>{r1(info.pv)}</b></div>

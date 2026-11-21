@@ -169,3 +169,125 @@ function nextGap(r, R) {
 }
 
 export const fmtUsd = (v) => `$${Math.round(n(v)).toLocaleString()}`;
+
+/* ---------------- 自动分析：离每个奖金还差什么、补多少能多拿多少 ----------------
+ * 做法：对每一个可行的动作，真的把订单加进去重新算一次，比较这个帐户（和整个团队）的预计奖金。
+ */
+const SIM_DATE = (ym) => `${ym}-15`;
+function withOrders(data, adds, ym) {
+  const extra = adds.filter((a) => a.pv > 0).map((a, i) => ({ id: `sim-${i}`, account_id: a.acct, member_id: a.member_id, date: SIM_DATE(ym), total_pv: a.pv, lrp: a.lrp !== false }));
+  return { ...data, accts: data.accts.concat(adds.filter((a) => a.newAcct).map((a) => a.newAcct)), orders: data.orders.concat(extra) };
+}
+const teamTotal = (R, ids) => ids.reduce((s, id) => s + (R.get(id)?.total || 0), 0);
+
+export function advise(data, ym, acctId, R0) {
+  const R = R0 || computeMonth(data, ym);
+  const r = R.get(acctId); if (!r) return null;
+  const byId = new Map(data.accts.map((a) => [a.id, a]));
+  const me = byId.get(acctId);
+  const name = (id) => { const a = byId.get(id); const m = data.members.find((x) => x.id === a?.member_id); return a ? `${m?.name || ""}${a.label ? ` · ${a.label}` : ""}` : "?"; };
+  const ours = data.accts.map((a) => a.id); // 能看到的都是我们团队
+  const base = r.total, baseTeam = teamTotal(R, ours);
+  const tips = [];
+  const sim = (key, title, detail, adds, extra = {}) => {
+    const cost = adds.reduce((s, a) => s + (a.pv || 0), 0);
+    const R2 = computeMonth(withOrders(data, adds, ym), ym);
+    const gain = (R2.get(acctId)?.total || 0) - base;
+    const teamGain = teamTotal(R2, ours) - baseTeam;
+    const r2 = R2.get(acctId);
+    tips.push({ key, title, detail, cost, gain, teamGain, roi: cost ? gain / cost : 0, rankAfter: r2?.rank, po3After: r2?.po3.level, ...extra });
+  };
+  const fl = r.fl || [];
+  const pe = (id) => data.accts.filter((a) => a.enroller_account_id === id || (!a.enroller_account_id && R.get(a.id)?.enroller === id)).map((a) => a.id);
+  const needPersonal = Math.max(0, PO3.personal - r.rpv);
+  const personalAdd = needPersonal ? [{ acct: acctId, member_id: me.member_id, pv: needPersonal }] : [];
+
+  // 1) 自己的 100 PV
+  if (r.pv < 100 || needPersonal) sim("personal", `自己补 ${Math.ceil(needPersonal || 100 - r.pv)} PV 的 Rewards 订单`, "每个奖金都要先有自己当月 100 PV（Power of 3 要求是 Rewards 订单）。补了才能拿 Fast Start、Unilevel 和 Power of 3。", personalAdd.length ? personalAdd : [{ acct: acctId, member_id: me.member_id, pv: 100 - r.pv }]);
+
+  // 2) Power of 3 第 1 级：第一层 Pod
+  const po = r.po3;
+  if (po.level < 1) {
+    const need = Math.max(0, PO3.podRewards - po.podR, PO3.pod - po.podVol, PO3.podPE - po.podPE);
+    const peFl = fl.filter((k) => R.get(k)?.enroller === acctId);
+    const target = peFl.sort((a, b) => (R.get(b).rpv) - (R.get(a).rpv))[0] || fl[0];
+    if (need > 0 && target) sim("po3_1", `Power of 3 第 1 级：第一层再做 ${Math.ceil(need)} PV`, `第一层（Pod）现在 ${Math.round(po.podVol)} / 500 PV，其中 Rewards ${Math.round(po.podR)} / 300、亲自推荐的 ${Math.round(po.podPE)} / 100。建议由 ${name(target)} 补一张 Rewards 单${needPersonal ? `，再加上你自己的 ${Math.ceil(needPersonal)} PV` : ""}。`, [...personalAdd, { acct: target, member_id: byId.get(target).member_id, pv: need }]);
+    else if (need > 0) sim("po3_1n", "Power of 3 第 1 级：第一层还没有人", `要在你第一层放会员，合计 500 PV（至少 300 Rewards，100 是你亲自推荐的）。下面按「新推荐一位 500 PV 的会员」估算。`, [...personalAdd, { acct: `sim-new-${acctId}`, member_id: null, pv: 500, newAcct: { id: `sim-new-${acctId}`, member_id: null, label: "（新会员）", sponsor_account_id: acctId, enroller_account_id: acctId, enroll_date: SIM_DATE(ym), acct_type: "wa" } }]);
+  }
+  // 3) Power of 3 第 2 / 3 级：帮第一层的人拿到 $50 / $250
+  if (po.level >= 1 && po.level < 3) {
+    const wantLv = po.level; // 第 2 级要第一层 3 人到第 1 级；第 3 级要 3 人到第 2 级
+    const have = wantLv === 1 ? po.fl1 : po.fl2;
+    const cand = fl.filter((k) => (R.get(k)?.po3.level || 0) < wantLv).map((k) => {
+      const c = R.get(k); const kp = c.po3; const adds = [];
+      const pNeed = Math.max(0, PO3.personal - c.rpv); if (pNeed) adds.push({ acct: k, member_id: byId.get(k).member_id, pv: pNeed });
+      const podNeed = Math.max(0, PO3.podRewards - kp.podR, PO3.pod - kp.podVol, PO3.podPE - kp.podPE);
+      const kfl = c.fl || []; const t = kfl.sort((a, b) => R.get(b).rpv - R.get(a).rpv)[0];
+      if (podNeed > 0 && t) adds.push({ acct: t, member_id: byId.get(t).member_id, pv: podNeed });
+      return { k, adds, cost: adds.reduce((s, a) => s + a.pv, 0), blocked: podNeed > 0 && !t, pNeed, podNeed };
+    });
+    const doable = cand.filter((c) => !c.blocked && wantLv === 1).sort((a, b) => a.cost - b.cost);
+    const missing = 3 - have;
+    if (missing > 0 && doable.length >= missing) {
+      const pick = doable.slice(0, missing);
+      sim(`po3_${wantLv + 1}`, `Power of 3 第 ${wantLv + 1} 级：帮第一层 ${missing} 个人拿到 $50`, pick.map((c) => `${name(c.k)}：${c.pNeed ? `自己补 ${Math.ceil(c.pNeed)} PV` : "自己已够"}${c.podNeed ? `，他的第一层补 ${Math.ceil(c.podNeed)} PV` : ""}`).join("；"), pick.flatMap((c) => c.adds), { people: pick.map((c) => c.k) });
+    } else if (missing > 0) {
+      tips.push({ key: `po3_${wantLv + 1}_info`, title: `Power of 3 第 ${wantLv + 1} 级：还要 ${missing} 个第一层的人拿到 ${wantLv === 1 ? "$50" : "$250"}`, detail: cand.map((c) => `${name(c.k)}${c.blocked ? "（他的第一层还没有人，需要先推荐新会员）" : c.cost ? `（差 ${Math.ceil(c.cost)} PV）` : ""}`).join("；") || "第一层的人数不够，需要再推荐新会员放到你第一层。", cost: 0, gain: 0, teamGain: 0, roi: 0, info: true });
+    }
+  }
+  // 4) Power of 3 加码（PGV）
+  if (po.level >= 1) {
+    const next = [...BOOST].reverse().find((b) => po.pgv < b.pgv && po.level >= b.minLevel);
+    if (next) {
+      const newPE = pe(acctId).filter((k) => { const e = R.get(k)?.enrollDate || ""; return e >= addMonths(ym, -12) && e.slice(0, 7) < ym; });
+      const gap = next.pgv - po.pgv;
+      if (newPE.length) sim("boost", `加码：PGV 再做 ${Math.ceil(gap)}（到 ${next.pgv}）`, `PGV 现在 ${Math.round(po.pgv)}。可以请 12 个月内由你推荐的会员（例如 ${name(newPE[0])}）多下 Rewards 单。`, [{ acct: newPE[0], member_id: byId.get(newPE[0]).member_id, pv: gap }]);
+      else tips.push({ key: "boost_info", title: `加码：PGV 还差 ${Math.ceil(gap)}（到 ${next.pgv} 加 $${next.amt}）`, detail: "PGV 只算你亲自推荐、在之前 12 个月内入会的会员的 Rewards 订单（入会当月不算）。现在没有这样的会员，需要先推荐新人，从下个月起算。", cost: 0, gain: 0, teamGain: 0, roi: 0, info: true });
+    }
+  }
+  // 5) 下一个级别
+  if (r.next) {
+    const nx = r.next.rank; const ovItem = r.next.items.find((x) => x.key === "ov");
+    const adds = [...personalAdd];
+    if (ovItem && ovItem.left > 0) { const t = fl.sort((a, b) => R.get(b).ov - R.get(a).ov)[0] || acctId; adds.push({ acct: t, member_id: byId.get(t).member_id, pv: ovItem.left }); }
+    const legItem = r.next.items.find((x) => x.key === "legs");
+    if (ovItem && ovItem.left > 0 && (!legItem || legItem.ok)) sim("rank", `升到 ${nx.zh}：团队再做 ${Math.ceil(ovItem.left)} PV${needPersonal ? `（另加自己补 ${Math.ceil(needPersonal)} PV）` : ""}`, `组织业绩现在 ${Math.round(ovItem.have)} / ${ovItem.need}。升级后 Unilevel 拿到第 ${nx.uni} 层。`, adds);
+  }
+  // 6) TGV（解锁较深的层）
+  if (r.tgv.need && !r.tgv.ok && !RANKS[r.rank].tgv?.pool) tips.push({ key: "tgv", title: `TGV 还差 ${Math.ceil(r.tgv.need - r.tgv.value)}，解锁第 ${RANKS[r.rank].tgv.unlock.join("、")} 层`, detail: `TGV 只算 ${r.tgv.levels} 层内、之前 12 个月内新入会会员的业绩（入会当月不算）。现在 ${Math.round(r.tgv.value)} / ${r.tgv.need}。`, cost: 0, gain: 0, teamGain: 0, roi: 0, info: true });
+
+  // 每条线（为下一个级别）
+  let legs = null;
+  if (r.next?.items.find((x) => x.key === "legs")) {
+    const L = r.next.rank.legs; const needIdx = RANK_IDX[L.rank];
+    legs = { need: L, rows: fl.map((k) => {
+      // 这条线里级别最高（或最接近）的那个帐户
+      const ids = []; const stack = [k]; while (stack.length) { const x = stack.pop(); ids.push(x); (R.get(x)?.fl || []).forEach((y) => stack.push(y)); }
+      const elig = ids.filter((x) => !L.pe || R.get(x)?.enroller === acctId);
+      const best = elig.sort((a, b) => R.get(b).rank - R.get(a).rank || R.get(b).ov - R.get(a).ov)[0];
+      const br = best ? R.get(best) : null;
+      const ok = br && br.rank >= needIdx;
+      const T = RANKS[needIdx]; let gap = null, add = 0;
+      if (!ok && br) {
+        gap = [];
+        if (br.pv < T.pv) { gap.push({ zh: "个人 PV", en: "PV", left: T.pv - br.pv }); add += T.pv - br.pv; }
+        if (T.ov && br.ov < T.ov) { gap.push({ zh: "组织业绩 OV", en: "OV", left: T.ov - br.ov }); add += T.ov - br.ov - Math.max(0, T.pv - br.pv); }
+        if (T.legs) gap.push({ zh: `还要自己的 ${T.legs.n} 条 ${RANKS[RANK_IDX[T.legs.rank]].zh} 线`, en: "legs", left: 0 });
+      }
+      return { head: k, best, bestRank: br?.rank ?? -1, ok, gap, add, simple: !T.legs, ov: R.get(k).ov };
+    }).sort((a, b) => b.bestRank - a.bestRank || (a.add || 1e9) - (b.add || 1e9)) };
+    const okN = legs.rows.filter((l) => l.ok).length, missing = L.n - okN;
+    const near = legs.rows.filter((l) => !l.ok && l.best && l.simple).sort((a, b) => a.add - b.add).slice(0, missing);
+    if (missing > 0 && near.length === missing) {
+      const adds = [...personalAdd, ...near.map((l) => ({ acct: l.best, member_id: byId.get(l.best).member_id, pv: l.add }))];
+      sim("legs", `升到 ${r.next.rank.zh}：帮 ${missing} 条线升到 ${RANKS[needIdx].zh}`, near.map((l) => `${name(l.best)} 补 ${Math.ceil(l.add)} PV`).join("；") + "。", adds);
+      tips.sort((a, b) => (b.info ? -1 : 0) - (a.info ? -1 : 0) || b.roi - a.roi || b.gain - a.gain);
+    }
+  }
+  // Fast Start 期内的会员
+  const fsWin = [];
+  const walk = (id, depth) => { if (depth > 3) return; pe(id).forEach((k) => { const ed = R.get(k)?.enrollDate; const left = 60 - Math.floor((new Date(SIM_DATE(ym)) - new Date(ed)) / 864e5); if (left > 0 && left <= 75) fsWin.push({ acct: k, depth, daysLeft: Math.min(60, left), rate: FAST_START[depth - 1] }); walk(k, depth + 1); }); };
+  walk(acctId, 1);
+  tips.sort((a, b) => (b.info ? -1 : 0) - (a.info ? -1 : 0) || b.roi - a.roi || b.gain - a.gain);
+  return { r, tips, legs, fsWin, name };
+}

@@ -5,7 +5,7 @@ import { useLang } from "../i18n";
 import { db } from "../api";
 import { Loading } from "../components";
 import { today } from "../util";
-import { BOOST, FAST_START, PO3, POOLS, RANKS, REWARDS, UNI_PCT, computeMonth, fmtUsd } from "../comp";
+import { BOOST, FAST_START, PO3, POOLS, RANKS, REWARDS, UNI_PCT, advise, computeMonth, fmtUsd } from "../comp";
 
 const r1 = (v) => Math.round(Number(v || 0) * 10) / 10;
 const thisMonth = () => today().slice(0, 7);
@@ -27,12 +27,13 @@ export function useCompData() {
 
 export function BusinessCenter({ memberId }) {
   const { pick } = useLang();
-  const [sub, setSub] = useState("progress");
+  const [sub, setSub] = useState("advise");
   return (
     <div className="biz">
       <div className="fseg" style={{ marginBottom: 18 }}>
-        {[["progress", pick("本月进度", "This month")], ["ladder", pick("级别与目标", "Ranks & goals")], ["guide", pick("奖金制度说明", "How you're paid")]].map(([k, l]) => <button key={k} aria-pressed={sub === k} onClick={() => setSub(k)}>{l}</button>)}
+        {[["advise", pick("自动分析", "Auto analysis")], ["progress", pick("本月进度", "This month")], ["ladder", pick("级别与目标", "Ranks & goals")], ["guide", pick("奖金制度说明", "How you're paid")]].map(([k, l]) => <button key={k} aria-pressed={sub === k} onClick={() => setSub(k)}>{l}</button>)}
       </div>
+      {sub === "advise" && <Advisor memberId={memberId} />}
       {sub === "progress" && <Progress memberId={memberId} />}
       {sub === "ladder" && <Ladder memberId={memberId} />}
       {sub === "guide" && <Guide />}
@@ -194,5 +195,67 @@ function Guide() {
         </ul>
       </S>
     </div>
+  );
+}
+
+/* ---------- 自动分析：选一个帐户，列出离每个奖金还差什么、补多少能多拿多少 ---------- */
+export function Advisor({ memberId, acctId: fixed }) {
+  const { pick, cv } = useLang();
+  const d = useCompData();
+  const [ym, setYm] = useState(thisMonth());
+  const [acct, setAcct] = useState(fixed || "");
+  const [q, setQ] = useState("");
+  const R = useMemo(() => (d ? computeMonth(d, ym) : null), [d, ym]);
+  if (!d) return <Loading />;
+  const label = (a) => { const m = d.members.find((x) => x.id === a.member_id); return `${cv(m?.name || "")} · ${cv(a.label || a.member_no || "doTERRA")}${a.member_no ? ` #${a.member_no}` : ""}`; };
+  const mine = d.accts.filter((a) => a.member_id === memberId).sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0));
+  const cur = d.accts.find((a) => a.id === acct) || mine[0] || d.accts[0];
+  if (!cur) return <div className="empty">{pick("还没有 doTERRA 帐户。", "No doTERRA accounts yet.")}</div>;
+  const A = advise(d, ym, cur.id, R);
+  const r = A.r; const rk = RANKS[r.rank];
+  const ql = q.trim().toLowerCase();
+  const list = d.accts.filter((a) => !ql || label(a).toLowerCase().includes(ql)).slice(0, 200);
+  const months = [...new Set([thisMonth(), ...d.orders.map((o) => String(o.date).slice(0, 7))])].filter(Boolean).sort().reverse().slice(0, 12);
+  const doable = A.tips.filter((t) => !t.info), info = A.tips.filter((t) => t.info);
+  return (
+    <>
+      {!fixed && <div className="inv-bar">
+        <input type="search" placeholder={pick("找帐户：名字或会员号", "Find account")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <select value={cur.id} onChange={(e) => setAcct(e.target.value)} aria-label={pick("要分析的帐户", "Account")}>{list.map((a) => <option key={a.id} value={a.id}>{label(a)}</option>)}</select>
+        <select value={ym} onChange={(e) => setYm(e.target.value)} aria-label={pick("月份", "Month")}>{months.map((m) => <option key={m} value={m}>{m}</option>)}</select>
+      </div>}
+      <div className="biz-hero">
+        <div><span className="muted small">{pick("现在（估算）", "Now (estimate)")}</span><b className="biz-rank">{pick(rk.zh, rk.en)}</b><span className="muted small">{label(cur)}</span></div>
+        <div><span className="muted small">{pick("本月预计奖金", "Estimated bonus")}</span><b className="biz-money">{fmtUsd(r.total)}</b><span className="muted small">Po3 {fmtUsd(r.po3Total)} · Unilevel {fmtUsd(r.uniTotal)} · Fast Start {fmtUsd(r.fsTotal)}</span></div>
+        <div className="biz-nums"><span><small>PV</small><b>{r1(r.pv)}</b></span><span><small>Rewards</small><b>{r1(r.rpv)}</b></span><span><small>OV</small><b>{r1(r.ov)}</b></span><span><small>Po3</small><b>{pick(`第 ${r.po3.level} 级`, `L${r.po3.level}`)}</b></span></div>
+      </div>
+
+      <section className="biz-card">
+        <h3>{pick("建议：补多少，能多拿多少", "What to add, and what it earns")}<span className="muted small">{pick("按「每 100 PV 换回多少」排序", "sorted by return per 100 PV")}</span></h3>
+        {!doable.length ? <p className="muted">{pick("这个月这个帐户没有马上能补的缺口。", "No quick gaps this month.")}</p> :
+          <div className="adv-list">{doable.map((t) => (
+            <div key={t.key} className="adv">
+              <div className="adv-h"><b>{t.title}</b><span className="adv-roi">{t.cost ? pick(`每 100 PV 换 ${fmtUsd((t.gain / t.cost) * 100)}`, `${fmtUsd((t.gain / t.cost) * 100)} per 100 PV`) : ""}</span></div>
+              <p>{t.detail}</p>
+              <div className="adv-n"><span>{pick("要补", "Add")} <b>{Math.ceil(t.cost)} PV</b></span><span>{pick("这个帐户多拿", "This account +")} <b className={t.gain > 0 ? "up" : ""}>{fmtUsd(t.gain)}</b></span><span>{pick("整个团队多拿", "Whole team +")} <b>{fmtUsd(t.teamGain)}</b></span>{t.rankAfter > r.rank && <span>{pick("升到", "Ranks up to")} <b>{pick(RANKS[t.rankAfter].zh, RANKS[t.rankAfter].en)}</b></span>}{t.rankAfter > r.rank && t.gain < 1 && <span className="muted">{pick("（本月层级奖金不变，好处在更深的层数和奖金池份数，下线做起来才有钱）", "(gain shows up as deeper levels and pool shares)")}</span>}{t.po3After > r.po3.level && <span>Po3 → <b>{pick(`第 ${t.po3After} 级`, `L${t.po3After}`)}</b></span>}</div>
+            </div>))}</div>}
+        {info.length > 0 && <><h4 style={{ margin: "14px 0 6px" }}>{pick("要先搭好结构的", "Needs structure first")}</h4><ul className="biz-list">{info.map((t) => <li key={t.key}><span><b>{t.title}</b><br /><span className="muted small">{t.detail}</span></span></li>)}</ul></>}
+      </section>
+
+      {A.legs && <section className="biz-card">
+        <h3>{pick(`升到 ${r.next.rank.zh}：每一条线`, `Legs for ${r.next.rank.en}`)}<span className="muted small">{pick(`要 ${A.legs.need.n} 条${A.legs.need.pe ? "亲自推荐的" : ""} ${RANKS.find((x) => x.code === A.legs.need.rank).zh}`, "")}</span></h3>
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("第一层（线头）", "Leg")}</th><th>{pick("线里最高的人", "Best in leg")}</th><th>{pick("现在", "Now")}</th><th>{pick("还差", "Gap")}</th></tr></thead>
+          <tbody>{A.legs.rows.map((l) => <tr key={l.head}><td>{A.name(l.head)}</td><td>{l.best ? A.name(l.best) : "—"}</td><td>{l.bestRank >= 0 ? pick(RANKS[l.bestRank].zh, RANKS[l.bestRank].en) : "—"}</td><td>{l.ok ? "✓" : l.gap ? l.gap.map((g) => g.left ? pick(`${g.zh} 差 ${Math.ceil(g.left)}`, `${g.en} ${Math.ceil(g.left)}`) : g.zh).join("；") || "—" : pick("这条线还没有亲自推荐的人", "No personally enrolled member yet")}</td></tr>)}</tbody></table></div>
+        {A.legs.rows.filter((l) => l.ok).length < A.legs.need.n && <p className="small">{pick(`现在 ${A.legs.rows.filter((l) => l.ok).length} 条达标，还差 ${A.legs.need.n - A.legs.rows.filter((l) => l.ok).length} 条。优先帮上面排在前面、最接近的线。`, "")}</p>}
+      </section>}
+
+      <section className="biz-card">
+        <h3>Fast Start {pick("期内的会员", "window")}<span className="muted small">{pick("这些人入会还不到 60 天，他们每下 100 PV 你就拿钱", "members still in their first 60 days")}</span></h3>
+        {!A.fsWin.length ? <p className="muted">{pick("现在没有在 60 天期内的会员。推荐新会员，头 60 天的订单你拿 20%。", "No one in the 60-day window. New enrollees earn you 20% for 60 days.")}</p> :
+          <ul className="biz-list">{A.fsWin.sort((a, b) => a.daysLeft - b.daysLeft).map((f) => <li key={f.acct}><span>{A.name(f.acct)}<span className="muted small"> · {pick(["你亲自推荐", "你推荐的人推荐的", "再下一层"][f.depth - 1], "")} · {pick(`还剩 ${f.daysLeft} 天`, `${f.daysLeft} days left`)}</span></span><b>{pick(`每 100 PV 你拿 $${Math.round(f.rate * 100)}`, `$${Math.round(f.rate * 100)} per 100 PV`)}</b></li>)}</ul>}
+        {r.pv < 100 && A.fsWin.length > 0 && <p className="small" style={{ color: "var(--warn)" }}>{pick("提醒：你自己这个月要有 100 PV 才拿得到。", "You need 100 PV yourself to qualify.")}</p>}
+        <p className="muted small">{pick(`本月已经拿到 Fast Start ${fmtUsd(r.fsTotal)}。`, `Fast Start so far: ${fmtUsd(r.fsTotal)}.`)}</p>
+      </section>
+    </>
   );
 }
