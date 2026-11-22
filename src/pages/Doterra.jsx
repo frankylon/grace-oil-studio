@@ -5,6 +5,7 @@ import { useLang } from "../i18n";
 import { db } from "../api";
 import { Loading, Modal } from "../components";
 import { today } from "../util";
+import { RANKS as COMP_RANKS } from "../comp";
 
 const n = (v) => { const x = Number(v); return isFinite(x) ? x : 0; };
 const r0 = (v) => Math.round(n(v)).toLocaleString();
@@ -80,14 +81,15 @@ export function DtOffice({ rootId, admin }) {
   const all = []; (function walk(m, lv) { for (const k of m.kids) { all.push({ m: k, lv }); walk(k, lv + 1); } })(root, 1);
   const closedN = all.filter((x) => x.m.closed).length;
   const team = showClosed ? all : all.filter((x) => !x.m.closed);
-  const ctx = { d, root, team, open: setSel, admin, ym: d.ym, reload, showClosed };
+  const ctx = { d, root, team, open: setSel, admin, ym: d.ym, reload, showClosed, goTab: setTab, RANKS: COMP_RANKS };
   const last = d.sync[0];
-  const tabs = [["home", pick("总览", "Overview")], ["po3", pick("三次方 / Boost", "Power of 3")], ["follow", pick("跟进名单", "Follow-up")], ["team", pick("团队名单", "Team list")], ["tree", pick("树状图", "Tree")], ["earn", pick("奖金", "Earnings")], ["orders", pick("我的订单", "My orders")], ...(admin ? [["reports", pick("原始报表", "Reports")]] : [])];
+  const tabs = [["home", pick("总览", "Overview")], ["grow", pick("升级目标", "Rank goals")], ["po3", pick("三次方 / Boost", "Power of 3")], ["follow", pick("跟进名单", "Follow-up")], ["team", pick("团队名单", "Team list")], ["tree", pick("树状图", "Tree")], ["earn", pick("奖金", "Earnings")], ["orders", pick("我的订单", "My orders")], ...(admin ? [["reports", pick("原始报表", "Reports")]] : [])];
   return (
     <div className="inv dt">
       <div className="fseg" style={{ marginBottom: 16 }}>{tabs.map(([k, l]) => <button key={k} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}</div>
       {admin && closedN > 0 && <p className="muted small" style={{ marginTop: -6 }}><label><input type="checkbox" checked={showClosed} onChange={(e) => setShowClosed(e.target.checked)} /> {pick(`显示已终止的 ${closedN} 个帐户`, `Show ${closedN} terminated`)}</label></p>}
       {tab === "home" && <Home {...ctx} />}
+      {tab === "grow" && <Growth {...ctx} />}
       {tab === "po3" && <Po3Panel {...ctx} />}
       {tab === "follow" && <Follow {...ctx} />}
       {tab === "team" && <TeamList {...ctx} />}
@@ -532,6 +534,130 @@ export function Po3Panel({ d, root, open }) {
           </div>; })}</div>
         <p className="muted small" style={{ margin: "8px 0 0" }}>{pick("亲自推荐的会员入会后 12 个月内，他们的 Rewards 业绩算进你的 PGV。快到期的人越多，下个月 PGV 越难维持，要继续推荐新人。", "")}</p>
       </section>}
+    </>
+  );
+}
+
+/* ================= 升级规划：目标是升到更高一级 ================= */
+// 用 doTERRA 同步来的每月 PV / OV 和团队结构，按奖金制度一级一级推算每个经营者的级别，
+// 再算出下一级还差什么：个人 PV、OV、哪几条线要培养到什么级别、每条线里谁最接近。
+const DT2CODE = { Consultant: "wa", Manager: "manager", Director: "director", Executive: "executive", Elite: "elite", Premier: "premier", Silver: "silver", Gold: "gold", Platinum: "platinum", Diamond: "diamond", "Blue Diamond": "blue", "Presidential Diamond": "presidential" };
+const fmtUsd0 = (v) => `US$${r0(v)}`;
+
+function useRankEngine(d, RANKS) {
+  return useMemo(() => {
+    const idx = Object.fromEntries(RANKS.map((r, i) => [r.code, i]));
+    const t = today();
+    const schedOf = (m, ym) => (ym === d.ym && m.lrp_date && m.lrp_date >= t && m.lrp_date.slice(0, 7) === ym ? n(m.lrp_pv) : 0);
+    const make = (ym, proj) => {
+      const memo = new Map(), best = new Map(), sub = new Map();
+      const schedSub = (m) => { if (sub.has(m.dt_id)) return sub.get(m.dt_id); const v = schedOf(m, ym) + m.kids.reduce((s, k) => s + schedSub(k), 0); sub.set(m.dt_id, v); return v; };
+      const facts = (m) => ({ pv: n(m.mo[ym]?.pv) + (proj ? schedOf(m, ym) : 0), ov: n(m.mo[ym]?.ov) + (proj ? schedSub(m) : 0) });
+      const rank = (m) => {
+        if (memo.has(m.dt_id)) return memo.get(m.dt_id);
+        let r = 0;
+        if (m.mtype === "D") {
+          const f = facts(m), legs = legsOf(m);
+          for (let i = 1; i < RANKS.length; i++) {
+            const R = RANKS[i];
+            if (f.pv < (R.pv || 0) || f.ov < (R.ov || 0)) break;
+            if (R.legs && legs.filter((l) => l.best >= idx[R.legs.rank] && (!R.legs.pe || l.pe)).length < R.legs.n) break;
+            r = i;
+          }
+        }
+        memo.set(m.dt_id, r); return r;
+      };
+      const bestOf = (m) => { if (best.has(m.dt_id)) return best.get(m.dt_id); const v = Math.max(rank(m), ...m.kids.map(bestOf)); best.set(m.dt_id, v); return v; };
+      const legsOf = (m) => m.kids.map((k) => ({ k, best: bestOf(k), pe: k.enroller_dt === m.dt_id }));
+      return { rank, legsOf, facts, bestOf };
+    };
+    const prevMonth = prevYm(d.ym);
+    return { idx, cur: make(d.ym, false), proj: make(d.ym, true), prev: make(prevMonth, false), prevMonth, schedOf };
+  }, [d, RANKS]);
+}
+
+export function Growth({ d, root, team, ym, open, goTab, RANKS }) {
+  const { pick } = useLang();
+  const E = useRankEngine(d, RANKS);
+  const [who, setWho] = useState(root.dt_id);
+  const me = d.by[who] || root;
+  const rz = (i) => pick(RANKS[i]?.zh || "—", RANKS[i]?.en || "—");
+  const paidIdx = E.idx[DT2CODE[me.highest_rank]] ?? 0;
+  const prevR = E.prev.rank(me), curR = E.cur.rank(me), projR = E.proj.rank(me);
+  const base = Math.max(prevR, projR);
+  const target = Math.min(RANKS.length - 1, base + 1);
+  const T = RANKS[target];
+  const f = E.proj.facts(me);
+  const legs = E.proj.legsOf(me).filter((l) => l.k.mtype === "D" || l.best > 0 || l.k._size);
+  // 每条线里离「需要的级别」最近的人
+  const nearest = (leg, need) => {
+    const cand = []; (function w(m) { if (m.mtype === "D") cand.push(m); m.kids.forEach(w); })(leg.k);
+    const R = RANKS[need];
+    return cand.map((m) => { const ff = E.proj.facts(m); const r = E.proj.rank(m); const ovGap = Math.max(0, (R.ov || 0) - ff.ov), pvGap = Math.max(0, 100 - ff.pv); return { m, r, ovGap, pvGap, score: r >= need ? 1e9 : r * 1e5 - ovGap }; }).sort((a, b) => b.score - a.score)[0];
+  };
+  const needLegIdx = T.legs ? E.idx[T.legs.rank] : null;
+  const legRows = T.legs ? legs.map((l) => ({ ...l, ok: l.best >= needLegIdx && (!T.legs.pe || l.pe), near: l.best >= needLegIdx ? null : nearest(l, needLegIdx) })).sort((a, b) => (b.ok - a.ok) || (b.best - a.best) || (a.near?.ovGap ?? 1e9) - (b.near?.ovGap ?? 1e9)) : [];
+  const legsOk = legRows.filter((l) => l.ok).length;
+  // 快速奖金（Fast Start）：亲推、入会 60 天内的新人
+  const fs = d.list.filter((m) => m.enroller_dt === me.dt_id && m.enroll_date && days(m.enroll_date, today()) < 60).map((m) => ({ m, left: 60 - days(m.enroll_date, today()), pv: n(m.mo[ym]?.pv) + E.schedOf(m, ym) })).sort((a, b) => a.left - b.left);
+  // 行动清单
+  const acts = [];
+  if (f.pv < 100) acts.push(pick(`自己这个月先下满 100 PV 的 LRP 单（现在 ${r1(f.pv)}），不然三次方、Unilevel、级别都不算。`, "Place a 100 PV LRP order first."));
+  if (T.ov && f.ov < T.ov) acts.push(pick(`团队 OV 再多 ${r1(T.ov - f.ov)}（大约 ${Math.ceil((T.ov - f.ov) / 100)} 张 100 PV 的单）就到 ${rz(target)} 的 OV 门槛。`, ""));
+  if (T.legs && legsOk < T.legs.n) {
+    const todo = legRows.filter((l) => !l.ok).slice(0, T.legs.n - legsOk);
+    todo.forEach((l) => acts.push(l.near ? pick(`培养「${l.k.name}」这条线：线里最接近的是 ${l.near.m.name}（现在${rz(l.near.r)}），要到 ${rz(needLegIdx)}${l.near.ovGap ? `，OV 还差 ${r1(l.near.ovGap)}` : ""}${l.near.pvGap ? `，自己 PV 还差 ${r1(l.near.pvGap)}` : ""}${T.legs.pe && !l.pe ? "（注意：这条线不是你亲自推荐的，不算数）" : ""}。`, "") : pick(`「${l.k.name}」这条线还没有经营者，要先在下面推荐一位经营者。`, "")));
+    if (legRows.length < T.legs.n) acts.push(pick(`第一层有经营者的线只有 ${legRows.length} 条，至少要 ${T.legs.n} 条，需要再亲自推荐新的经营者开新线。`, ""));
+  }
+  if (fs.length) acts.push(pick(`有 ${fs.length} 位亲推新人还在 60 天快速奖金期内，帮他们这个月下满 100 PV：你可拿他们订单的 20%。`, ""));
+  else acts.push(pick("最近 60 天没有亲自推荐的新人。快速奖金只来自新人头 60 天的订单，也是开新线、补 PGV 的来源。", ""));
+  // 团队冲级名单
+  const board = useMemo(() => team.filter((x) => x.m.mtype === "D").map(({ m }) => {
+    const r = Math.max(E.prev.rank(m), E.proj.rank(m)); const nx = RANKS[Math.min(RANKS.length - 1, r + 1)]; const ff = E.proj.facts(m);
+    const ovPct = nx.ov ? Math.min(1, ff.ov / nx.ov) : null;
+    const legN = nx.legs ? E.proj.legsOf(m).filter((l) => l.best >= E.idx[nx.legs.rank] && (!nx.legs.pe || l.pe)).length : null;
+    const pct = nx.legs ? (legN / nx.legs.n) * (nx.ov ? ovPct : 1) : ovPct;
+    return { m, r, nx, ff, legN, pct, pvOk: ff.pv >= 100 };
+  }).sort((a, b) => b.r - a.r || b.pct - a.pct), [team, E]);
+  return (
+    <>
+      <div className="inv-bar">
+        <select value={me.dt_id} onChange={(e) => setWho(e.target.value)} aria-label={pick("经营者", "Advocate")}>{[root, ...team.filter((x) => x.m.mtype === "D").map((x) => x.m)].map((m) => <option key={m.dt_id} value={m.dt_id}>{m.name} · {m.dt_id}</option>)}</select>
+        {me.dt_id !== root.dt_id && <button className="btn sm ghost" onClick={() => setWho(root.dt_id)}>{pick("回到自己", "Back")}</button>}
+      </div>
+
+      <div className="rk-ladder">{RANKS.map((R, i) => i === 0 ? null : <div key={R.code} className={`rk ${i <= base ? "ok" : ""} ${i === target ? "goal" : ""} ${i === paidIdx ? "hi" : ""}`}><b>{pick(R.zh, R.en)}</b>{R.range && <small>{fmtUsd0(R.range[0])}–{fmtUsd0(R.range[1])}/月</small>}{i === paidIdx && <small>{pick("曾达到最高", "Highest")}</small>}{i === target && <small>{pick("下一个目标", "Next goal")}</small>}</div>)}</div>
+      <p className="muted small" style={{ marginTop: 4 }}>{pick(`${me.name}：上个月（${E.prevMonth}）按数据推算 ${rz(prevR)}；本月到现在 ${rz(curR)}，排好的 LRP 都下了是 ${rz(projR)}；doTERRA 显示现在 ${rankL(me.rank, pick)}、最高 ${rankL(me.highest_rank, pick)}。每月收入范围是 doTERRA 公布的美国数据，不代表保证。`, "")}</p>
+
+      <section className="biz-card">
+        <h3>{pick(`目标：${rz(target)}`, `Goal: ${T.en}`)} <span className="muted small">{pick("按本月数据（含已排好的 LRP）", "this month incl. scheduled LRP")}</span></h3>
+        <Bar label={pick("自己的 PV", "Personal PV")} have={f.pv} need={100} />
+        {T.ov ? <Bar label={pick("团队 OV", "OV")} have={f.ov} need={T.ov} /> : null}
+        {T.legs && <>
+          <Bar label={pick(`${T.legs.n} 条线各有一位 ${rz(needLegIdx)}${T.legs.pe ? "（要是亲推的线）" : ""}`, "Legs")} have={legsOk} need={T.legs.n} unit={pick(" 条", "")} />
+          <div className="inv-tbl-wrap" style={{ marginTop: 8 }}><table className="inv-tbl"><thead><tr><th>{pick("第一层的线", "Leg")}</th><th>{pick("线里最高", "Best in leg")}</th><th>{pick("亲推", "PE")}</th><th>{pick("离目标最近的人", "Closest")}</th><th>{pick("还差", "Gap")}</th></tr></thead>
+            <tbody>{legRows.map((l) => <tr key={l.k.dt_id} className={l.ok ? "" : ""}><td><button className="linkbtn" onClick={() => setWho(l.k.mtype === "D" ? l.k.dt_id : who)}><b>{l.k.name}</b></button> <span className="muted small">{pick(`下面 ${l.k._size} 人`, "")}</span></td><td>{l.ok ? <span className="tag k-in">✓ {rz(l.best)}</span> : rz(l.best)}</td><td className="small">{l.pe ? pick("是", "Yes") : <span className="po3-gap">{pick("否", "No")}</span>}</td><td className="small">{l.near ? <button className="linkbtn" onClick={() => setWho(l.near.m.dt_id)}>{l.near.m.name}</button> : "—"}{l.near ? ` · ${rz(l.near.r)}` : ""}</td><td className="small">{l.ok ? "—" : l.near ? [l.near.ovGap && `OV ${r1(l.near.ovGap)}`, l.near.pvGap && `PV ${r1(l.near.pvGap)}`, RANKS[needLegIdx].legs && pick(`还要自己的 ${RANKS[needLegIdx].legs.n} 条线`, "legs")].filter(Boolean).join("，") || pick("看他自己的规划", "") : pick("先推荐经营者", "")}</td></tr>)}</tbody></table></div>
+        </>}
+      </section>
+
+      <section className="biz-card">
+        <h3>{pick("这个月该做的事（按顺序）", "Action plan")}</h3>
+        <ol className="rk-acts">{acts.map((a, i) => <li key={i}>{a}</li>)}<li>{pick("把三次方做满：看「三次方 / Boost」里 Pod 和第一层还差什么，第一层每人都要有 100 PV 的 LRP。", "")} <button className="linkbtn" onClick={() => goTab("po3")}>{pick("去看三次方", "Open Power of 3")}</button></li></ol>
+      </section>
+
+      <section className="biz-card">
+        <h3>{pick("快速奖金（新人头 60 天）", "Fast Start")} <span className="muted small">{pick("亲推 20%，第二代 10%，第三代 5%", "")}</span></h3>
+        {!fs.length ? <p className="muted small" style={{ margin: 0 }}>{pick("现在没有 60 天内的亲推新人。", "None in the 60-day window.")}</p> :
+          <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("新人", "New member")}</th><th>{pick("入会", "Joined")}</th><th className="n">{pick("剩几天", "Days left")}</th><th className="n">{pick("本月 PV（含排好）", "PV")}</th><th className="n">{pick("你约可拿 20%", "≈20%")}</th></tr></thead>
+            <tbody>{fs.map(({ m, left, pv }) => <tr key={m.dt_id}><td><button className="linkbtn" onClick={() => open(m.dt_id)}>{m.name}</button> <span className="muted small">{pick(...(TYPE[m.mtype] || ["", ""]))}</span></td><td className="small">{m.enroll_date}</td><td className={`n ${left <= 14 ? "neg" : ""}`}>{left}</td><td className="n">{r1(pv)}</td><td className="n">{fmtUsd0(pv * 0.2)}</td></tr>)}</tbody></table></div>}
+      </section>
+
+      {me.dt_id === root.dt_id && <section className="biz-card">
+        <h3>{pick("团队冲级名单", "Who's close to the next rank")} <span className="muted small">{pick("每位经营者的下一级和完成度，点名字看他的规划", "")}</span></h3>
+        <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("经营者", "Advocate")}</th><th>{pick("现在（推算）", "Now")}</th><th>{pick("下一级", "Next")}</th><th className="n">{pick("自己 PV", "PV")}</th><th className="n">OV</th><th>{pick("线", "Legs")}</th><th className="n">{pick("完成度", "Progress")}</th></tr></thead>
+          <tbody>{board.slice(0, 60).map((b) => <tr key={b.m.dt_id}><td><button className="linkbtn" onClick={() => { setWho(b.m.dt_id); window.scrollTo({ top: 0, behavior: "smooth" }); }}><b>{b.m.name}</b></button></td><td className="small">{rz(b.r)}</td><td className="small">{pick(b.nx.zh, b.nx.en)}</td><td className={`n ${b.pvOk ? "" : "neg"}`}>{r1(b.ff.pv)}</td><td className="n">{r1(b.ff.ov)}{b.nx.ov ? <span className="muted"> / {b.nx.ov}</span> : ""}</td><td className="small">{b.nx.legs ? `${b.legN} / ${b.nx.legs.n}` : "—"}</td><td className="n"><span className="rk-pct"><i style={{ width: `${Math.round(b.pct * 100)}%` }} /></span> {Math.round(b.pct * 100)}%</td></tr>)}</tbody></table></div>
+      </section>}
+      <p className="muted small">{pick("级别按 doTERRA 公布的晋升条件推算：经理到精英看个人 100 PV 和团队 OV；Premier 起还要几条线各有一位达到某个级别，Premier、银钻、金钻要求是亲自推荐的线。实际以 doTERRA 月底结算为准。", "")}</p>
     </>
   );
 }
