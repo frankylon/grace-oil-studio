@@ -38,16 +38,19 @@ const rankL = (r, pick) => (r ? pick(DT_RANK[r] ? `${DT_RANK[r]}${DT_RANK[r] ===
 function useDt() {
   const [d, setD] = useState(null);
   const [err, setErr] = useState(null);
+  const [k, setK] = useState(0);
   useEffect(() => {
     (async () => {
       try {
-        const [members, monthly, orders, comm, sync] = await Promise.all([
+        const [members, monthly, orders, comm, sync, accts] = await Promise.all([
           db.select("dt_members", { all: true, order: ["dt_id", true] }),
           db.select("dt_monthly", { all: true, order: ["dt_id", true] }),
           db.select("dt_orders", { order: ["odate", false] }).catch(() => []),
           db.select("dt_commissions", { all: true, order: ["period", false] }).catch(() => []),
           db.select("dt_sync", { order: ["at", false], limit: 5 }).catch(() => []),
+          db.select("dt_accounts", { all: true, order: ["created_at", true] }).catch(() => []),
         ]);
+        const acctBy = Object.fromEntries(accts.filter((a) => a.member_no).map((a) => [a.member_no, a]));
         const by = Object.fromEntries(members.map((m) => [m.dt_id, { ...m, kids: [], mo: {} }]));
         for (const x of monthly) if (by[x.dt_id]) by[x.dt_id].mo[x.ym] = x;
         for (const m of Object.values(by)) if (m.sponsor_dt && by[m.sponsor_dt]) by[m.sponsor_dt].kids.push(m);
@@ -56,30 +59,36 @@ function useDt() {
         for (const m of Object.values(by)) m.kids.sort((a, b) => (a.mtype === "D" ? 0 : 1) - (b.mtype === "D" ? 0 : 1) || n(b.mo[latestYm]?.ov) - n(a.mo[latestYm]?.ov));
         const size = (m) => (m._size ??= m.kids.reduce((s, k) => s + 1 + size(k), 0));
         Object.values(by).forEach(size);
+        for (const m of Object.values(by)) { m.acct = acctBy[m.dt_id]; m.closed = m.acct?.status === "closed"; }
         setD({ by, list: Object.values(by), yms, ym: latestYm, orders, comm, sync });
       } catch (e) { setErr(e.message); }
     })();
-  }, []);
-  return { d, err };
+  }, [k]);
+  return { d, err, reload: () => setK((x) => x + 1) };
 }
 
 export function DtOffice({ rootId, admin }) {
   const { pick } = useLang();
-  const { d, err } = useDt();
+  const { d, err, reload } = useDt();
   const [tab, setTab] = useState("home");
   const [sel, setSel] = useState(null);
+  const [showClosed, setShowClosed] = useState(false);
   if (err) return <div className="empty">{err}</div>;
   if (!d) return <Loading />;
   const root = d.by[rootId] || d.list.find((m) => !d.by[m.sponsor_dt]);
   if (!root) return <div className="empty">{pick("还没有从 doTERRA 同步资料。", "Nothing synced from doTERRA yet.")}</div>;
-  const team = []; (function walk(m, lv) { for (const k of m.kids) { team.push({ m: k, lv }); walk(k, lv + 1); } })(root, 1);
-  const ctx = { d, root, team, open: setSel, admin, ym: d.ym };
+  const all = []; (function walk(m, lv) { for (const k of m.kids) { all.push({ m: k, lv }); walk(k, lv + 1); } })(root, 1);
+  const closedN = all.filter((x) => x.m.closed).length;
+  const team = showClosed ? all : all.filter((x) => !x.m.closed);
+  const ctx = { d, root, team, open: setSel, admin, ym: d.ym, reload, showClosed };
   const last = d.sync[0];
-  const tabs = [["home", pick("总览", "Overview")], ["follow", pick("跟进名单", "Follow-up")], ["team", pick("团队名单", "Team list")], ["tree", pick("树状图", "Tree")], ["earn", pick("奖金", "Earnings")], ["orders", pick("我的订单", "My orders")], ...(admin ? [["reports", pick("原始报表", "Reports")]] : [])];
+  const tabs = [["home", pick("总览", "Overview")], ["po3", pick("三次方 / Boost", "Power of 3")], ["follow", pick("跟进名单", "Follow-up")], ["team", pick("团队名单", "Team list")], ["tree", pick("树状图", "Tree")], ["earn", pick("奖金", "Earnings")], ["orders", pick("我的订单", "My orders")], ...(admin ? [["reports", pick("原始报表", "Reports")]] : [])];
   return (
     <div className="inv dt">
       <div className="fseg" style={{ marginBottom: 16 }}>{tabs.map(([k, l]) => <button key={k} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}</div>
+      {admin && closedN > 0 && <p className="muted small" style={{ marginTop: -6 }}><label><input type="checkbox" checked={showClosed} onChange={(e) => setShowClosed(e.target.checked)} /> {pick(`显示已终止的 ${closedN} 个帐户`, `Show ${closedN} terminated`)}</label></p>}
       {tab === "home" && <Home {...ctx} />}
+      {tab === "po3" && <Po3Panel {...ctx} />}
       {tab === "follow" && <Follow {...ctx} />}
       {tab === "team" && <TeamList {...ctx} />}
       {tab === "tree" && <Tree {...ctx} />}
@@ -213,21 +222,22 @@ function TeamList({ d, team, ym, open }) {
   );
 }
 
-function Tree({ root, ym, open }) {
+function Tree({ root, ym, open, showClosed }) {
   const { pick } = useLang();
   const [openSet, setOpenSet] = useState(() => new Set([root.dt_id, ...root.kids.map((k) => k.dt_id)]));
   const [onlyD, setOnlyD] = useState(false);
   const tog = (id) => setOpenSet((s) => { const x = new Set(s); x.has(id) ? x.delete(id) : x.add(id); return x; });
   const dot = (m) => { const pv = n(m.mo[ym]?.pv); return pv >= 100 ? "ok" : pv > 0 ? "lo" : m.lrp_date ? "wait" : "off"; };
   const Node = ({ m, depth }) => {
-    const kids = onlyD ? m.kids.filter((k) => k.mtype === "D" || k._size) : m.kids;
+    const kids0 = showClosed ? m.kids : m.kids.filter((k) => !k.closed || k._size);
+    const kids = onlyD ? kids0.filter((k) => k.mtype === "D" || k._size) : kids0;
     const isOpen = openSet.has(m.dt_id);
     return (
       <li>
         <div className="dt-node">
           {kids.length ? <button className="dt-tog" onClick={() => tog(m.dt_id)} aria-label={isOpen ? pick("收起", "Collapse") : pick("展开", "Expand")}>{isOpen ? "−" : "+"}</button> : <span className="dt-tog" />}
           <i className={`dt-dot ${dot(m)}`} />
-          <button className="linkbtn" onClick={() => open(m.dt_id)}><b>{m.name}</b></button>
+          <button className="linkbtn" onClick={() => open(m.dt_id)}><b style={m.closed ? { textDecoration: "line-through", opacity: .5 } : null}>{m.name}</b></button>{m.acct && !m.acct.is_main && <span className="tag">{pick("小号", "Sub")}</span>}
           <span className="muted small">{m.mtype === "D" ? rankL(m.rank, pick) : pick(...(TYPE[m.mtype] || ["", ""]))}</span>
           <span className="small">{r1(m.mo[ym]?.pv)} PV{m.mtype === "D" && n(m.mo[ym]?.ov) ? ` · ${r1(m.mo[ym].ov)} OV` : ""}</span>
           {m._size > 0 && <span className="muted small">{pick(`下面 ${m._size} 人`, `${m._size} below`)}</span>}
@@ -275,6 +285,7 @@ function Person({ m, ctx, onClose }) {
       </dl>
       <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("月份", "Month")}</th><th className="n">PV</th><th className="n">LRP PV</th><th className="n">OV</th><th className="n">PGV</th><th className="n">TGV</th></tr></thead>
         <tbody>{yms.map((y) => { const x = m.mo[y]; return <tr key={y} className={x ? "" : "off"}><td>{y}</td><td className="n">{x ? r1(x.pv) : "—"}</td><td className="n">{x ? r1(x.lrp_pv) : ""}</td><td className="n">{x?.ov ? r1(x.ov) : ""}</td><td className="n">{x?.pgv ? r1(x.pgv) : ""}</td><td className="n">{x?.tgv ? r1(x.tgv) : ""}</td></tr>; })}</tbody></table></div>
+      {admin && m.acct?.member_id && <AccountAdmin ownerId={m.acct.member_id} focusDt={m.dt_id} onChanged={ctx.reload} />}
       {m.kids.length > 0 && <><h4 style={{ margin: "14px 0 6px" }}>{pick(`直接下线 ${m.kids.length} 人`, `${m.kids.length} frontline`)}</h4>
         <div className="dt-kids">{m.kids.map((k) => <button key={k.dt_id} className="linkbtn" onClick={() => ctx.open(k.dt_id)}>{k.name}<small className="muted"> {r1(k.mo[ctx.ym]?.pv)} PV</small></button>)}</div></>}
     </Modal>
@@ -332,6 +343,195 @@ function Reports() {
     <>
       <div className="inv-bar"><select value={r.kind} onChange={(e) => setK(e.target.value)} aria-label={pick("报表", "Report")}>{useful.map((x) => <option key={x.kind} value={x.kind}>{REPORT_ZH[x.kind] || x.kind}</option>)}</select><span className="muted small">{pick(`同步于 ${String(r.synced_at).slice(0, 10)}`, "")}</span></div>
       {(r.tables || []).filter((t) => t.length > 1).map((t, i) => <div key={i} className="inv-tbl-wrap" style={{ marginBottom: 14 }}><table className="inv-tbl"><thead><tr>{t[0].map((c, j) => <th key={j}>{c}</th>)}</tr></thead><tbody>{t.slice(1).map((row, j) => <tr key={j}>{row.map((c, l) => <td key={l} className="small">{String(c).replace(/­/g, "")}</td>)}</tr>)}</tbody></table></div>)}
+    </>
+  );
+}
+
+/* ================= 帐户归属：小号绑定、备注、关联、终止 ================= */
+// 一个 doTERRA 帐户（dt_accounts.member_no）归某位会员所有；把别人的帐户「加为小号」= 改归属到这位会员名下。
+// 原来那位只剩空壳的会员会被标为「已终止」（隐藏，资料保留）。
+export function AccountAdmin({ ownerId, focusDt, onChanged }) {
+  const { pick } = useLang();
+  const [s, setS] = useState(null);
+  const [q, setQ] = useState(""); const [lq, setLq] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = async () => {
+    const [members, accts, dtm] = await Promise.all([db.select("members", { all: true, order: ["name", true] }), db.select("dt_accounts", { all: true, order: ["created_at", true] }), db.select("dt_members", { all: true, order: ["dt_id", true] }).catch(() => [])]);
+    setS({ members, accts, dtm });
+  };
+  useEffect(() => { load(); }, [ownerId]);
+  if (!s) return <Loading />;
+  const owner = s.members.find((m) => m.id === ownerId);
+  if (!owner) return null;
+  const mine = s.accts.filter((a) => a.member_id === ownerId).sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0));
+  const mName = (id) => s.members.find((m) => m.id === id)?.name || "—";
+  const dtName = (no) => s.dtm.find((x) => x.dt_id === no)?.name;
+  const link = s.members.find((m) => m.id === owner.link_member_id);
+  const run = async (f) => { setBusy(true); try { await f(); await load(); onChanged && onChanged(); } catch (e) { alert(e.message); } setBusy(false); };
+
+  const bind = (acct) => run(async () => {
+    const old = acct.member_id;
+    await db.update("dt_accounts", acct.id, { member_id: ownerId, is_main: false });
+    if (old && old !== ownerId && !s.accts.some((a) => a.member_id === old && a.id !== acct.id)) {
+      const om = s.members.find((m) => m.id === old);
+      await db.update("members", old, { archived: true, archived_at: new Date().toISOString(), admin_notes: `${om?.admin_notes ? om.admin_notes + "\n" : ""}已并入 ${owner.name} 名下（小号）` });
+      for (const k of s.members.filter((m) => m.sponsor_id === old)) await db.update("members", k.id, { sponsor_id: ownerId });
+    }
+  });
+  const unbind = (acct) => run(async () => {
+    // 拆回去：找原来那位（编号对得上）的会员，恢复她
+    const back = s.members.find((m) => String(m.doterra_id || "").trim() === acct.member_no && m.id !== ownerId);
+    if (!back) throw new Error(pick("找不到原来的会员，无法拆回", "Original member not found"));
+    await db.update("dt_accounts", acct.id, { member_id: back.id, is_main: true });
+    if (back.archived) await db.update("members", back.id, { archived: false, archived_at: null });
+  });
+  const setMain = (acct) => run(async () => { for (const a of mine) if (a.is_main !== (a.id === acct.id)) await db.update("dt_accounts", a.id, { is_main: a.id === acct.id }); });
+  const terminate = (acct) => run(async () => {
+    if (!confirm(pick(`把 ${acct.label || acct.member_no} 标为已终止？之后不再显示，以前的资料会保留，可以随时恢复。`, "Mark as terminated?"))) return;
+    await db.update("dt_accounts", acct.id, { status: "closed" });
+    if (!mine.some((a) => a.id !== acct.id && a.status !== "closed")) await db.update("members", ownerId, { archived: true, archived_at: new Date().toISOString() });
+  });
+  const restore = (acct) => run(async () => { await db.update("dt_accounts", acct.id, { status: "active" }); if (owner.archived) await db.update("members", ownerId, { archived: false, archived_at: null }); });
+  const archiveMember = () => run(async () => {
+    if (!confirm(pick(`把 ${owner.name} 整个会员标为已终止？她名下所有帐户都不再显示，资料保留。`, "Terminate this member?"))) return;
+    for (const a of mine) if (a.status !== "closed") await db.update("dt_accounts", a.id, { status: "closed" });
+    await db.update("members", ownerId, { archived: true, archived_at: new Date().toISOString() });
+  });
+  const restoreMember = () => run(async () => { await db.update("members", ownerId, { archived: false, archived_at: null }); for (const a of mine) if (a.status === "closed") await db.update("dt_accounts", a.id, { status: "active" }); });
+
+  const cands = q.trim().length < 1 ? [] : s.accts.filter((a) => a.member_id !== ownerId && `${a.label} ${a.member_no} ${dtName(a.member_no) || ""} ${mName(a.member_id)}`.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 8);
+  const lcands = lq.trim().length < 1 ? [] : s.members.filter((m) => m.id !== ownerId && !m.archived && `${m.name} ${m.doterra_id || ""} ${m.phone || ""}`.toLowerCase().includes(lq.trim().toLowerCase())).slice(0, 8);
+  return (
+    <section className="biz-card dt-admin" aria-busy={busy}>
+      <h3>{pick(`${owner.name} 名下的 doTERRA 帐户`, "Accounts")}{owner.archived && <span className="tag k-out" style={{ marginLeft: 8 }}>{pick("已终止", "Terminated")}</span>}</h3>
+      <div className="inv-tbl-wrap"><table className="inv-tbl"><thead><tr><th>{pick("帐户", "Account")}</th><th>{pick("编号", "ID")}</th><th>{pick("主号 / 小号", "Main")}</th><th>{pick("状态", "Status")}</th><th /></tr></thead>
+        <tbody>{mine.map((a) => <tr key={a.id} className={a.status === "closed" ? "off" : ""}>
+          <td><b>{a.label || dtName(a.member_no) || "—"}</b>{a.member_no === focusDt && <span className="muted small">　{pick("（正在看）", "(this)")}</span>}</td><td className="small">{a.member_no || "—"}</td>
+          <td className="small">{a.is_main ? pick("主号", "Main") : <button className="linkbtn" onClick={() => setMain(a)}>{pick("小号 · 设为主号", "Sub · make main")}</button>}</td>
+          <td className="small">{a.status === "closed" ? pick("已终止", "Terminated") : pick("正常", "Active")}</td>
+          <td className="nw">{a.status === "closed" ? <button className="btn sm ghost" onClick={() => restore(a)}>{pick("恢复", "Restore")}</button> : <button className="btn sm ghost" onClick={() => terminate(a)}>{pick("删除（终止）", "Terminate")}</button>}
+            {!a.is_main && s.members.some((m) => String(m.doterra_id || "").trim() === a.member_no && m.id !== ownerId) && <button className="btn sm ghost" onClick={() => unbind(a)}>{pick("拆回去", "Unbind")}</button>}</td></tr>)}</tbody></table></div>
+
+      <div className="field" style={{ marginTop: 12 }}><label htmlFor="aa_q">{pick("加小号：搜别的帐户的名字或编号，点一下就并到这位名下", "Add a sub-account")}</label>
+        <input id="aa_q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={pick("例如 Teng 或 18375197", "Name or ID")} />
+        {cands.length > 0 && <div className="dt-pick">{cands.map((a) => <button key={a.id} onClick={() => { bind(a); setQ(""); }}><b>{a.label || dtName(a.member_no)}</b> <span className="muted small">{a.member_no} · {pick("现在属于", "now")} {mName(a.member_id)}</span></button>)}</div>}
+      </div>
+
+      <div className="field"><label htmlFor="aa_note">{pick("备注（只有管理员看得到）", "Admin notes")}</label>
+        <textarea id="aa_note" rows={2} defaultValue={owner.admin_notes || ""} onBlur={(e) => e.target.value !== (owner.admin_notes || "") && run(() => db.update("members", ownerId, { admin_notes: e.target.value }))} /></div>
+
+      <div className="field"><label htmlFor="aa_l">{pick("关联到某位会员 / 经营者（例如：是谁的家人、谁介绍的、实际由谁在用）", "Link to member")}</label>
+        {link ? <div className="small">{pick("已关联", "Linked")}：<b>{link.name}</b>{owner.link_note ? ` · ${owner.link_note}` : ""}　<button className="linkbtn" onClick={() => run(() => db.update("members", ownerId, { link_member_id: null, link_note: null }))}>{pick("取消关联", "Remove")}</button></div> :
+          <><input id="aa_l" type="search" value={lq} onChange={(e) => setLq(e.target.value)} placeholder={pick("搜会员名字、编号、电话", "Search")} />
+            {lcands.length > 0 && <div className="dt-pick">{lcands.map((m) => <button key={m.id} onClick={() => { const note = prompt(pick(`和 ${m.name} 是什么关系？（可以不填）`, "Relation (optional)")) || ""; run(() => db.update("members", ownerId, { link_member_id: m.id, link_note: note })); setLq(""); }}><b>{m.name}</b> <span className="muted small">{m.doterra_id || m.phone || ""}</span></button>)}</div>}</>}
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{owner.archived ? <button className="btn sm" onClick={restoreMember}>{pick("恢复这位会员", "Restore member")}</button> : <button className="btn sm ghost" onClick={archiveMember}>{pick("整个会员删除（终止，资料保留）", "Terminate member")}</button>}</div>
+    </section>
+  );
+}
+
+/* ================= Power of 3 / Boost ================= */
+const PO3_LV = [{ lv: 1, amt: 63 }, { lv: 2, amt: 313 }, { lv: 3, amt: 1563 }];
+const BOOST_LV = [{ lv: 1, pgv: 400, amt: 63 }, { lv: 2, pgv: 800, amt: 313 }, { lv: 3, pgv: 1200, amt: 635 }];
+const cad = (v) => `CA$${r0(v)}`;
+
+function Bar({ have, need, extra = 0, label, sub, unit = "" }) {
+  const pct = Math.min(100, (n(have) / need) * 100), pct2 = Math.min(100 - pct, (n(extra) / need) * 100);
+  const ok = n(have) >= need;
+  return (
+    <div className="po3-req">
+      <i className={`po3-ck ${ok ? "ok" : ""}`}>{ok ? "✓" : ""}</i>
+      <div><b>{label}</b>{sub && <small className="muted">{sub}</small>}</div>
+      <div className="po3-bar"><span style={{ width: `${pct}%` }} /><span className="x" style={{ width: `${pct2}%` }} /></div>
+      <div className="nw small"><b>{r1(have)}</b>{extra ? <span className="muted"> +{r1(extra)}</span> : ""} / {need}{unit}{!ok && <div className="po3-gap">{`差 ${r1(need - n(have))}`}</div>}</div>
+    </div>
+  );
+}
+
+export function Po3Panel({ d, root, open }) {
+  const { pick } = useLang();
+  const [rows, setRows] = useState(null); const [pgv, setPgv] = useState([]);
+  const [who, setWho] = useState(root.dt_id);
+  useEffect(() => { (async () => {
+    const [p, g] = await Promise.all([db.select("dt_po3", { all: true, order: ["dt_id", true] }).catch(() => []), db.select("dt_pgv", { all: true, order: ["dt_id", true] }).catch(() => [])]);
+    setRows(p); setPgv(g);
+  })(); }, []);
+  if (!rows) return <Loading />;
+  if (!rows.length) return <div className="empty">{pick("还没有同步 Power of 3 资料。", "No Power of 3 data yet.")}</div>;
+  const ym = rows.map((r) => r.ym).sort().pop();
+  const by = Object.fromEntries(rows.filter((r) => r.ym === ym).map((r) => [r.dt_id, { ...r, kids: [] }]));
+  for (const r of Object.values(by)) if (r.parent_dt && by[r.parent_dt]) by[r.parent_dt].kids.push(r);
+  const monthEnd = `${ym}-31`, t = today();
+  const sched = (r) => (r.lrp_date && r.lrp_date >= t && r.lrp_date <= monthEnd ? n(r.lrp_tpl) : 0);
+  // 估算某帐户是否达到 Level 1（含/不含本月排好的 LRP）
+  const l1 = (r, withSched) => !!r && n(r.rv) + (withSched ? sched(r) : 0) >= 100 && n(r.pe_pod) >= 100 && n(r.pod) >= 500;
+  const lvOf = (r, withSched, depth = 0) => { if (!l1(r, withSched)) return 0; if (depth > 3) return 1; const k = r.kids.map((c) => lvOf(c, withSched, depth + 1)); return k.filter((x) => x >= 2).length >= 3 ? 3 : k.filter((x) => x >= 1).length >= 3 ? 2 : 1; };
+  const me = by[who] || by[root.dt_id];
+  if (!me) return <div className="empty">{pick("这个帐户没有 Power of 3 资料。", "No data for this account.")}</div>;
+  const mem = d.by[me.dt_id];
+  const fl = [...me.kids].sort((a, b) => n(b.rv) + sched(b) - (n(a.rv) + sched(a)));
+  const lvNow = lvOf(me, false), lvSch = lvOf(me, true);
+  const fl1 = fl.filter((k) => lvOf(k, true) >= 1).length, fl2 = fl.filter((k) => lvOf(k, true) >= 2).length;
+  const myPgv = pgv.filter((x) => x.root_dt === me.dt_id).sort((a, b) => n(b.rv) - n(a.rv) || n(b.next_pv) - n(a.next_pv));
+  const pgvSched = myPgv.reduce((s, x) => s + (x.next_date && x.next_date >= t && x.next_date <= monthEnd ? n(x.next_pv) : 0), 0);
+  const boostNow = BOOST_LV.filter((b) => n(me.pgv) >= b.pgv && lvNow >= b.lv).pop();
+  const nextBoost = BOOST_LV.find((b) => !(n(me.pgv) >= b.pgv && lvSch >= b.lv));
+  const lvMsg = (L) => {
+    if (L.lv === 1) { const g = [n(me.rv) + sched(me) < 100 && pick(`自己 Rewards 还差 ${r1(100 - n(me.rv) - sched(me))} PV`, "RV"), n(me.pe_pod) < 100 && pick(`亲推 Pod 差 ${r1(100 - n(me.pe_pod))}`, "PE"), n(me.pod) < 500 && pick(`Pod 差 ${r1(500 - n(me.pod))}`, "Pod")].filter(Boolean); return g.length ? g.join("，") : pick("达标", "Met"); }
+    if (L.lv === 2) return fl1 >= 3 ? pick("3 位第一层已达 Level 1", "Met") : pick(`第一层达到 Level 1 的有 ${fl1} 位，还差 ${3 - fl1} 位`, `${3 - fl1} more`);
+    return fl2 >= 3 ? pick("3 位第一层已达 Level 2", "Met") : pick(`第一层达到 Level 2 的有 ${fl2} 位，还差 ${3 - fl2} 位`, `${3 - fl2} more`);
+  };
+  const ds = Object.values(by).filter((r) => d.by[r.dt_id]?.mtype === "D" || r.dt_id === root.dt_id).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return (
+    <>
+      <div className="inv-bar">
+        <select value={me.dt_id} onChange={(e) => setWho(e.target.value)} aria-label={pick("帐户", "Account")}>{ds.map((r) => <option key={r.dt_id} value={r.dt_id}>{r.name} · {r.dt_id}</option>)}</select>
+        {me.dt_id !== root.dt_id && <button className="btn sm ghost" onClick={() => setWho(root.dt_id)}>{pick("回到自己", "Back to me")}</button>}
+        <span className="muted small">{pick(`${ym}　按 doTERRA 同步时的数字；「+」是本月还没下、但已排好的 LRP`, `${ym}`)}</span>
+      </div>
+
+      <section className="biz-card">
+        <h3>Power of 3 <span className="muted small">{pick(`${me.name}　现在：${lvNow ? `Level ${lvNow}` : "未达标"}　·　排好的 LRP 都下了：${lvSch ? `Level ${lvSch}` : "未达标"}`, "")}</span></h3>
+        <div className="po3-pills">{PO3_LV.map((L) => <div key={L.lv} className={`po3-pill ${lvNow >= L.lv ? "ok" : lvSch >= L.lv ? "soon" : ""}`}><b>Level {L.lv} · {cad(L.amt)}</b><small>{lvMsg(L)}</small></div>)}</div>
+        <Bar label={pick("自己的 Rewards 订单（RV）", "Rewards Volume")} have={me.rv} extra={sched(me)} need={100} sub={me.lrp_date ? pick(`下次 LRP ${me.lrp_date} · ${r1(me.lrp_tpl)} PV`, "") : pick("没有 LRP", "No LRP")} />
+        <Bar label={pick("亲自推荐的 Pod 业绩（PE-Pod）", "PE Pod Volume")} have={me.pe_pod} need={100} />
+        <Bar label={pick("Pod 业绩", "Pod Volume")} have={me.pod} need={500} sub={pick("第一层的业绩，其中非 Rewards 最多算 200", "max 200 non-Rewards")} />
+        {lvNow === 0 && n(me.rv) < 100 && n(me.pe_pod) >= 100 && n(me.pod) >= 500 && <p className="notice" style={{ marginBottom: 0 }}>{pick(`自己这个月还没有 100 PV 的 Rewards 订单。Pod 已经够了，只要在月底前下一张满 ${r1(100 - n(me.rv))} PV 的 LRP 单，就能拿 Level 1 以上。`, "")}</p>}
+      </section>
+
+      <section className="biz-card">
+        <h3>Power of 3 Boost <span className="muted small">{pick("看 PGV：亲自推荐、入会 12 个月内的会员本月的 Rewards 业绩", "PGV-based")}</span></h3>
+        <div className="po3-pills">{BOOST_LV.map((b) => { const okP = n(me.pgv) >= b.pgv, okL = lvNow >= b.lv; return <div key={b.lv} className={`po3-pill ${okP && okL ? "ok" : okP && lvSch >= b.lv ? "soon" : ""}`}><b>Boost {b.lv} · {cad(b.amt)}</b><small>{okP ? (okL ? pick("达标", "Met") : pick(`PGV 够了，还要 Power of 3 Level ${b.lv}`, "")) : pick(`PGV 差 ${r1(b.pgv - n(me.pgv))}${!okL ? `，也要 Level ${b.lv}` : ""}`, "")}</small></div>; })}</div>
+        {(() => { const nb = BOOST_LV.find((b) => n(me.pgv) < b.pgv); return <Bar label="PGV" have={me.pgv} extra={pgvSched} need={nb ? nb.pgv : 1200} sub={nb ? pick(`下一档 Boost ${nb.lv} 要 ${nb.pgv} PGV（同时要 Power of 3 Level ${nb.lv}）`, "") : pick("已超过最高档 1200", "")} />; })()}
+        {boostNow && <p className="muted small" style={{ margin: 0 }}>{pick(`按现在的数字可拿 Boost ${boostNow.lv}（${cad(boostNow.amt)}）。`, "")}</p>}
+      </section>
+
+      <section className="biz-card">
+        <h3>{pick(`第一层（Pod）${fl.length} 位`, "Frontline pod")} <span className="muted small">{pick(`排好的 LRP 都下了的话，有 ${fl1} 位达到 Level 1、${fl2} 位达到 Level 2`, "")}</span></h3>
+        <div className="po3-cards">{fl.map((k) => { const m = d.by[k.dt_id]; const pe = m?.enroller_dt === me.dt_id; const isNew = m?.enroll_date?.slice(0, 7) === ym; const kl = lvOf(k, true);
+          return <div key={k.dt_id} className="po3-card">
+            <div className="po3-tags">{isNew && <span>NEW</span>}{pe && <span>PE</span>}</div>
+            <button className="linkbtn" onClick={() => (m?.mtype === "D" ? setWho(k.dt_id) : open(k.dt_id))}><b>{k.name}</b></button>
+            <small className="muted">{k.dt_id}　{m?.enroll_date ? pick(`${m.enroll_date.slice(0, 7)} 入会`, m.enroll_date) : ""}</small>
+            <small className="muted">{m ? pick(...(TYPE[m.mtype] || [m.mtype, m.mtype])) : ""}{m?.mtype === "D" ? ` · ${rankL(m.rank, pick)}` : ""}</small>
+            <div className="po3-nums"><span><b className={n(k.rv) >= 100 ? "g" : ""}>{r1(k.rv || k.pv)}</b><small>{n(k.rv) ? "Reward PV" : "Total PV"}</small></span><span><b>{r1(sched(k))}</b><small>{pick("排好的", "Scheduled")}</small></span></div>
+            {m?.mtype === "D" && <small>{kl ? pick(`自己可达 Level ${kl}`, `Level ${kl}`) : pick(`自己 Pod ${r1(k.pod)}/500`, "")}</small>}
+          </div>; })}</div>
+      </section>
+
+      {myPgv.length > 0 && <section className="biz-card">
+        <h3>{pick(`PGV 来源（${myPgv.filter((x) => n(x.rv)).length} 位本月有贡献，共 ${myPgv.length} 位在 12 个月内）`, "PGV contributors")}</h3>
+        <div className="po3-cards">{myPgv.map((x) => { const sc = x.next_date && x.next_date >= t && x.next_date <= monthEnd ? n(x.next_pv) : 0;
+          return <div key={x.dt_id} className={`po3-card ${!n(x.rv) && !sc ? "dim" : ""}`}>
+            <div className="po3-tags"><span>PE</span></div>
+            <button className="linkbtn" onClick={() => open(x.dt_id)}><b>{x.name}</b></button>
+            <small className="muted">{x.dt_id}　{x.enroll_date ? pick(`${x.enroll_date.slice(0, 7)} 入会`, "") : ""}</small>
+            <small className="muted">{pick(...(TYPE[x.mtype] || [x.mtype || "", x.mtype || ""]))}</small>
+            <div className="po3-nums"><span><b className="b">{r1(x.rv)}</b><small>PGV</small></span><span><b>{r1(sc)}</b><small>{pick("排好的", "Scheduled")}</small></span></div>
+            <small className={x.months_left <= 2 ? "po3-gap" : ""}>{pick(`还算 ${x.months_left} 个月${x.final_month ? "（本月最后一次）" : ""}`, `${x.months_left} months remaining`)}</small>
+          </div>; })}</div>
+        <p className="muted small" style={{ margin: "8px 0 0" }}>{pick("亲自推荐的会员入会后 12 个月内，他们的 Rewards 业绩算进你的 PGV。快到期的人越多，下个月 PGV 越难维持，要继续推荐新人。", "")}</p>
+      </section>}
     </>
   );
 }

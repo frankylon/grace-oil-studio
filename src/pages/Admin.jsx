@@ -13,7 +13,7 @@ import { Books } from "./Finance";
 import { TeamMap, lrpRate } from "./Team";
 import { PartnersAdmin } from "./Partners";
 import { DropshipAdmin } from "./Dropship";
-import { DtOffice } from "./Doterra";
+import { DtOffice, AccountAdmin } from "./Doterra";
 
 export default function Admin() {
   const { t } = useLang();
@@ -92,10 +92,12 @@ function MembersAdmin() {
   const [sp, setSp] = useSearchParams();
   const [members, reload] = useTable("members", { order: ["name", true] });
   const [q, setQ] = useState("");
+  const [showArch, setShowArch] = useState(false);
   const [editing, setEditing] = useState(null);
   const sel = sp.get("m");
   if (!members) return <Loading />;
-  const list = members.filter((m) => !q || [m.name, m.email, m.phone, m.doterra_id].join(" ").toLowerCase().includes(q.toLowerCase()));
+  const archN = members.filter((m) => m.archived).length;
+  const list = members.filter((m) => (showArch || !m.archived) && (!q || [m.name, m.email, m.phone, m.doterra_id].join(" ").toLowerCase().includes(q.toLowerCase())));
   const cur = members.find((m) => m.id === sel) || null;
   return (
     <div className="admin-grid">
@@ -103,7 +105,9 @@ function MembersAdmin() {
         <input id="am_q" type="search" placeholder={t("search")} value={q} onChange={(e) => setQ(e.target.value)} />
         <button className="btn primary" onClick={() => setEditing({})}>+ {t("new_member")}</button>
         <BulkLogins members={members} reload={reload} />
-        <div className="mlist">{list.map((m) => <button key={m.id} className="mitem" aria-current={m.id === sel} onClick={() => setSp({ tab: "a_members", m: m.id })}><b>{cv(m.name)}</b><small>{m.doterra_id || m.email || m.phone || "—"}</small></button>)}</div>
+        {archN > 0 && <label className="small muted"><input type="checkbox" checked={showArch} onChange={(e) => setShowArch(e.target.checked)} /> 显示已终止的 {archN} 位</label>}
+        <div className="small muted">共 {list.length} 位</div>
+        <div className="mlist">{list.map((m) => <button key={m.id} className="mitem" aria-current={m.id === sel} onClick={() => setSp({ tab: "a_members", m: m.id })} style={m.archived ? { opacity: .5 } : null}><b>{cv(m.name)}</b><small>{m.doterra_id || m.email || m.phone || "—"}</small></button>)}</div>
       </aside>
       <section style={{ minWidth: 0 }}>
         {cur ? <MemberAdminDetail key={cur.id} m={cur} members={members} onEdit={() => setEditing(cur)} reloadMembers={reload} /> : <div className="empty">{t("all_members")} · {members.length}</div>}
@@ -201,11 +205,14 @@ function MemberAdminDetail({ m, members, onEdit, reloadMembers }) {
             <span>{t("joined")} {m.joined}</span>{sponsor && <span>{t("sponsor")}: {cv(sponsor.name)}</span>}
           </div>
           {!!m.accounts?.length && <div className="chips" style={{ marginTop: 8 }}>{m.accounts.map((a) => <span key={a} className="chip">{cv(a)}</span>)}</div>}
+          {m.archived && <p className="notice" style={{ marginBottom: 0 }}>{pick("这位会员已终止（隐藏，资料保留）", "Terminated")}</p>}
+          {m.link_member_id && <p className="small" style={{ margin: "6px 0 0" }}>{pick("关联", "Linked")}：<Link to={`/admin?tab=a_members&m=${m.link_member_id}`}>{cv(members.find((x) => x.id === m.link_member_id)?.name || "")}</Link>{m.link_note ? ` · ${cv(m.link_note)}` : ""}</p>}
           {m.admin_notes && <p className="notice" style={{ marginBottom: 0 }}>{cv(m.admin_notes)}</p>}
         </div>
         <button className="btn sm" onClick={onEdit}>{t("edit")}</button>
       </div>
       <LoginBox m={m} onDone={reloadMembers} />
+      <AccountAdmin ownerId={m.id} onChanged={reloadMembers} />
       <div className="tabs">{["services", "status", "orders", "blends", "needs", "team", "preview"].map((x) => <button key={x} aria-current={sub === x} onClick={() => setSub(x)}>{t({ services: "my_services", status: "status_edit", orders: "my_orders", blends: "my_blends", needs: "my_needs", team: "my_team", preview: "nav_member" }[x])}</button>)}</div>
       {sub === "services" && <><p><Link className="btn primary sm" to={`/staff/c/${m.id}`}>{pick("打开服务档案 / 写新记录", "Open client file / new record")}</Link></p><ServiceHistory memberId={m.id} staffView /></>}
       {sub === "status" && <StatusEditor m={m} />}

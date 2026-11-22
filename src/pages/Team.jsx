@@ -59,7 +59,7 @@ function useTeamData() {
   const [d, setD] = useState(null);
   useEffect(() => {
     (async () => {
-      const [members, orders, status, moves, levels, accts] = await Promise.all([
+      let [members, orders, status, moves, levels, accts] = await Promise.all([
         db.select("members", { order: ["name", true] }).catch(() => []),
         db.select("orders", { order: ["date", false] }).catch(() => []),
         db.select("member_status").catch(() => []),
@@ -67,6 +67,7 @@ function useTeamData() {
         db.select("levels", { order: ["sort", true] }).catch(() => []),
         db.select("dt_accounts", { order: ["created_at", true] }).catch(() => []),
       ]);
+      members = members.filter((m) => !m.archived);
       setD({ members, orders, st: Object.fromEntries(status.map((s) => [s.member_id, s])), moves, levels, accts });
     })();
   }, []);

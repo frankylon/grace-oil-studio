@@ -613,3 +613,24 @@ span.dt-tog{border-color:transparent;background:none}
 .dt-dot.ok{background:#1f8a70}.dt-dot.lo{background:#9cc9c1}.dt-dot.wait{background:#e0b44c}
 .dt-dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0}.dt-dl dt{color:var(--muted);font-size:13px}.dt-dl dd{margin:0}
 .dt-kids{display:flex;flex-wrap:wrap;gap:6px 14px}
+.dt-pick{display:grid;gap:4px;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff}
+.dt-pick button{border:0;background:none;text-align:left;padding:6px 8px;border-radius:8px}.dt-pick button:hover{background:var(--surface)}
+.dt-admin[aria-busy="true"]{opacity:.6;pointer-events:none}
+.po3-pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.po3-pill{border:1px solid var(--line);border-radius:14px;padding:8px 14px;display:grid;gap:2px;background:#fff;min-width:200px}
+.po3-pill small{color:var(--muted);font-size:12px}
+.po3-pill.ok{border-color:#1f8a70;background:#eaf5f1}.po3-pill.ok b{color:#1f8a70}
+.po3-pill.soon{border-color:#e0b44c;background:#fdf6e6}
+.po3-req{display:grid;grid-template-columns:26px minmax(150px,1.2fr) 2fr auto;gap:12px;align-items:center;padding:8px 0}
+.po3-req small{display:block}
+.po3-ck{width:24px;height:24px;border-radius:50%;border:2px solid #cfd6d9;display:grid;place-items:center;font-style:normal;font-size:13px;color:#1f8a70}
+.po3-ck.ok{border-color:#1f8a70;background:#eaf5f1}
+.po3-bar{height:12px;border-radius:99px;background:#e9eef0;display:flex;overflow:hidden}
+.po3-bar span{background:#1f8a70;height:100%}.po3-bar span.x{background:repeating-linear-gradient(45deg,#9cc9c1 0 6px,#cfe7e2 6px 12px)}
+.po3-gap{color:#b4572e;font-size:12px}
+.po3-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.po3-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px;display:grid;gap:3px;text-align:center;position:relative}
+.po3-card.dim{opacity:.55}
+.po3-tags{display:flex;gap:4px;justify-content:flex-end;min-height:18px}.po3-tags span{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--muted)}
+.po3-nums{display:grid;grid-template-columns:1fr 1fr;margin:6px 0}.po3-nums span{display:grid}.po3-nums b{font-size:20px}.po3-nums b.g{color:#1f8a70}.po3-nums b.b{color:#5b6fd6}.po3-nums small{font-size:11px;color:var(--muted)}
+@media (max-width:640px){.po3-req{grid-template-columns:26px 1fr;}.po3-req .po3-bar{grid-column:2}.po3-req>div:last-child{grid-column:2}}
