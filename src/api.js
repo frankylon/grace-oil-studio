@@ -87,6 +87,17 @@ export const db = {
       if (opt.order) { const [c, asc] = opt.order; rows = [...rows].sort((a, b) => String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * (asc ? 1 : -1)); }
       return JSON.parse(JSON.stringify(rows));
     }
+    if (opt.all) { // 分页读完整张表（超过 1000 行时）
+      const out = [];
+      for (let from = 0; ; from += 1000) {
+        let q = sb.from(table).select(opt.select || "*");
+        for (const [k, v] of Object.entries(opt.eq || {})) q = q.eq(k, v);
+        if (opt.order) q = q.order(opt.order[0], { ascending: !!opt.order[1] });
+        const { data, error } = await q.range(from, from + 999);
+        if (error) throw error;
+        out.push(...data); if (data.length < 1000) return out;
+      }
+    }
     let q = sb.from(table).select(opt.select || "*");
     for (const [k, v] of Object.entries(opt.eq || {})) q = q.eq(k, v);
     for (const [k, v] of Object.entries(opt.in || {})) q = q.in(k, v);

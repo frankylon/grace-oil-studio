@@ -60,7 +60,7 @@ const S = {
   health_hidden: ["对方没有开放配油和需求记录。", "This member keeps blends and needs private."],
   owned_oils: ["买过的产品", "Products bought"], last: ["上次", "Last"],
   // 管理
-  a_requests: ["配油申请", "Requests"], a_members: ["会员", "Members"], a_import: ["导入报表", "Import"], a_levels: ["等级规则", "Levels"], a_recipes: ["配方管理", "Recipes"], a_inventory: ["库存", "Inventory"], a_finance: ["账本", "Books"], a_tree: ["团队地图", "Team map"], a_partners: ["商家分成", "Partners"], a_dropship: ["分销订单", "Dropship"], my_settings: ["帐户设置", "Settings"], my_business: ["事业进度", "Business"], my_books: ["我的账本", "My books"], my_stock: ["库存与借货", "Stock & loans"],
+  a_requests: ["配油申请", "Requests"], a_members: ["会员", "Members"], a_import: ["导入报表", "Import"], a_levels: ["等级规则", "Levels"], a_recipes: ["配方管理", "Recipes"], a_inventory: ["库存", "Inventory"], a_finance: ["账本", "Books"], a_tree: ["团队地图", "Team map"], a_dt: ["doTERRA 后台", "doTERRA office"], my_dt: ["doTERRA 团队", "doTERRA team"], a_partners: ["商家分成", "Partners"], a_dropship: ["分销订单", "Dropship"], my_settings: ["帐户设置", "Settings"], my_business: ["事业进度", "Business"], my_books: ["我的账本", "My books"], my_stock: ["库存与借货", "Stock & loans"],
   save: ["保存", "Save"], cancel: ["取消", "Cancel"], del: ["删除", "Delete"], edit: ["编辑", "Edit"], add: ["新增", "Add"], saved: ["已保存", "Saved"], confirm_del: ["确定删除？", "Delete this?"],
   new_member: ["新会员", "New member"], name: ["姓名", "Name"], sponsor: ["推荐人（上线）", "Sponsor (upline)"], doterra_id: ["doTERRA 会员号", "doTERRA ID"], joined: ["加入日期", "Joined"], member_type: ["身份", "Type"],
   mt_retail: ["零售客户", "Retail"], mt_wholesale: ["批发会员", "Wholesale"], mt_builder: ["事业会员", "Builder"], admin_notes: ["内部备注（客人看不到）", "Internal notes (hidden from member)"],

@@ -13,6 +13,7 @@ import { Books } from "./Finance";
 import { TeamMap, lrpRate } from "./Team";
 import { PartnersAdmin } from "./Partners";
 import { DropshipAdmin } from "./Dropship";
+import { DtOffice } from "./Doterra";
 
 export default function Admin() {
   const { t } = useLang();
@@ -26,7 +27,7 @@ export default function Admin() {
   return (
     <>
       <h1 style={{ fontSize: 30 }}>{t("nav_admin")}</h1>
-      <div className="tabs">{["a_bookings", "a_requests", "a_dropship", "a_tree", "a_partners", "a_inventory", "a_finance", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
+      <div className="tabs">{["a_bookings", "a_requests", "a_dt", "a_dropship", "a_tree", "a_partners", "a_inventory", "a_finance", "a_members", "a_staff", "a_import", "a_levels", "a_recipes"].map((x) => <button key={x} aria-current={tab === x} onClick={() => go(x)}>{t(x)}</button>)}</div>
       {tab === "a_bookings" && <BookingsAdmin />}
       {tab === "a_staff" && <StaffAdmin />}
       {tab === "a_requests" && <RequestsAdmin />}
@@ -37,6 +38,7 @@ export default function Admin() {
       {tab === "a_inventory" && <InventoryAdmin />}
       {tab === "a_finance" && <Books admin />}
       {tab === "a_tree" && <TeamMap admin />}
+      {tab === "a_dt" && <DtOffice admin />}
       {tab === "a_partners" && <PartnersAdmin />}
       {tab === "a_dropship" && <DropshipAdmin />}
     </>

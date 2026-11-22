@@ -589,3 +589,27 @@ td.neg b{color:var(--warn)}
 .ds-ful{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:8px;background:#fff}
 .ds-ful-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ds-ful-row select{width:auto}
 .ds-alloc{border:1px solid #bfe0dc;background:#f3faf9;border-radius:var(--r);padding:12px 14px;display:grid;gap:10px}
+/* doTERRA 后台镜像 */
+.dt .fin-sum{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.dt .fin-sum small{display:block;font-size:12px;margin-top:2px}
+.dt .linkbtn{color:var(--ink);text-decoration:none}.dt .linkbtn:hover{text-decoration:underline}
+.dt tr.click{cursor:pointer}.dt tr.click:hover td{background:var(--bg)}
+.dt-bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;align-items:end;height:190px;padding-top:8px}
+.dt-bar{display:grid;grid-template-rows:1fr auto auto;height:100%;text-align:center;font-size:11px;gap:2px}
+.dt-bar-col{display:flex;gap:2px;align-items:flex-end;justify-content:center}
+.dt-bar-col i{display:block;width:40%;background:var(--ink);border-radius:3px 3px 0 0;min-height:1px}
+.dt-bar-col i.e{background:#9cc9c1}
+.dt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.dt-chips button{border:1px solid var(--line);background:#fff;border-radius:var(--r-pill);padding:7px 14px;font-size:14px;display:inline-flex;gap:8px;align-items:center}
+.dt-chips button b{background:var(--surface);border-radius:var(--r-pill);padding:0 8px;font-size:12px}
+.dt-chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dt-chips button[aria-pressed="true"] b{background:rgba(255,255,255,.2)}
+.dt-tree,.dt-tree ul{list-style:none;margin:0;padding:0}
+.dt-tree ul{padding-left:22px;border-left:1px dashed var(--line);margin-left:11px}
+.dt-node{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:5px 0}
+.dt-tog{width:22px;height:22px;border:1px solid var(--line);border-radius:6px;background:#fff;display:inline-grid;place-items:center;padding:0;font-size:14px;line-height:1;flex:none}
+span.dt-tog{border-color:transparent;background:none}
+.dt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#d6d6d6;flex:none;vertical-align:middle}
+.dt-dot.ok{background:#1f8a70}.dt-dot.lo{background:#9cc9c1}.dt-dot.wait{background:#e0b44c}
+.dt-dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0}.dt-dl dt{color:var(--muted);font-size:13px}.dt-dl dd{margin:0}
+.dt-kids{display:flex;flex-wrap:wrap;gap:6px 14px}

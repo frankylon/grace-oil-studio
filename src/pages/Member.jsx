@@ -8,6 +8,7 @@ import { MyBookings, ServiceHistory } from "./Service";
 import { MyStock } from "./Inventory";
 import { Books } from "./Finance";
 import { TeamMap, PointsPanel } from "./Team";
+import { DtOffice } from "./Doterra";
 import { BusinessCenter } from "./Business";
 import { buildTree, countTree, daysSince, dilutionPct, ladder, money, ownedSet } from "../util";
 
@@ -57,7 +58,7 @@ const TIER_TABS = {
   customer: ["my_services", "my_blends", "my_needs", "my_bookings", "my_requests", "my_settings"],
   doterra: ["overview", "my_orders", "my_services", "my_blends", "my_needs", "my_bookings", "my_requests", "my_stock", "my_books", "my_settings"],
 };
-const TABS = ["overview", "my_business", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock", "my_books", "my_settings"];
+const TABS = ["overview", "my_business", "my_dt", "my_services", "my_blends", "my_orders", "my_needs", "my_bookings", "my_team", "my_requests", "my_stock", "my_books", "my_settings"];
 
 export function MemberView({ memberId, self, admin }) {
   const { t, cv, pick } = useLang();
@@ -74,7 +75,7 @@ export function MemberView({ memberId, self, admin }) {
   const isMine = m.id === profile?.member_id;
   const healthVisible = admin || isMine || m.share_health_with_upline;
   const tierTabs = admin ? TABS : TIER_TABS[m.tier] || TABS;
-  const tabs = TABS.filter((x) => tierTabs.includes(x) && (x !== "my_settings" || isMine) && (x !== "my_business" || ["builder", "super"].includes(m.tier))).filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin) && (x !== "my_books" || (isMine && !admin)));
+  const tabs = TABS.filter((x) => tierTabs.includes(x) && (x !== "my_settings" || isMine) && (x !== "my_business" || ["builder", "super"].includes(m.tier)) && (x !== "my_dt" || (["builder", "super"].includes(m.tier) && !!String(m.doterra_id || "").trim()))).filter((x) => (!["my_requests", "my_bookings"].includes(x) || isMine) && (x !== "my_team" || teamN > 0 || self) && (x !== "my_stock" || isMine || admin) && (x !== "my_books" || (isMine && !admin)));
   const tab = tab0 && tabs.includes(tab0) ? tab0 : tabs[0];
   return (
     <>
@@ -98,6 +99,7 @@ export function MemberView({ memberId, self, admin }) {
       {tab === "my_books" && <Books />}
       {tab === "my_settings" && <MySettings m={m} />}
       {tab === "my_business" && <BusinessCenter memberId={m.id} />}
+      {tab === "my_dt" && <DtOffice rootId={String(m.doterra_id).trim()} admin={admin} />}
       {self && <ShareToggle m={m} reload={reload} />}
     </>
   );
