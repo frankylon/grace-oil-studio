@@ -69,3 +69,13 @@ drop policy if exists r on dt_orders;      create policy r on dt_orders for sele
 drop policy if exists r on dt_commissions; create policy r on dt_commissions for select using (private.is_admin() or dt_id in (select private.my_dt_roots()));
 drop policy if exists r on dt_reports;     create policy r on dt_reports for select using (private.is_admin());
 drop policy if exists r on dt_sync;        create policy r on dt_sync for select using (private.is_admin() or private.my_tier() in ('builder', 'super'));
+
+-- Power of 3 / Boost（按 doTERRA Po3 树同步）
+create table if not exists dt_po3 (dt_id text not null, ym text not null, parent_dt text, name text, rv numeric, pv numeric, lrp_tpl numeric, lrp_date date, pe_pod numeric, pod numeric, po3_level int, pgv numeric, ov numeric, status text, primary key (dt_id, ym));
+create table if not exists dt_pgv (root_dt text not null, ym text not null, dt_id text not null, name text, rv numeric, months_left int, final_month boolean, next_pv numeric, next_date date, enroll_date date, mtype text, primary key (root_dt, ym, dt_id));
+-- 会员终止（隐藏、资料保留）和关联
+alter table members add column if not exists archived boolean not null default false;
+alter table members add column if not exists archived_at timestamptz;
+alter table members add column if not exists link_member_id uuid references members(id) on delete set null;
+alter table members add column if not exists link_note text;
+-- 同步：private.dt_apply_import() 和 private.dt_apply_po3() 把 dt_import 里的原始资料整理进上面的表
